@@ -1,0 +1,438 @@
+/* ==========================================================================
+   Gym Log — Global Styles
+   Design: Multi-Theme — "Garmin" (Electric Dark) · "Bordeaux" (Warm Premium) · "Whoop" (Performance Clean)
+   Fonts: Barlow Condensed (headlines) + Inter (body)
+   Ebenen-Modell: --bg-base (Hintergrund) → --bg-surface (Karten) → --bg-elevated (Sheets/Navs).
+   Hintergrund und Karten teilen sich NIE denselben Grundton — Abgrenzung über
+   Fläche, 1px-Kante (--border-subtle) und Inset-Top-Licht (--shadow-card).
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+/* --------------------------------------------------------------------------
+   Theme-neutrale Tokens (identisch in allen Themes)
+   -------------------------------------------------------------------------- */
+:root {
+  /* Radius (kann pro Theme überschrieben werden, z. B. Whoop 18px) */
+  --radius-card: 24px;
+  --radius-input: 14px;
+  --radius-pill: 100px;
+  --radius-sm: 10px;
+
+  /* Spacing — 8px Grid */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Safe Areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* Tab Bar Height */
+  --tab-bar-height: 64px;
+
+  /* Transitions — starke Ease-Out-Kurven (Kowalski) */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Theme: garmin (Default) — Techno-Sport, Electric Lime
+   -------------------------------------------------------------------------- */
+:root,
+[data-theme='garmin'] {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --bg-app: #0A0A0B;
+  --bg-base: #0A0A0B;
+  --bg-surface: #1A1A1D;
+  --bg-elevated: #141416;
+  --bg-card: #1A1A1D;
+  --bg-glass: rgba(14, 14, 16, 0.80);
+  --bg-glass-lighter: rgba(26, 26, 29, 0.70);
+  --bg-input: rgba(255, 255, 255, 0.05);
+  --bg-input-focus: rgba(255, 255, 255, 0.08);
+  --bg-chip-inset: rgba(0, 0, 0, 0.25);
+
+  /* Accent — Electric Lime */
+  --accent: #C8FF00;
+  --accent-primary: #C8FF00;
+  --accent-dim: rgba(200, 255, 0, 0.12);
+  --accent-hover: #D4FF33;
+  --accent-glow: rgba(200, 255, 0, 0.35);
+
+  /* Secondary Accent (aktive Tabs, Icons, sekundäre CTAs) */
+  --accent-secondary: #C8FF00;
+  --accent-secondary-hover: #D4FF33;
+  --accent-secondary-text: #C8FF00;
+
+  /* Text */
+  --text-main: #F0F0EC;
+  --text-primary: #F0F0EC;
+  --text-muted: #8A8A8F;
+  --text-secondary: #8A8A8F;
+  --text-tertiary: #55555A;
+  --text-on-accent: #0A0A0B;
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border: rgba(255, 255, 255, 0.07);
+  --border-hover: rgba(255, 255, 255, 0.14);
+  --border-accent: rgba(200, 255, 0, 0.30);
+
+  /* Shadows */
+  --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.40), 0 0 0 1px var(--border);
+  --shadow-float: 0 8px 32px rgba(0, 0, 0, 0.60), 0 0 0 1px var(--border);
+  --shadow-accent: 0 0 20px rgba(200, 255, 0, 0.20);
+
+  /* Semantisch: Danger / Warning / Info / Overlay */
+  --danger: #EF4444;
+  --danger-dim: rgba(239, 68, 68, 0.08);
+  --danger-border: rgba(239, 68, 68, 0.20);
+  --on-danger: #FFFFFF;
+  --warning: #F97316;
+  --info: #3B82F6;
+  --overlay: rgba(0, 0, 0, 0.65);
+}
+
+/* --------------------------------------------------------------------------
+   Theme: bordeaux — Premium Warm-Dark mit klarem Ebenen-Modell
+   Base #180A0B → Surface #2A1215 (deutlich abgehoben) → Kante #4A2025.
+   Kontraste (WCAG, gegen Surface #2A1215): Text #F5F2EB 13,5:1 ✓ AA/AAA ·
+   Muted #A68A8E 5,4:1 ✓ AA · Bronze-Fläche/Dunkeltext #2B1207 6,3:1 ✓ AA ·
+   Aktive Tab-Text-Variante #D97A2E auf Glas 5,9:1 ✓ AA
+   -------------------------------------------------------------------------- */
+[data-theme='bordeaux'] {
+  color-scheme: dark;
+
+  /* Ebenen — Base dunkler als Surface, kein Farb-Teppich */
+  --bg-app: #180A0B;
+  --bg-base: #180A0B;
+  --bg-surface: #2A1215;
+  --bg-elevated: #241013;
+  --bg-card: #2A1215;
+  --bg-glass: rgba(26, 12, 14, 0.85);
+  --bg-glass-lighter: rgba(42, 18, 21, 0.60);
+  --bg-input: rgba(245, 242, 235, 0.05);
+  --bg-input-focus: rgba(245, 242, 235, 0.09);
+  --bg-chip-inset: rgba(0, 0, 0, 0.30);
+
+  /* Radius — etwas straffer, technischer */
+  --radius-card: 20px;
+
+  /* Accent — Bronze (primär, nur CTAs/Progress), Rust (Badges/Flächen) */
+  --accent: #D58936;
+  --accent-primary: #D58936;
+  --accent-dim: rgba(213, 137, 54, 0.14);
+  --accent-hover: #E09A4B;
+  --accent-glow: rgba(213, 137, 54, 0.32);
+  --accent-secondary: #A44200;
+  --accent-secondary-hover: #B85310;
+  /* Helle Rust-Variante für Text/Icons: #A44200 als Text auf dunklem Rot nur ~2,6:1 (WCAG fail) */
+  --accent-secondary-text: #D97A2E;
+
+  /* Text — warmes Off-White als Haupttext, klares Rosa-Grau als Muted */
+  --text-main: #F5F2EB;
+  --text-primary: #F5F2EB;
+  --text-muted: #A68A8E;
+  --text-secondary: #A68A8E;
+  --text-tertiary: #7A5F64;
+  --text-on-accent: #2B1207; /* dunkel auf Bronze (Vanilla wäre nur 2,4:1) */
+
+  /* Borders — feine, feste 1px-Kanten (Spec: #4A2025) */
+  --border-subtle: #4A2025;
+  --border: #4A2025;
+  --border-hover: #5E2A30;
+  --border-accent: rgba(213, 137, 54, 0.45);
+
+  /* Shadows — Tiefe + Inset-Top-Licht (Kowalski-Polish) */
+  --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.50), 0 0 0 1px var(--border), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-float: 0 8px 32px rgba(0, 0, 0, 0.60), 0 0 0 1px var(--border), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-accent: 0 0 24px rgba(213, 137, 54, 0.22);
+
+  /* Semantisch: Danger / Warning / Info / Overlay */
+  --danger: #F87171;
+  --danger-dim: rgba(248, 113, 113, 0.12);
+  --danger-border: rgba(248, 113, 113, 0.28);
+  --on-danger: #3B0A06;
+  --warning: #F97316;
+  --info: #60A5FA;
+  --overlay: rgba(10, 4, 5, 0.72);
+}
+
+/* --------------------------------------------------------------------------
+   Theme: whoop — Ultra-Clean Performance Dark
+   Base #1F2024 → Surface #2A2C31 (16–20px Radius) → Kante #3E4047.
+   Kontraste (WCAG, gegen Surface #2A2C31): Text #FFFFFF 16,0:1 ✓ ·
+   Muted #9A9AA0 5,0:1 ✓ AA (Spec-#8E8E93 wäre mit 4,3:1 durchgefallen) ·
+   Grün #5CB88E 5,8:1 ✓ · Gold #F4C754 8,7:1 ✓ · Dunkeltext auf Grün 6,8:1 ✓
+   -------------------------------------------------------------------------- */
+[data-theme='whoop'] {
+  color-scheme: dark;
+
+  /* Ebenen */
+  --bg-app: #1F2024;
+  --bg-base: #1F2024;
+  --bg-surface: #2A2C31;
+  --bg-elevated: #26282D;
+  --bg-card: #2A2C31;
+  --bg-glass: rgba(31, 32, 36, 0.85);
+  --bg-glass-lighter: rgba(42, 44, 49, 0.60);
+  --bg-input: rgba(255, 255, 255, 0.06);
+  --bg-input-focus: rgba(255, 255, 255, 0.09);
+  --bg-chip-inset: rgba(0, 0, 0, 0.25);
+
+  /* Radius — Whoop: stark abgerundete Karten (Spec 16–20px) */
+  --radius-card: 18px;
+
+  /* Accent — Green (primär), Gold (sekundär), Red (Danger) */
+  --accent: #5CB88E;
+  --accent-primary: #5CB88E;
+  --accent-dim: rgba(92, 184, 142, 0.14);
+  --accent-hover: #6FC79D;
+  --accent-glow: rgba(92, 184, 142, 0.30);
+  --accent-secondary: #F4C754;
+  --accent-secondary-hover: #F5D274;
+  --accent-secondary-text: #F4C754;
+
+  /* Text */
+  --text-main: #FFFFFF;
+  --text-primary: #FFFFFF;
+  --text-muted: #9A9AA0;
+  --text-secondary: #9A9AA0;
+  --text-tertiary: #6B6B71;
+  --text-on-accent: #0E2318; /* dunkel auf Green (Weiß wäre nur ~2,2:1) */
+
+  /* Borders */
+  --border-subtle: #3E4047;
+  --border: #3E4047;
+  --border-hover: #4A4D55;
+  --border-accent: rgba(92, 184, 142, 0.45);
+
+  /* Shadows — weiche Tiefe + Inset-Top-Licht */
+  --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--border), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-float: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--border), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-accent: 0 0 20px rgba(92, 184, 142, 0.20);
+
+  /* Semantisch: Danger / Warning / Info / Overlay */
+  --danger: #F2654A;
+  --danger-dim: rgba(242, 101, 74, 0.12);
+  --danger-border: rgba(242, 101, 74, 0.28);
+  --on-danger: #2B0D06; /* dunkel auf hellem Red (Weiß wäre 3,1:1, fail) */
+  --warning: #F4C754;
+  --info: #6AA9E9;
+  --overlay: rgba(8, 9, 12, 0.70);
+}
+
+/* --------------------------------------------------------------------------
+   Base / Reset
+   -------------------------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent bounce scroll showing white */
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--bg-app);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --------------------------------------------------------------------------
+   Theme-Wechsel — sanfter Cross-Fade (View Transitions API)
+   -------------------------------------------------------------------------- */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Typography Scale
+   -------------------------------------------------------------------------- */
+.font-display {
+  font-family: 'Barlow Condensed', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* --------------------------------------------------------------------------
+   Glassmorphism Utilities
+   -------------------------------------------------------------------------- */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+}
+
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* Kowalski-Polish — weiche Micro-Transitions auf Flächen/Kanten */
+.glass-card,
+button {
+  transition: background 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+
+/* --------------------------------------------------------------------------
+   Scrollbar (webkit) — ruhig, unsichtbar
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   Focus Styles — WCAG AA
+   -------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Form Inputs — Custom Styling
+   -------------------------------------------------------------------------- */
+input, textarea {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 16px; /* Verhindert iOS-Zoom beim Focus */
+  padding: 14px 16px;
+  width: 100%;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--border-accent);
+  background: var(--bg-input-focus);
+}
+
+textarea {
+  resize: none;
+  min-height: 100px;
+  line-height: 1.6;
+}
+
+/* --------------------------------------------------------------------------
+   Accent Glow — für aktive/highlight Elemente
+   -------------------------------------------------------------------------- */
+.accent-glow {
+  box-shadow: var(--shadow-accent);
+}
+
+/* --------------------------------------------------------------------------
+   Keyframe Animations
+   -------------------------------------------------------------------------- */
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced Motion
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Date Input — Dark Mode Fix
+   -------------------------------------------------------------------------- */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.4);
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   Textarea Resize Handle
+   -------------------------------------------------------------------------- */
+textarea {
+  resize: vertical;
+}
+
+/* --------------------------------------------------------------------------
+   Selection — Accent
+   -------------------------------------------------------------------------- */
+::selection {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   Search Input — Hide Native Cancel Button
+   -------------------------------------------------------------------------- */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Page Container (content above tab bar)
+   -------------------------------------------------------------------------- */
+.page-container {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--tab-bar-height) + var(--safe-bottom) + var(--space-6));
+  padding-top: calc(var(--safe-top) + var(--space-4));
+  padding-left: calc(var(--safe-left) + var(--space-4));
+  padding-right: calc(var(--safe-right) + var(--space-4));
+}
