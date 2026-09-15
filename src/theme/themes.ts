@@ -11,7 +11,7 @@ export interface ThemeMeta {
 
 export const THEME_META: Record<ThemeName, ThemeMeta> = {
   garmin: { label: 'Garmin', swatch: '#C8FF00' },
-  bordeaux: { label: 'Bordeaux', swatch: '#D58936' },
+  bordeaux: { label: 'Bordeaux', swatch: '#8C232B' },
   whoop: { label: 'Whoop', swatch: '#5CB88E' },
 };
 
@@ -41,7 +41,7 @@ export function storeTheme(theme: ThemeName): void {
 /** Status-Bar-Farbe pro Theme (bg-base). */
 const META_COLORS: Record<ThemeName, string> = {
   garmin: '#0A0A0B',
-  bordeaux: '#180A0B',
+  bordeaux: '#0D0D0F',
   whoop: '#1F2024',
 };
 

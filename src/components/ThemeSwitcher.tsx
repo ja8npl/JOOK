@@ -68,7 +68,7 @@ export function ThemeSwitcher() {
                   display: 'inline-block',
                   fontSize: '12px',
                   fontWeight: 600,
-                  color: 'var(--accent)',
+                  color: 'var(--text-main)',
                   letterSpacing: '0.02em',
                 }}
               >
