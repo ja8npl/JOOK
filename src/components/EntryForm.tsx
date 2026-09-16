@@ -155,7 +155,7 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
                   >
                     <span style={{ flex: 1, textAlign: 'left' }}>{suggestion}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--accent)', fontWeight: 600 }}>EIGENE</span>
+                    <span style={{ fontSize: '11px', color: 'var(--accent-text)', fontWeight: 600 }}>EIGENE</span>
                   </button>
                 </li>
               ))}
@@ -224,7 +224,7 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
                 <span style={{
                   fontSize: '11px',
                   fontWeight: 700,
-                  color: 'var(--accent)',
+                  color: 'var(--accent-text)',
                   minWidth: '20px',
                 }}>
                   {i + 1}
@@ -266,8 +266,8 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
             fontSize: '14px',
             marginBottom: '12px',
           }}>
-            <Dumbbell size={16} color="var(--accent)" />
-            Keine Sätze geloggt — nur Einstellungen dokumentieren
+            <Dumbbell size={16} color="var(--accent-text)" />
+            Keine Sätze geloggt, nur Einstellungen dokumentieren
           </div>
         ) : null}
 
@@ -296,7 +296,7 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
       {/* Einstellungen */}
       <div>
         <label htmlFor="einstellung" style={labelStyle}>
-          Einstellungen <span style={{ color: 'var(--accent)' }}>*</span>
+          Einstellungen <span style={{ color: 'var(--accent-text)' }}>*</span>
         </label>
         <textarea
           id="einstellung"
@@ -381,6 +381,7 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
           width: '100%',
           padding: '18px',
           background: saved ? 'var(--accent-dim)' : 'var(--accent)',
+          boxShadow: saved ? 'var(--neo-pressed)' : 'var(--neo-convex)',
           border: saved ? '1px solid var(--accent)' : 'none',
           borderRadius: 'var(--radius-input)',
           color: saved ? 'var(--accent)' : 'var(--text-on-accent)',

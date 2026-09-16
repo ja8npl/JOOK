@@ -45,7 +45,7 @@ export function Detail() {
             gap: '4px',
             background: 'none',
             border: 'none',
-            color: 'var(--accent)',
+            color: 'var(--accent-text)',
             fontSize: '16px',
             fontWeight: 500,
             cursor: 'pointer',
@@ -62,7 +62,7 @@ export function Detail() {
       <header style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h1 style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: '32px',
             fontWeight: 700,
             color: 'var(--text-primary)',
@@ -72,7 +72,7 @@ export function Detail() {
             {machineName}
           </h1>
           <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-            {entries?.length ?? '—'} {entries?.length === 1 ? 'Eintrag' : 'Einträge'}
+            {entries?.length ?? 0} {entries?.length === 1 ? 'Eintrag' : 'Einträge'}
           </p>
         </div>
 
@@ -86,6 +86,7 @@ export function Detail() {
             height: '44px',
             borderRadius: '14px',
             background: 'var(--accent-dim)',
+            boxShadow: 'var(--neo-raised)',
             border: '1px solid var(--border-accent)',
             display: 'flex',
             alignItems: 'center',
@@ -94,7 +95,7 @@ export function Detail() {
             flexShrink: 0,
           }}
         >
-          <Plus size={20} color="var(--accent)" />
+          <Plus size={20} color="var(--accent-text)" />
         </motion.button>
       </header>
 
@@ -188,12 +189,13 @@ function EntryCard({
           top: '14px',
           right: '14px',
           background: 'var(--accent)',
-          color: 'var(--bg-base)',
+          color: 'var(--text-on-accent)',
           fontSize: '10px',
           fontWeight: 700,
           padding: '2px 8px',
           borderRadius: '6px',
           letterSpacing: '0.05em',
+          boxShadow: 'var(--neo-knob)',
         }}>
           AKTUELL
         </div>
@@ -206,7 +208,7 @@ function EntryCard({
 
       {/* Felder */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <EntryField icon={<Settings size={14} color="var(--accent)" />} label="Einstellung" value={entry.einstellung} />
+        <EntryField icon={<Settings size={14} color="var(--accent-text)" />} label="Einstellung" value={entry.einstellung} />
         {entry.problem && <EntryField icon={<AlertCircle size={14} color="var(--warning)" />} label="Problem / Notiz" value={entry.problem} />}
         {entry.ziel && <EntryField icon={<Target size={14} color="var(--info)" />} label="Ziel" value={entry.ziel} />}
         {setsOf(entry).length > 0 && <SetsSummary entry={entry} />}
@@ -222,6 +224,7 @@ function EntryCard({
             flex: 1,
             padding: '10px',
             background: 'var(--bg-input)',
+            boxShadow: 'var(--neo-raised)',
             border: '1px solid var(--border)',
             borderRadius: 'var(--radius-sm)',
             color: 'var(--text-secondary)',
@@ -246,6 +249,7 @@ function EntryCard({
             width: '44px',
             padding: '10px',
             background: 'var(--danger-dim)',
+            boxShadow: 'var(--neo-pressed)',
             border: '1px solid var(--danger-border)',
             borderRadius: 'var(--radius-sm)',
             color: 'var(--danger)',
@@ -293,7 +297,7 @@ function SetsSummary({ entry }: { entry: GymEntry }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
-        <Dumbbell size={14} color="var(--accent)" />
+        <Dumbbell size={14} color="var(--accent-text)" />
         <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500, letterSpacing: '0.04em' }}>
           SÄTZE
         </span>
@@ -325,8 +329,8 @@ function SetsSummary({ entry }: { entry: GymEntry }) {
         ))}
       </div>
       <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '6px' }}>
-        {sets.length} Sätze · {range}
-        {best && ` · Best ${best.gewicht.toLocaleString('de-DE')} kg × ${best.wiederholungen}`}
+        {sets.length} Sätze, {range}
+        {best && ` (Best ${best.gewicht.toLocaleString('de-DE')} kg × ${best.wiederholungen})`}
       </p>
     </div>
   );

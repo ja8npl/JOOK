@@ -20,7 +20,7 @@ export function Search() {
       {/* Header */}
       <header style={{ marginBottom: '20px' }}>
         <h1 style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "var(--font-display)",
           fontSize: '28px',
           fontWeight: 700,
           color: 'var(--text-primary)',
@@ -125,7 +125,7 @@ function highlight(text: string, query: string): React.ReactNode {
   return (
     <>
       {text.slice(0, idx)}
-      <mark style={{ background: 'var(--accent-dim)', color: 'var(--accent)', borderRadius: '3px', padding: '0 2px' }}>
+      <mark style={{ background: 'var(--accent-dim)', color: 'var(--accent-text)', borderRadius: '3px', padding: '0 2px' }}>
         {text.slice(idx, idx + query.length)}
       </mark>
       {text.slice(idx + query.length)}
@@ -188,16 +188,17 @@ function SearchResult({ entry, query, index, reduced, onClick }: {
         height: '38px',
         borderRadius: '10px',
         background: 'var(--accent-dim)',
+        boxShadow: 'var(--neo-pressed)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
       }}>
-        <Dumbbell size={18} color="var(--accent)" strokeWidth={1.5} />
+        <Dumbbell size={18} color="var(--accent-text)" strokeWidth={1.5} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "var(--font-display)",
           fontSize: '17px',
           fontWeight: 600,
           color: 'var(--text-primary)',

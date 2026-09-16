@@ -79,6 +79,7 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
               background: 'var(--bg-elevated)',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
+              boxShadow: 'var(--neo-float)',
               borderTop: '1px solid var(--border)',
               borderRadius: '24px 24px 0 0',
               paddingBottom: 'calc(var(--safe-bottom) + 16px)',
@@ -94,7 +95,8 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
             <div style={{
               width: '36px',
               height: '4px',
-              background: 'var(--border-hover)',
+              background: 'var(--bg-chip-inset)',
+              boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.04)',
               borderRadius: '2px',
               margin: '0 auto 20px',
             }} />
@@ -108,7 +110,7 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
                 marginBottom: '20px',
               }}>
                 <h2 style={{
-                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontFamily: "var(--font-display)",
                   fontSize: '22px',
                   fontWeight: 600,
                   color: 'var(--text-primary)',
@@ -121,6 +123,7 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
                   aria-label="Schließen"
                   style={{
                     background: 'var(--bg-input)',
+                    boxShadow: 'var(--neo-pressed)',
                     border: 'none',
                     borderRadius: '50%',
                     width: '32px',

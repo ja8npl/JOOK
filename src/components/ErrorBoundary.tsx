@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
       >
         <section style={{ maxWidth: '360px' }}>
           <h1 style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: '32px',
             marginBottom: '10px',
           }}>

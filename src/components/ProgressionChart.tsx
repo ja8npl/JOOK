@@ -88,7 +88,7 @@ export function ProgressionChart({ entries, reduced }: Props) {
       {/* Header mit Trend */}
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '12px' }}>
         <h2 style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "var(--font-display)",
           fontSize: '20px',
           fontWeight: 600,
           color: 'var(--text-primary)',
@@ -111,10 +111,10 @@ export function ProgressionChart({ entries, reduced }: Props) {
           borderRadius: 'var(--radius-sm)',
           boxShadow: 'var(--shadow-accent)',
         }}>
-          <Trophy size={16} color="var(--accent)" />
+          <Trophy size={16} color="var(--accent-text)" />
           <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>
             Bestleistung{' '}
-            <strong style={{ color: 'var(--accent)' }}>
+            <strong style={{ color: 'var(--accent-text)' }}>
               {pr.satz.gewicht.toLocaleString('de-DE')} kg × {pr.satz.wiederholungen}
             </strong>
             {' '}· {new Date(pr.datum).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })}
@@ -163,8 +163,8 @@ export function ProgressionChart({ entries, reduced }: Props) {
           <AreaChart data={chartData} margin={{ top: 8, right: 16, left: -8, bottom: 4 }}>
             <defs>
               <linearGradient id="progressionMax" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.25} />
-                <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+                <stop offset="0%" stopColor="var(--accent-text)" stopOpacity={0.25} />
+                <stop offset="100%" stopColor="var(--accent-text)" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="progressionAvg" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--text-tertiary)" stopOpacity={0.15} />
@@ -220,11 +220,11 @@ export function ProgressionChart({ entries, reduced }: Props) {
             <Area
               type="monotone"
               dataKey="maxGewicht"
-              stroke="var(--accent)"
+              stroke="var(--accent-text)"
               strokeWidth={2.5}
               fill="url(#progressionMax)"
-              dot={{ r: 3, fill: 'var(--accent)', stroke: 'var(--bg-card)', strokeWidth: 2 }}
-              activeDot={{ r: 5, fill: 'var(--accent)', stroke: 'var(--bg-card)', strokeWidth: 2 }}
+              dot={{ r: 3, fill: 'var(--accent-text)', stroke: 'var(--bg-card)', strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: 'var(--accent-text)', stroke: 'var(--bg-card)', strokeWidth: 2 }}
               animationDuration={reduced ? 0 : 700}
             />
             <Area
@@ -250,7 +250,7 @@ export function ProgressionChart({ entries, reduced }: Props) {
           color: 'var(--text-secondary)',
         }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '14px', height: '2px', background: 'var(--accent)', borderRadius: '1px' }} />
+            <span style={{ width: '14px', height: '2px', background: 'var(--accent-text)', borderRadius: '1px' }} />
             Max Arbeitsgewicht (kg)
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -265,7 +265,7 @@ export function ProgressionChart({ entries, reduced }: Props) {
 
 function TrendBadge({ trend, reduced }: { trend: 'up' | 'down' | 'flat'; reduced: boolean }) {
   const config = {
-    up: { Icon: TrendingUp, color: 'var(--accent)', label: 'Steigend' },
+    up: { Icon: TrendingUp, color: 'var(--accent-text)', label: 'Steigend' },
     down: { Icon: TrendingDown, color: 'var(--danger)', label: 'Fallend' },
     flat: { Icon: Minus, color: 'var(--text-tertiary)', label: 'Konstant' },
   }[trend];

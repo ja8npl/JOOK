@@ -26,7 +26,7 @@ export function Warmup() {
       {/* Header */}
       <header style={{ marginBottom: '24px' }}>
         <h1 style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "var(--font-display)",
           fontSize: '30px',
           fontWeight: 700,
           color: 'var(--text-primary)',
@@ -61,13 +61,14 @@ export function Warmup() {
             onChange={(e) => setWorkingWeightStr(e.target.value)}
             placeholder="z.B. 100"
             style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
+              fontFamily: "var(--font-display)",
               fontSize: '32px',
               fontWeight: 600,
+              fontVariantNumeric: 'tabular-nums',
               padding: '16px 20px',
               paddingRight: '60px',
-              background: 'var(--bg-card)',
-              boxShadow: 'var(--shadow-card)',
+              background: 'var(--bg-input)',
+              boxShadow: 'var(--neo-pressed)',
               border: '1px solid var(--border-accent)',
             }}
           />
@@ -76,9 +77,9 @@ export function Warmup() {
             right: '20px',
             top: '50%',
             transform: 'translateY(-50%)',
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: '24px',
-            color: 'var(--accent)',
+            color: 'var(--accent-text)',
             fontWeight: 600,
             pointerEvents: 'none',
           }}>
@@ -91,7 +92,7 @@ export function Warmup() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px' }}>
           <h2 style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: '20px',
             fontWeight: 600,
             color: 'var(--text-primary)',
@@ -118,14 +119,14 @@ export function Warmup() {
                 percentage="25%" 
                 weight={set1} 
                 reps="10–20" 
-                icon={<Target size={16} color="var(--accent)" />} 
+                icon={<Target size={16} color="var(--accent-text)" />} 
               />
               <SetCard 
                 setNum={2} 
                 percentage="50%" 
                 weight={set2} 
                 reps="3–10" 
-                icon={<Zap size={16} color="var(--accent)" />} 
+                icon={<Zap size={16} color="var(--accent-text)" />} 
               />
               
               {/* Optional Set 3 Toggle */}
@@ -148,7 +149,8 @@ export function Warmup() {
                     width: '44px',
                     height: '24px',
                     borderRadius: '12px',
-                    background: showSet3 ? 'var(--accent)' : 'var(--bg-input)',
+                    background: showSet3 ? 'var(--accent)' : 'var(--bg-chip-inset)',
+                    boxShadow: showSet3 ? 'inset 0 1px 2px rgba(0, 0, 0, 0.2)' : 'var(--neo-pressed)',
                     border: showSet3 ? 'none' : '1px solid var(--border)',
                     position: 'relative',
                     cursor: 'pointer',
@@ -167,7 +169,7 @@ export function Warmup() {
                       top: '1px',
                       left: showSet3 ? 'auto' : '1px',
                       right: showSet3 ? '1px' : 'auto',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                      boxShadow: 'var(--neo-knob)',
                     }}
                   />
                 </button>
@@ -187,7 +189,7 @@ export function Warmup() {
                       percentage="75%" 
                       weight={set3} 
                       reps="2–3" 
-                      icon={<Dumbbell size={16} color="var(--accent)" />} 
+                      icon={<Dumbbell size={16} color="var(--accent-text)" />} 
                       isHighlight
                     />
                   </motion.div>
@@ -260,13 +262,14 @@ function SetCard({ setNum, percentage, weight, reps, icon, isHighlight = false }
             SATZ {setNum}
           </span>
           <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>•</span>
-          <span style={{ fontSize: '12px', color: 'var(--accent)' }}>{percentage}</span>
+          <span style={{ fontSize: '12px', color: 'var(--accent-text)' }}>{percentage}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
           <span style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: '28px',
             fontWeight: 700,
+            fontVariantNumeric: 'tabular-nums',
             color: 'var(--text-primary)',
             lineHeight: 1,
           }}>
@@ -281,9 +284,10 @@ function SetCard({ setNum, percentage, weight, reps, icon, isHighlight = false }
           WPS
         </span>
         <span style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "var(--font-display)",
           fontSize: '20px',
           fontWeight: 600,
+          fontVariantNumeric: 'tabular-nums',
           color: 'var(--text-primary)',
           lineHeight: 1,
         }}>

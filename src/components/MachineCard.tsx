@@ -64,18 +64,19 @@ export function MachineCard({ summary, index }: Props) {
         height: '42px',
         borderRadius: '12px',
         background: 'var(--accent-dim)',
+        boxShadow: 'var(--neo-pressed)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
       }}>
-        <Dumbbell size={20} color="var(--accent)" strokeWidth={1.5} />
+        <Dumbbell size={20} color="var(--accent-text)" strokeWidth={1.5} />
       </div>
 
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "var(--font-display)",
           fontSize: '18px',
           fontWeight: 600,
           color: 'var(--text-primary)',
@@ -105,7 +106,7 @@ export function MachineCard({ summary, index }: Props) {
         </span>
         <span style={{
           fontSize: '11px',
-          color: 'var(--accent)',
+          color: 'var(--accent-text)',
           fontWeight: 500,
         }}>
           {summary.count} {summary.count === 1 ? 'Eintrag' : 'Einträge'}

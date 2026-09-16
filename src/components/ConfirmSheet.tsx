@@ -31,6 +31,7 @@ export function ConfirmSheet({
           height: '52px',
           borderRadius: '16px',
           background: 'var(--danger-dim)',
+          boxShadow: 'var(--neo-pressed)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -40,7 +41,7 @@ export function ConfirmSheet({
 
         <div>
           <h2 style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: '22px',
             fontWeight: 600,
             color: 'var(--text-primary)',
@@ -62,6 +63,7 @@ export function ConfirmSheet({
               width: '100%',
               padding: '16px',
               background: 'var(--danger)',
+              boxShadow: 'var(--neo-convex)',
               border: 'none',
               borderRadius: 'var(--radius-input)',
               color: 'var(--on-danger)',
@@ -80,6 +82,7 @@ export function ConfirmSheet({
               width: '100%',
               padding: '16px',
               background: 'var(--bg-input)',
+              boxShadow: 'var(--neo-raised)',
               border: '1px solid var(--border)',
               borderRadius: 'var(--radius-input)',
               color: 'var(--text-primary)',

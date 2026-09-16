@@ -1,13 +1,23 @@
 /* ==========================================================================
    Gym Log — Global Styles
-   Design: Multi-Theme — "Garmin" (Electric Dark) · "Bordeaux" (Warm Premium) · "Whoop" (Performance Clean)
-   Fonts: Barlow Condensed (headlines) + Manrope (body)
-   Ebenen-Modell: --bg-base (Hintergrund) → --bg-surface (Karten) → --bg-elevated (Sheets/Navs).
-   Hintergrund und Karten teilen sich NIE denselben Grundton — Abgrenzung über
-   Fläche, 1px-Kante (--border-subtle) und Inset-Top-Licht (--shadow-card).
+   Design: Multi-Theme Neumorphism (Soft-UI)
+   Themes: "garmin" (Techno-Sport) · "bordeaux" (Luxury Editorial) · "whoop" (Clean Apple UI)
+
+   Neumorphism-System (drei Dimensionen pro Theme):
+   - Flat/Raised  (--neo-raised)  Karten & Container: dunkler Drop-Shadow
+     unten-rechts + heller Lichtschimmer oben-links + 1px-Kante.
+   - Pressed      (--neo-pressed) Inset-Wells: Inputs, Suchleiste, aktive Tabs,
+     Zähler-Buttons, Switch-Tracks.
+   - Convex       (--neo-convex)  Schwebende Primär-Buttons (FAB, CTA): Inset-
+     Highlight oben + Inset-Schatten unten = plastische Wölbung.
+   - Float        (--neo-float)   Sheets, Dropdowns, Tooltips (deepeste Ebene).
+   - Knob         (--neo-knob)    Switch-Knöpfe.
+
+   Typo pro Theme via --font-display / --font-body / --tracking-display.
+   Ebenen: --bg-base → --bg-surface → --bg-elevated; Base & Surface teilen sich
+   nie denselben Grundton; Abgrenzung über Fläche, 1px-Kante und Schattenlicht.
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* --------------------------------------------------------------------------
@@ -19,6 +29,11 @@
   --radius-input: 14px;
   --radius-pill: 100px;
   --radius-sm: 10px;
+
+  /* Typo-Defaults (garmin; bordeaux/whoop überschreiben im Theme-Block) */
+  --font-display: 'Barlow Condensed', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  --tracking-display: -0.01em;
 
   /* Spacing — 8px Grid */
   --space-1: 4px;
@@ -43,10 +58,15 @@
   /* Transitions — starke Ease-Out-Kurven (Kowalski) */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.23, 1, 0.32, 1);
+  --transition-press: 120ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* --------------------------------------------------------------------------
-   Theme: garmin (Default) — instrumentelle Performance-UI
+   Theme: garmin (Default) — Techno-Sport Neumorphism
+   Scharfe, prägnante Soft-Shadows: enger Offset, straffe Blur-Radien,
+   kühle Graphit-Töne, Electric Lime als CTA-Material.
+   Kontraste (WCAG, gegen Surface #1A1A1D): Text #FFFFFF 15,5:1 ✓ AAA ·
+   Muted #A0A0AA 7,4:1 ✓ AA · Tertiary #82828B 4,6:1 ✓ AA
    -------------------------------------------------------------------------- */
 :root,
 [data-theme='garmin'] {
@@ -65,9 +85,15 @@
   --bg-input-focus: rgba(255, 255, 255, 0.08);
   --bg-chip-inset: rgba(0, 0, 0, 0.25);
 
+  /* Typo — Techno/Sporty: Barlow Condensed (Display/Metriken) + Inter (Body) */
+  --font-display: 'Barlow Condensed', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  --tracking-display: -0.01em;
+
   /* Accent — Electric Lime */
   --accent: #C8FF00;
   --accent-primary: #C8FF00;
+  --accent-text: #C8FF00; /* Lime ist hell genug für Text (10,7:1 auf Chips) */
   --accent-dim: rgba(200, 255, 0, 0.12);
   --accent-hover: #D4FF33;
   --accent-glow: rgba(200, 255, 0, 0.35);
@@ -83,7 +109,7 @@
   --text-primary: #FFFFFF;
   --text-muted: #A0A0AA;
   --text-secondary: #A0A0AA;
-  --text-tertiary: #55555A;
+  --text-tertiary: #82828B;
   --text-on-accent: #0A0A0B;
 
   /* Borders */
@@ -93,9 +119,19 @@
   --border-hover: var(--border-highlight);
   --border-accent: rgba(200, 255, 0, 0.30);
 
-  /* Shadows */
-  --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.40), 0 0 0 1px var(--border);
-  --shadow-float: 0 8px 32px rgba(0, 0, 0, 0.60), 0 0 0 1px var(--border);
+  /* Neumorphism — scharf & technisch */
+  --neo-raised: 3px 3px 10px rgba(0, 0, 0, 0.55), -2px -2px 6px rgba(255, 255, 255, 0.045),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 0 1px var(--border);
+  --neo-pressed: inset 3px 3px 8px rgba(0, 0, 0, 0.60), inset -2px -2px 5px rgba(255, 255, 255, 0.05);
+  --neo-convex: 0 6px 16px rgba(0, 0, 0, 0.60), 0 2px 10px var(--accent-glow),
+    inset 0 1px 1px rgba(255, 255, 255, 0.40), inset 0 -2px 4px rgba(0, 0, 0, 0.28);
+  --neo-float: 0 18px 44px rgba(0, 0, 0, 0.65), 0 4px 12px rgba(0, 0, 0, 0.45),
+    0 0 0 1px var(--border), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --neo-knob: 0 2px 5px rgba(0, 0, 0, 0.50), inset 0 1px 0 rgba(255, 255, 255, 0.30);
+
+  /* Kompatibilität — alte Schatten-Tokens mappen aufs Neo-System */
+  --shadow-card: var(--neo-raised);
+  --shadow-float: var(--neo-float);
   --shadow-accent: 0 0 20px rgba(200, 255, 0, 0.20);
 
   /* Semantisch: Danger / Warning / Info / Overlay */
@@ -109,11 +145,13 @@
 }
 
 /* --------------------------------------------------------------------------
-   Theme: bordeaux — Premium Warm-Dark mit klarem Ebenen-Modell
-   Base #180A0B → Surface #2A1215 (deutlich abgehoben) → Kante #4A2025.
-   Kontraste (WCAG, gegen Surface #2A1215): Text #F5F2EB 13,5:1 ✓ AA/AAA ·
-   Muted #A68A8E 5,4:1 ✓ AA · Bronze-Fläche/Dunkeltext #2B1207 6,3:1 ✓ AA ·
-   Aktive Tab-Text-Variante #D97A2E auf Glas 5,9:1 ✓ AA
+   Theme: bordeaux — Luxury Editorial Neumorphism
+   Sehr weiche, elegante Schatten mit warmem Champagner-Lichtschimmer.
+   Base #0D0D0F (Obsidian) → Surface #17161A → Kante #2C262E. KEIN roter Grund.
+   Typo: Playfair Display (Headings) + Plus Jakarta Sans (Body).
+   Kontraste (WCAG, gegen Surface #17161A): Text #F7F4EF 16,0:1 ✓ AAA ·
+   Muted #9E96A0 6,0:1 ✓ AA · Tertiary #8B8392 5,4:1 ✓ AA ·
+   Champagne auf Burgundy #8C232B 8,1:1 ✓ AAA
    -------------------------------------------------------------------------- */
 [data-theme='bordeaux'] {
   color-scheme: dark;
@@ -125,18 +163,24 @@
   --bg-surface-hover: #201E24;
   --bg-elevated: #211F24;
   --bg-card: var(--bg-surface);
-  --bg-glass: rgba(26, 12, 14, 0.85);
-  --bg-glass-lighter: rgba(42, 18, 21, 0.60);
+  --bg-glass: rgba(20, 19, 23, 0.86);
+  --bg-glass-lighter: rgba(33, 31, 36, 0.60);
   --bg-input: rgba(245, 242, 235, 0.05);
   --bg-input-focus: rgba(245, 242, 235, 0.09);
   --bg-chip-inset: rgba(0, 0, 0, 0.30);
 
-  /* Radius — etwas straffer, technischer */
+  /* Radius — edel, leicht straffer */
   --radius-card: 20px;
 
-  /* Accent — Bronze (primär, nur CTAs/Progress), Rust (Badges/Flächen) */
+  /* Typo — Luxury Editorial: Playfair Display + Plus Jakarta Sans */
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  --tracking-display: 0em;
+
+  /* Accent — Deep Burgundy (primär), Bronze (sekundär) */
   --accent: #8C232B;
   --accent-primary: #8C232B;
+  --accent-text: #D58936; /* Burgundy als Text wäre nur ~2:1 — Spec: Key-Metriken in Bronze */
   --accent-dim: rgba(140, 35, 43, 0.18);
   --accent-hover: #A52D37;
   --accent-glow: rgba(90, 30, 36, 0.42);
@@ -145,25 +189,35 @@
   --accent-secondary-hover: #E09A4B;
   --accent-secondary-text: #D58936;
 
-  /* Text — warmes Off-White als Haupttext, klares Rosa-Grau als Muted */
+  /* Text — Champagner-Haupttext, Warm-Taupe als Muted */
   --text-main: #F7F4EF;
   --text-primary: #F7F4EF;
   --text-muted: #9E96A0;
   --text-secondary: #9E96A0;
-  --text-tertiary: #746D76;
+  --text-tertiary: #8B8392;
   --text-on-accent: #F7F4EF;
   --text-on-secondary: #2B1207;
 
-  /* Borders — feine, feste 1px-Kanten (Spec: #4A2025) */
+  /* Borders — feine, feste 1px-Kanten */
   --border-subtle: #2C262E;
   --border-highlight: #443B46;
   --border: var(--border-subtle);
   --border-hover: var(--border-highlight);
   --border-accent: rgba(90, 30, 36, 0.72);
 
-  /* Shadows — Tiefe + Inset-Top-Licht (Kowalski-Polish) */
-  --shadow-card: 0 2px 18px rgba(0, 0, 0, 0.42), 0 0 0 1px var(--border), inset 0 1px 0 rgba(255, 255, 255, 0.045);
-  --shadow-float: 0 12px 36px rgba(0, 0, 0, 0.54), 0 0 0 1px var(--border), inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  /* Neumorphism — sehr weich, warmes Licht, große Blur-Radien */
+  --neo-raised: 4px 4px 14px rgba(0, 0, 0, 0.50), -3px -3px 10px rgba(247, 244, 239, 0.03),
+    inset 0 1px 0 rgba(247, 244, 239, 0.05), 0 0 0 1px var(--border);
+  --neo-pressed: inset 3px 3px 9px rgba(0, 0, 0, 0.55), inset -2px -2px 6px rgba(247, 244, 239, 0.028);
+  --neo-convex: 0 8px 20px rgba(0, 0, 0, 0.55), 0 3px 12px rgba(90, 30, 36, 0.35),
+    inset 0 1px 1px rgba(247, 244, 239, 0.16), inset 0 -2px 5px rgba(0, 0, 0, 0.30);
+  --neo-float: 0 20px 48px rgba(0, 0, 0, 0.60), 0 6px 14px rgba(0, 0, 0, 0.40),
+    0 0 0 1px var(--border), inset 0 1px 0 rgba(247, 244, 239, 0.05);
+  --neo-knob: 0 2px 6px rgba(0, 0, 0, 0.50), inset 0 1px 0 rgba(247, 244, 239, 0.22);
+
+  /* Kompatibilität — alte Schatten-Tokens mappen aufs Neo-System */
+  --shadow-card: var(--neo-raised);
+  --shadow-float: var(--neo-float);
   --shadow-accent: 0 0 24px rgba(90, 30, 36, 0.34);
 
   /* Semantisch: Danger / Warning / Info / Overlay */
@@ -177,11 +231,13 @@
 }
 
 /* --------------------------------------------------------------------------
-   Theme: whoop — Ultra-Clean Performance Dark
-   Base #1F2024 → Surface #2A2C31 (16–20px Radius) → Kante #3E4047.
-   Kontraste (WCAG, gegen Surface #2A2C31): Text #FFFFFF 16,0:1 ✓ ·
-   Muted #9A9AA0 5,0:1 ✓ AA (Spec-#8E8E93 wäre mit 4,3:1 durchgefallen) ·
-   Grün #5CB88E 5,8:1 ✓ · Gold #F4C754 8,7:1 ✓ · Dunkeltext auf Grün 6,8:1 ✓
+   Theme: whoop — Clean Apple-UI Neumorphism
+   Sanfte, flache Surfaces mit subtilem Inset-Highlight, große Radien,
+   Backdrop-Blur auf Overlays. Base #1F2024 → Surface #2A2C31 → Elevated #34363C.
+   Typo: DM Sans überall (-0.025em Display-Tracking).
+   Kontraste (WCAG, gegen Surface #2A2C31): Text #FFFFFF 13,4:1 ✓ AAA ·
+   Muted #9A9AA0 4,7:1 ✓ AA · Tertiary #8E8F97 4,6:1 ✓ AA ·
+   Grün #5CB88E 5,0:1 ✓ · Gold #F4C754 7,4:1 ✓ · Dunkeltext auf Green 6,3:1 ✓
    -------------------------------------------------------------------------- */
 [data-theme='whoop'] {
   color-scheme: dark;
@@ -199,12 +255,18 @@
   --bg-input-focus: rgba(255, 255, 255, 0.09);
   --bg-chip-inset: rgba(0, 0, 0, 0.25);
 
-  /* Radius — Whoop: stark abgerundete Karten (Spec 16–20px) */
+  /* Radius — Whoop: stark abgerundete Karten */
   --radius-card: 18px;
+
+  /* Typo — Ultra-clean Apple-Style: DM Sans */
+  --font-display: 'DM Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  --tracking-display: -0.025em;
 
   /* Accent — Green (primär), Gold (sekundär), Red (Danger) */
   --accent: #5CB88E;
   --accent-primary: #5CB88E;
+  --accent-text: #5CB88E; /* Green als Text 5,7:1 ✓ */
   --accent-dim: rgba(92, 184, 142, 0.14);
   --accent-hover: #6FC79D;
   --accent-glow: rgba(92, 184, 142, 0.30);
@@ -218,7 +280,7 @@
   --text-primary: #FFFFFF;
   --text-muted: #9A9AA0;
   --text-secondary: #9A9AA0;
-  --text-tertiary: #6B6B71;
+  --text-tertiary: #8E8F97;
   --text-on-accent: #0E2318; /* dunkel auf Green (Weiß wäre nur ~2,2:1) */
 
   /* Borders */
@@ -228,9 +290,19 @@
   --border-hover: var(--border-highlight);
   --border-accent: rgba(92, 184, 142, 0.45);
 
-  /* Shadows — weiche Tiefe + Inset-Top-Licht */
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.28), 0 0 0 1px var(--border), inset 0 1px 0 rgba(255, 255, 255, 0.065);
-  --shadow-float: 0 14px 40px rgba(0, 0, 0, 0.38), 0 0 0 1px var(--border), inset 0 1px 0 rgba(255, 255, 255, 0.075);
+  /* Neumorphism — sanft, flach, kaum Offset */
+  --neo-raised: 2px 2px 8px rgba(0, 0, 0, 0.35), -2px -2px 8px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 0 1px var(--border);
+  --neo-pressed: inset 2px 2px 6px rgba(0, 0, 0, 0.45), inset -1px -1px 4px rgba(255, 255, 255, 0.06);
+  --neo-convex: 0 6px 16px rgba(0, 0, 0, 0.40), 0 2px 10px rgba(92, 184, 142, 0.25),
+    inset 0 1px 1px rgba(255, 255, 255, 0.35), inset 0 -2px 4px rgba(0, 0, 0, 0.22);
+  --neo-float: 0 18px 44px rgba(0, 0, 0, 0.50), 0 4px 12px rgba(0, 0, 0, 0.30),
+    0 0 0 1px var(--border), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --neo-knob: 0 2px 5px rgba(0, 0, 0, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+
+  /* Kompatibilität — alte Schatten-Tokens mappen aufs Neo-System */
+  --shadow-card: var(--neo-raised);
+  --shadow-float: var(--neo-float);
   --shadow-accent: 0 0 22px rgba(92, 184, 142, 0.22);
 
   /* Semantisch: Danger / Warning / Info / Overlay */
@@ -272,7 +344,7 @@
 html {
   background: var(--bg-app);
   color: var(--text-primary);
-  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -313,8 +385,8 @@ body {
    Typography Scale
    -------------------------------------------------------------------------- */
 .font-display {
-  font-family: 'Barlow Condensed', -apple-system, BlinkMacSystemFont, sans-serif;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-display);
 }
 
 /* --------------------------------------------------------------------------
@@ -333,7 +405,7 @@ body {
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--neo-raised);
 }
 
 /* Kowalski-Polish — weiche Micro-Transitions auf Flächen/Kanten */
@@ -344,16 +416,20 @@ textarea {
   transition:
     background-color 200ms ease,
     border-color 200ms ease,
-    box-shadow 200ms ease,
+    box-shadow var(--transition-press),
     transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 button {
   color: var(--text-main);
+  font-family: inherit;
 }
 
+/* Haptisches Pressed-Feedback: convex/raised kippt beim Druck ins Inset-Well.
+   !important ist Absicht: überschreibt Inline-Shadow aktiver Buttons. */
 button:not(:disabled):active {
   transform: scale(0.985);
+  box-shadow: var(--neo-pressed) !important;
 }
 
 .glass-card:hover {
@@ -384,12 +460,13 @@ button:not(:disabled):active {
 }
 
 /* --------------------------------------------------------------------------
-   Form Inputs — Custom Styling
+   Form Inputs — Neumorphic Pressed Wells
    -------------------------------------------------------------------------- */
 input, textarea {
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-input);
+  box-shadow: var(--neo-pressed);
   color: var(--text-primary);
   font-family: inherit;
   font-size: 16px; /* Verhindert iOS-Zoom beim Focus */
@@ -448,13 +525,6 @@ textarea {
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1) opacity(0.4);
   cursor: pointer;
-}
-
-/* --------------------------------------------------------------------------
-   Textarea Resize Handle
-   -------------------------------------------------------------------------- */
-textarea {
-  resize: vertical;
 }
 
 /* --------------------------------------------------------------------------

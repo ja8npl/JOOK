@@ -123,6 +123,7 @@ export function RestTimer({ startKey, onDone }: Props) {
             style={{
               padding: '6px 14px',
               background: dauer === d ? 'var(--accent-dim)' : 'var(--bg-input)',
+              boxShadow: dauer === d ? 'var(--neo-pressed)' : 'var(--neo-raised)',
               border: `1px solid ${dauer === d ? 'var(--border-accent)' : 'var(--border)'}`,
               borderRadius: 'var(--radius-pill)',
               color: dauer === d ? 'var(--accent)' : 'var(--text-secondary)',
@@ -141,12 +142,12 @@ export function RestTimer({ startKey, onDone }: Props) {
         <svg width="200" height="200" viewBox="0 0 200 200" role="timer" aria-label={`Pausen-Timer: ${min}:${String(sek).padStart(2, '0')} verbleibend`}>
           <circle
             cx="100" cy="100" r={RING_RADIUS}
-            fill="none" stroke="var(--bg-card)" strokeWidth="10"
+            fill="none" stroke="var(--bg-chip-inset)" strokeWidth="10"
           />
           <motion.circle
             cx="100" cy="100" r={RING_RADIUS}
             fill="none"
-            stroke="var(--accent)"
+            stroke="var(--accent-text)"
             strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={RING_CIRCUMFERENCE}
@@ -175,12 +176,12 @@ export function RestTimer({ startKey, onDone }: Props) {
                 transition={reduced ? { duration: 0 } : { duration: 0.45, ease: 'easeOut' }}
                 style={{ textAlign: 'center' }}
               >
-                <Bell size={22} color="var(--accent)" style={{ margin: '0 auto 4px' }} />
+                <Bell size={22} color="var(--accent-text)" style={{ margin: '0 auto 4px' }} />
                 <div style={{
-                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontFamily: "var(--font-display)",
                   fontSize: '22px',
                   fontWeight: 700,
-                  color: 'var(--accent)',
+                  color: 'var(--accent-text)',
                 }}>
                   Fertig!
                 </div>
@@ -188,7 +189,7 @@ export function RestTimer({ startKey, onDone }: Props) {
             ) : (
               <motion.div key="count" style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontFamily: "var(--font-display)",
                   fontSize: '44px',
                   fontWeight: 700,
                   color: aktiv ? 'var(--text-primary)' : 'var(--text-tertiary)',
@@ -235,6 +236,7 @@ function TimerButton({ onClick, disabled, primary, children }: {
         padding: '10px 16px',
         minHeight: '44px',
         background: primary && !disabled ? 'var(--accent)' : 'var(--bg-input)',
+        boxShadow: disabled ? 'var(--neo-pressed)' : primary ? 'var(--neo-convex)' : 'var(--neo-raised)',
         border: primary && !disabled ? 'none' : '1px solid var(--border)',
         borderRadius: 'var(--radius-pill)',
         color: primary && !disabled ? 'var(--text-on-accent)' : disabled ? 'var(--text-tertiary)' : 'var(--text-primary)',

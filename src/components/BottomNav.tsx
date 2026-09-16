@@ -28,6 +28,7 @@ export function BottomNav() {
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         borderTop: '1px solid var(--border)',
+        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.04)',
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'space-around',
@@ -61,7 +62,7 @@ export function BottomNav() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 20px var(--accent-glow), 0 0 0 1px var(--border-accent)',
+              boxShadow: 'var(--neo-convex)',
               color: 'var(--text-on-accent)',
               zIndex: 10,
             }}

@@ -17,6 +17,7 @@ export function ThemeSwitcher() {
         gap: '4px',
         padding: '4px',
         background: 'var(--bg-input)',
+        boxShadow: 'var(--neo-pressed)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-pill)',
       }}
@@ -42,6 +43,7 @@ export function ThemeSwitcher() {
               padding: '6px 12px',
               minHeight: '32px',
               background: active ? 'var(--accent-dim)' : 'transparent',
+              boxShadow: active ? 'var(--neo-raised)' : 'none',
               border: `1px solid ${active ? 'var(--border-accent)' : 'transparent'}`,
               borderRadius: 'var(--radius-pill)',
               cursor: 'pointer',

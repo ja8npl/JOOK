@@ -27,7 +27,7 @@ export function NewEntry() {
             gap: '4px',
             background: 'none',
             border: 'none',
-            color: 'var(--accent)',
+            color: 'var(--accent-text)',
             fontSize: '16px',
             fontWeight: 500,
             cursor: 'pointer',
@@ -43,7 +43,7 @@ export function NewEntry() {
       {/* Header */}
       <header style={{ marginBottom: '28px' }}>
         <h1 style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "var(--font-display)",
           fontSize: '30px',
           fontWeight: 700,
           color: 'var(--text-primary)',

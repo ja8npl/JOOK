@@ -25,10 +25,10 @@ export function Home() {
               justifyContent: 'center',
               flexShrink: 0,
             }}>
-              <Dumbbell size={18} color="var(--accent)" strokeWidth={1.5} />
+              <Dumbbell size={18} color="var(--accent-text)" strokeWidth={1.5} />
             </div>
             <h1 style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
+              fontFamily: "var(--font-display)",
               fontSize: '28px',
               fontWeight: 700,
               color: 'var(--text-primary)',
@@ -60,12 +60,12 @@ export function Home() {
           <StatChip
             value={summaries.length}
             label={summaries.length === 1 ? 'Maschine' : 'Maschinen'}
-            icon={<Dumbbell size={14} color="var(--accent)" />}
+            icon={<Dumbbell size={14} color="var(--accent-text)" />}
           />
           <StatChip
             value={summaries.reduce((acc, s) => acc + s.count, 0)}
             label="Einträge gesamt"
-            icon={<TrendingUp size={14} color="var(--accent)" />}
+            icon={<TrendingUp size={14} color="var(--accent-text)" />}
           />
         </motion.div>
       )}
@@ -93,6 +93,7 @@ function StatChip({ value, label, icon }: { value: number; label: string; icon: 
       background: 'var(--bg-card)',
       border: '1px solid var(--border)',
       borderRadius: '16px',
+      boxShadow: 'var(--neo-raised)',
       padding: '14px 16px',
       display: 'flex',
       flexDirection: 'column',
@@ -101,9 +102,10 @@ function StatChip({ value, label, icon }: { value: number; label: string; icon: 
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         {icon}
         <span style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "var(--font-display)",
           fontSize: '26px',
           fontWeight: 700,
+          fontVariantNumeric: 'tabular-nums',
           color: 'var(--text-primary)',
           lineHeight: 1,
         }}>
@@ -135,15 +137,16 @@ function EmptyState() {
         height: '72px',
         borderRadius: '24px',
         background: 'var(--accent-dim)',
+        boxShadow: 'var(--neo-pressed)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
       }}>
-        <Dumbbell size={32} color="var(--accent)" strokeWidth={1.5} />
+        <Dumbbell size={32} color="var(--accent-text)" strokeWidth={1.5} />
       </div>
       <div>
         <h2 style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "var(--font-display)",
           fontSize: '22px',
           fontWeight: 600,
           color: 'var(--text-primary)',
@@ -152,7 +155,7 @@ function EmptyState() {
           Noch nichts eingetragen
         </h2>
         <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-          Tippe auf das <span style={{ color: 'var(--accent)' }}>+</span> um deine erste<br />Maschine einzutragen.
+          Tippe auf das <span style={{ color: 'var(--accent-text)' }}>+</span> um deine erste<br />Maschine einzutragen.
         </p>
       </div>
     </motion.div>

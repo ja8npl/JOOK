@@ -81,12 +81,14 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
               background: 'var(--accent-dim)',
               border: '1px solid var(--border-accent)',
               borderRadius: 'var(--radius-input)',
-              color: 'var(--accent)',
-              fontFamily: "'Barlow Condensed', sans-serif",
+              color: 'var(--accent-text)',
+              fontFamily: "var(--font-display)",
+              fontVariantNumeric: 'tabular-nums',
               fontSize: '34px',
               fontWeight: 700,
               cursor: 'pointer',
               lineHeight: 1,
+              boxShadow: 'var(--neo-raised)',
             }}
           >
             {wiederholungen}
@@ -107,6 +109,7 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
           width: '100%',
           padding: '14px',
           background: wiederholungen > 0 ? 'var(--accent)' : 'var(--bg-input)',
+          boxShadow: wiederholungen > 0 ? 'var(--neo-convex)' : 'var(--neo-pressed)',
           border: wiederholungen > 0 ? 'none' : '1px solid var(--border)',
           borderRadius: 'var(--radius-input)',
           color: wiederholungen > 0 ? 'var(--text-on-accent)' : 'var(--text-tertiary)',
@@ -143,6 +146,7 @@ function StepperButton({ onClick, label, children }: {
         height: '44px',
         flexShrink: 0,
         background: 'var(--bg-input)',
+        boxShadow: 'var(--neo-pressed)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-sm)',
         color: 'var(--text-primary)',
