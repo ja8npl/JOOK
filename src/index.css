@@ -479,6 +479,27 @@ input, textarea {
 
 input::placeholder, textarea::placeholder {
   color: var(--text-tertiary);
+  opacity: 1;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  -webkit-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+  opacity: 0;
+  width: 0;
+  margin: 0;
+}
+
+input, textarea {
+  caret-color: var(--accent-text);
 }
 
 input:focus, textarea:focus {
@@ -533,6 +554,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 ::selection {
   background: var(--accent-dim);
   color: var(--text-main);
+}
+
+/* Browser surfaces belong to the same material system as the app UI. */
+::placeholder {
+  text-decoration-color: var(--border-highlight);
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+button, input, textarea {
+  -webkit-touch-callout: none;
 }
 
 /* Themewechsel ohne FOUC: feste Übergangsebene für Browser ohne View Transitions */

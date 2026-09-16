@@ -36,7 +36,7 @@ export function MachineCard({ summary, index }: Props) {
       }
       whileTap={reduced ? undefined : { scale: 0.97 }}
       onClick={() => navigate(`/machine/${encodeURIComponent(summary.machineId)}`)}
-      aria-label={`${summary.name} — zuletzt ${formatDate(summary.lastDatum)}`}
+      aria-label={`${summary.name}, zuletzt ${formatDate(summary.lastDatum)}`}
       style={{
         display: 'flex',
         alignItems: 'center',

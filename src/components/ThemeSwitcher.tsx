@@ -41,7 +41,7 @@ export function ThemeSwitcher() {
               justifyContent: 'center',
               gap: '6px',
               padding: '6px 12px',
-              minHeight: '32px',
+              minHeight: '44px',
               background: active ? 'var(--accent-dim)' : 'transparent',
               boxShadow: active ? 'var(--neo-raised)' : 'none',
               border: `1px solid ${active ? 'var(--border-accent)' : 'transparent'}`,

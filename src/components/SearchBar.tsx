@@ -62,8 +62,8 @@ export function SearchBar({ value, onChange, placeholder = 'Maschine, Einstellun
                 background: 'var(--bg-input)',
                 border: 'none',
                 borderRadius: '50%',
-                width: '22px',
-                height: '22px',
+                width: '44px',
+                height: '44px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -71,7 +71,7 @@ export function SearchBar({ value, onChange, placeholder = 'Maschine, Einstellun
                 color: 'var(--text-secondary)',
               }}
             >
-              <X size={12} />
+              <X size={15} />
             </motion.button>
           </div>
         )}

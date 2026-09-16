@@ -55,7 +55,7 @@ export function Warmup() {
         <div style={{ position: 'relative' }}>
           <input
             id="working-weight"
-            type="number"
+            type="text"
             inputMode="decimal"
             value={workingWeightStr}
             onChange={(e) => setWorkingWeightStr(e.target.value)}
@@ -118,14 +118,14 @@ export function Warmup() {
                 setNum={1} 
                 percentage="25%" 
                 weight={set1} 
-                reps="10–20" 
+                reps="10-20"
                 icon={<Target size={16} color="var(--accent-text)" />} 
               />
               <SetCard 
                 setNum={2} 
                 percentage="50%" 
                 weight={set2} 
-                reps="3–10" 
+                reps="3-10"
                 icon={<Zap size={16} color="var(--accent-text)" />} 
               />
               
@@ -146,9 +146,9 @@ export function Warmup() {
                   aria-checked={showSet3}
                   onClick={() => setShowSet3(!showSet3)}
                   style={{
-                    width: '44px',
-                    height: '24px',
-                    borderRadius: '12px',
+                    width: '52px',
+                    height: '44px',
+                    borderRadius: '22px',
                     background: showSet3 ? 'var(--accent)' : 'var(--bg-chip-inset)',
                     boxShadow: showSet3 ? 'inset 0 1px 2px rgba(0, 0, 0, 0.2)' : 'var(--neo-pressed)',
                     border: showSet3 ? 'none' : '1px solid var(--border)',
@@ -166,9 +166,9 @@ export function Warmup() {
                       borderRadius: '50%',
                       background: showSet3 ? 'var(--bg-base)' : 'var(--text-tertiary)',
                       position: 'absolute',
-                      top: '1px',
-                      left: showSet3 ? 'auto' : '1px',
-                      right: showSet3 ? '1px' : 'auto',
+                      top: '12px',
+                      left: showSet3 ? 'auto' : '12px',
+                      right: showSet3 ? '12px' : 'auto',
                       boxShadow: 'var(--neo-knob)',
                     }}
                   />
@@ -188,7 +188,7 @@ export function Warmup() {
                       setNum={3} 
                       percentage="75%" 
                       weight={set3} 
-                      reps="2–3" 
+                      reps="2-3"
                       icon={<Dumbbell size={16} color="var(--accent-text)" />} 
                       isHighlight
                     />
