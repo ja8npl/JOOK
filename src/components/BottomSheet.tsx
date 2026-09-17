@@ -11,11 +11,9 @@ interface Props {
 }
 
 export function BottomSheet({ isOpen, onClose, title, children }: Props) {
-  const reduced = useReducedMotion();
+  const reduced  = useReducedMotion();
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  // Schließen bei Klick auf Backdrop
-  // Focus-Trap beim Öffnen
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -26,7 +24,6 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  // ESC-Taste
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) onClose();
@@ -44,14 +41,14 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: reduced ? 0 : 0.2 }}
+            transition={{ duration: reduced ? 0 : 0.22 }}
             onClick={onClose}
             style={{
               position: 'fixed',
               inset: 0,
               background: 'var(--overlay)',
-              backdropFilter: 'blur(4px)',
-              WebkitBackdropFilter: 'blur(4px)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
               zIndex: 200,
             }}
             aria-hidden="true"
@@ -69,36 +66,37 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
             exit={{ y: '100%' }}
             transition={reduced
               ? { duration: 0 }
-              : { type: 'spring', stiffness: 320, damping: 32 }
+              : { type: 'spring', stiffness: 340, damping: 34 }
             }
             style={{
               position: 'fixed',
               bottom: 0,
               left: 0,
               right: 0,
+              /* Float-Level — höchste Neo-Ebene */
               background: 'var(--bg-elevated)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-              boxShadow: 'var(--neo-float)',
-              borderTop: '1px solid var(--border)',
-              borderRadius: '24px 24px 0 0',
-              paddingBottom: 'calc(var(--safe-bottom) + 16px)',
+              backdropFilter: 'blur(28px)',
+              WebkitBackdropFilter: 'blur(28px)',
+              boxShadow: 'var(--neo-float), inset 0 1px 1px rgba(255,255,255,0.08)',
+              borderTop: '1px solid var(--border-highlight)',
+              borderRadius: '26px 26px 0 0',
+              paddingBottom: 'calc(var(--safe-bottom) + 20px)',
               paddingLeft: '20px',
               paddingRight: '20px',
-              paddingTop: '16px',
+              paddingTop: '18px',
               zIndex: 201,
               maxHeight: '90dvh',
               overflowY: 'auto',
             }}
           >
-            {/* Drag Handle */}
+            {/* Drag Handle — Neo-Pressed-Pill */}
             <div style={{
-              width: '36px',
+              width: '40px',
               height: '4px',
               background: 'var(--bg-chip-inset)',
-              boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.04)',
+              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.50), 0 1px 0 rgba(255,255,255,0.04)',
               borderRadius: '2px',
-              margin: '0 auto 20px',
+              margin: '0 auto 22px',
             }} />
 
             {/* Header */}
@@ -107,24 +105,25 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                marginBottom: '20px',
+                marginBottom: '22px',
               }}>
                 <h2 style={{
-                  fontFamily: "var(--font-display)",
+                  fontFamily: 'var(--font-display)',
                   fontSize: '22px',
-                  fontWeight: 600,
+                  fontWeight: 700,
                   color: 'var(--text-primary)',
+                  letterSpacing: 'var(--tracking-display)',
                 }}>
                   {title}
                 </h2>
                 <motion.button
                   onClick={onClose}
-                  whileTap={reduced ? undefined : { scale: 0.90 }}
+                  whileTap={reduced ? undefined : { scale: 0.96 }}
                   aria-label="Schließen"
                   style={{
                     background: 'var(--bg-input)',
                     boxShadow: 'var(--neo-pressed)',
-                    border: 'none',
+                    border: '1px solid var(--border)',
                     borderRadius: '50%',
                     width: '44px',
                     height: '44px',
@@ -132,10 +131,10 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    color: 'var(--text-secondary)',
+                    color: 'var(--text-tertiary)',
                   }}
                 >
-                  <X size={16} />
+                  <X size={16} strokeWidth={2.5} />
                 </motion.button>
               </div>
             )}

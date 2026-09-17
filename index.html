@@ -3,41 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-
-    <!-- PWA / iOS -->
     <meta name="theme-color" content="#0A0A0B" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Gym Log" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <meta name="description" content="Deine persönliche Gym-Maschinen-App – Einstellungen, Sätze, Progression." />
 
-    <!-- SEO -->
-    <meta name="description" content="Gym Log – Deine Maschineneinstellungen, offline und privat." />
-    <title>Gym Log</title>
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="apple-touch-icon" href="/vite.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
 
-    <!-- Fonts (theme-abhängig): Barlow Condensed + Inter (garmin),
-         Playfair Display + Plus Jakarta Sans (bordeaux), DM Sans (whoop) -->
+    <!-- Google Fonts: Inter, Space Grotesk, Plus Jakarta Sans, Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Fontshare: Cabinet Grotesk & Satoshi -->
+    <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800&f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/icon-192.png" />
+    <title>Gym Log</title>
   </head>
   <body>
-    <script>
-      // Theme vor React-Boot anwenden (verhindert Theme-Flash beim Start)
-      try {
-        var t = localStorage.getItem('gymlog.theme');
-        if (t !== 'garmin' && t !== 'bordeaux' && t !== 'whoop') t = 'garmin';
-        document.documentElement.dataset.theme = t;
-      } catch (e) {
-        document.documentElement.dataset.theme = 'garmin';
-      }
-    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -12,50 +12,43 @@ import { SetCounter } from './SetCounter';
 import { RestTimer } from './RestTimer';
 
 interface Props {
-  /** Bestehender Eintrag zum Bearbeiten (undefined = neuer Eintrag) */
   initialEntry?: Partial<GymEntry>;
-  /** Vorausgefüllter Maschinenname (z.B. aus Detail-View) */
   defaultName?: string;
   onSaved?: (id: number) => void;
 }
 
 export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
-  const navigate = useNavigate();
-  const reduced = useReducedMotion();
+  const navigate     = useNavigate();
+  const reduced      = useReducedMotion();
   const machineNames = useMachineNames() ?? [];
 
-  const [name, setName] = useState(initialEntry?.name ?? defaultName ?? '');
+  const [name, setName]             = useState(initialEntry?.name ?? defaultName ?? '');
   const [einstellung, setEinstellung] = useState(initialEntry?.einstellung ?? '');
-  const [problem, setProblem] = useState(initialEntry?.problem ?? '');
-  const [ziel, setZiel] = useState(initialEntry?.ziel ?? '');
-  const [datum, setDatum] = useState(
+  const [problem, setProblem]       = useState(initialEntry?.problem ?? '');
+  const [ziel, setZiel]             = useState(initialEntry?.ziel ?? '');
+  const [datum, setDatum]           = useState(
     initialEntry?.datum
       ? new Date(initialEntry.datum).toISOString().slice(0, 10)
       : new Date().toISOString().slice(0, 10)
   );
-
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved]           = useState(false);
+  const [error, setError]           = useState<string | null>(null);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
-
-  // Set-Tracking
-  const [sets, setSets] = useState<WorkoutSet[]>(
+  const [sets, setSets]             = useState<WorkoutSet[]>(
     Array.isArray(initialEntry?.sets) ? initialEntry!.sets! : [],
   );
   const [timerStartKey, setTimerStartKey] = useState(0);
-  const machineId = toMachineId(name);
-  const lastWeight = useLastWeightForMachine(machineId);
 
+  const machineId  = toMachineId(name);
+  const lastWeight = useLastWeightForMachine(machineId);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  // Eigene, bereits genutzte Maschinen
   const customSuggestions = name.length > 0
     ? machineNames.filter((n): n is string =>
-      typeof n === 'string' && n.toLowerCase().includes(name.toLowerCase()) && n !== name,
-    )
+        typeof n === 'string' && n.toLowerCase().includes(name.toLowerCase()) && n !== name,
+      )
     : [];
 
-  // Vorschläge aus der statischen Datenbank
   const staticSuggestions = searchStaticExercises(name)
     .filter(ex => ex.name !== name && !customSuggestions.includes(ex.name));
 
@@ -64,7 +57,6 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
     if (!name.trim()) {
       setError('Bitte gib einen Maschinennamen ein.');
       nameInputRef.current?.focus();
@@ -74,7 +66,6 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
       setError('Bitte trag die Einstellungen ein.');
       return;
     }
-
     try {
       const id = await saveEntry({
         id: initialEntry?.id,
@@ -85,7 +76,6 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
         datum: new Date(datum).getTime(),
         sets: sets.length > 0 ? sets : undefined,
       });
-
       setSaved(true);
       setTimeout(() => {
         if (onSaved) onSaved(id);
@@ -97,13 +87,11 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
-      {/* Maschinen-Name mit Autocomplete */}
+      {/* Maschinen-Name */}
       <div style={{ position: 'relative' }}>
-        <label htmlFor="machine-name" style={labelStyle}>
-          Maschine / Übung
-        </label>
+        <label htmlFor="machine-name" style={labelStyle}>Maschine / Übung</label>
         <input
           ref={nameInputRef}
           id="machine-name"
@@ -116,31 +104,31 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
           autoComplete="off"
           required
         />
-        {/* Autocomplete-Dropdown */}
+        {/* Autocomplete Dropdown */}
         <AnimatePresence>
           {showAutocomplete && hasSuggestions && (
             <motion.ul
-              initial={reduced ? false : { opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduced ? undefined : { opacity: 0, y: -4 }}
-              transition={{ duration: 0.15 }}
+              initial={reduced ? false : { opacity: 0, y: -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={reduced ? undefined : { opacity: 0, y: -6, scale: 0.98 }}
+              transition={{ duration: 0.14, ease: 'easeOut' }}
               role="listbox"
               aria-label="Vorschläge"
               style={{
                 position: 'absolute',
-                top: 'calc(100% + 4px)',
+                top: 'calc(100% + 6px)',
                 left: 0,
                 right: 0,
                 background: 'var(--bg-elevated)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-input)',
+                border: '1px solid var(--border-highlight)',
+                borderRadius: 'var(--radius-md)',
                 overflow: 'hidden',
                 zIndex: 50,
                 listStyle: 'none',
-                padding: '4px',
-                boxShadow: 'var(--shadow-float)',
-                maxHeight: '300px',
-                overflowY: 'auto'
+                padding: '6px',
+                boxShadow: 'var(--neo-float)',
+                maxHeight: '280px',
+                overflowY: 'auto',
               }}
             >
               {customSuggestions.map((suggestion) => (
@@ -151,19 +139,28 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
                     aria-selected={false}
                     onClick={() => { setName(suggestion); setShowAutocomplete(false); }}
                     style={suggestionButtonStyle}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-input)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--bg-input)')}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'none')}
                   >
                     <span style={{ flex: 1, textAlign: 'left' }}>{suggestion}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--accent-text)', fontWeight: 600 }}>EIGENE</span>
+                    <span style={{
+                      fontSize: '10px',
+                      color: 'var(--accent-text)',
+                      fontWeight: 700,
+                      letterSpacing: '0.06em',
+                      background: 'var(--accent-dim)',
+                      padding: '2px 6px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--border-accent)',
+                    }}>
+                      EIGENE
+                    </span>
                   </button>
                 </li>
               ))}
-              
               {customSuggestions.length > 0 && staticSuggestions.length > 0 && (
                 <div style={{ height: '1px', background: 'var(--border)', margin: '4px 8px' }} />
               )}
-              
               {staticSuggestions.map((ex) => (
                 <li key={ex.id}>
                   <button
@@ -172,20 +169,22 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
                     aria-selected={false}
                     onClick={() => { setName(ex.name); setShowAutocomplete(false); }}
                     style={suggestionButtonStyle}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-input)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--bg-input)')}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'none')}
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', flex: 1 }}>
                       <span style={{ fontSize: '15px', color: 'var(--text-primary)' }}>{ex.name}</span>
                       <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{ex.target ?? 'Übung'}</span>
                     </div>
                     {ex.equipment && (
-                      <div style={{ 
-                        fontSize: '10px', 
-                        color: 'var(--text-secondary)',
+                      <div style={{
+                        fontSize: '10px',
+                        color: 'var(--text-tertiary)',
                         background: 'var(--bg-input)',
                         padding: '2px 6px',
-                        borderRadius: '4px'
+                        borderRadius: '6px',
+                        border: '1px solid var(--border)',
+                        letterSpacing: '0.04em',
                       }}>
                         {ex.equipment.toUpperCase()}
                       </div>
@@ -198,7 +197,7 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
         </AnimatePresence>
       </div>
 
-      {/* Set-Tracking */}
+      {/* Sätze */}
       <div>
         <label style={labelStyle}>
           Sätze
@@ -207,35 +206,43 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
 
         {/* Geloggte Sätze */}
         {sets.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
             {sets.map((s, i) => (
               <div
                 key={s.timestamp + '-' + i}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
-                  padding: '10px 14px',
+                  gap: '12px',
+                  padding: '12px 14px',
                   background: 'var(--bg-input)',
+                  boxShadow: 'var(--neo-pressed)',
                   border: '1px solid var(--border)',
                   borderRadius: 'var(--radius-sm)',
                 }}
               >
                 <span style={{
                   fontSize: '11px',
-                  fontWeight: 700,
+                  fontWeight: 800,
                   color: 'var(--accent-text)',
                   minWidth: '20px',
+                  fontVariantNumeric: 'tabular-nums',
                 }}>
                   {i + 1}
                 </span>
-                <span style={{ flex: 1, fontSize: '15px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                <span style={{
+                  flex: 1,
+                  fontSize: '15px',
+                  color: 'var(--text-primary)',
+                  fontWeight: 600,
+                  fontVariantNumeric: 'tabular-nums',
+                }}>
                   {s.gewicht} kg × {s.wiederholungen}
                 </span>
                 <motion.button
                   type="button"
                   onClick={() => setSets((prev) => prev.filter((_, j) => j !== i))}
-                  whileTap={reduced ? undefined : { scale: 0.88 }}
+                  whileTap={reduced ? undefined : { scale: 0.96 }}
                   aria-label={`Satz ${i + 1} entfernen`}
                   style={{
                     background: 'none',
@@ -243,33 +250,36 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
                     color: 'var(--text-tertiary)',
                     cursor: 'pointer',
                     display: 'flex',
-                    padding: '4px',
+                    padding: '6px',
+                    borderRadius: '8px',
                   }}
                 >
-                  <X size={16} />
+                  <X size={15} strokeWidth={2.5} />
                 </motion.button>
               </div>
             ))}
           </div>
         )}
 
-        {sets.length === 0 ? (
+        {/* Leer-State */}
+        {sets.length === 0 && (
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            padding: '14px',
+            gap: '10px',
+            padding: '14px 16px',
             background: 'var(--bg-input)',
+            boxShadow: 'var(--neo-pressed)',
             border: '1px dashed var(--border)',
             borderRadius: 'var(--radius-sm)',
             color: 'var(--text-tertiary)',
             fontSize: '14px',
-            marginBottom: '12px',
+            marginBottom: '14px',
           }}>
             <Dumbbell size={16} color="var(--accent-text)" />
-            Keine Sätze geloggt, nur Einstellungen dokumentieren
+            Keine Sätze geloggt – nur Einstellungen dokumentieren
           </div>
-        ) : null}
+        )}
 
         <SetCounter
           defaultWeight={lastWeight ?? (sets.length > 0 ? sets[sets.length - 1].gewicht : undefined)}
@@ -279,17 +289,23 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
           }}
         />
 
-        {/* Pausen-Timer nach Satz-Abschluss */}
+        {/* Pausen-Timer */}
         {timerStartKey > 0 && (
-          <div style={{
-            marginTop: '16px',
-            padding: '16px',
-            background: 'var(--bg-elevated)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-card)',
-          }}>
+          <motion.div
+            initial={reduced ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            style={{
+              marginTop: '18px',
+              padding: '20px',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-card)',
+              boxShadow: 'var(--neo-raised)',
+            }}
+          >
             <RestTimer startKey={timerStartKey} />
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -307,7 +323,7 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
         />
       </div>
 
-      {/* Problem/Notizen */}
+      {/* Problem */}
       <div>
         <label htmlFor="problem" style={labelStyle}>
           Probleme / Notizen
@@ -317,7 +333,7 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
           id="problem"
           value={problem}
           onChange={(e) => setProblem(e.target.value)}
-          placeholder="Schmerzen in der Schulter bei zu hohem Gewicht, Knie-Alignment checken…"
+          placeholder="Schmerzen in der Schulter bei zu hohem Gewicht…"
           style={{ minHeight: '80px' }}
         />
       </div>
@@ -354,14 +370,16 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
         {error && (
           <motion.p
             role="alert"
+            aria-live="assertive"
             initial={reduced ? false : { opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             style={{
               fontSize: '14px',
               color: 'var(--danger)',
-              padding: '12px 14px',
+              padding: '13px 16px',
               background: 'var(--danger-dim)',
+              boxShadow: 'var(--neo-pressed)',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--danger-border)',
             }}
@@ -371,28 +389,31 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
         )}
       </AnimatePresence>
 
-      {/* Submit Button */}
+      {/* Submit */}
       <motion.button
         type="submit"
-        whileTap={reduced ? undefined : { scale: 0.97 }}
+        whileTap={reduced ? undefined : { scale: 0.96 }}
         animate={saved ? { scale: [1, 1.04, 1] } : {}}
         transition={saved ? { duration: 0.35, ease: 'easeOut' } : {}}
         style={{
           width: '100%',
           padding: '18px',
+          minHeight: '56px',
           background: saved ? 'var(--accent-dim)' : 'var(--accent)',
           boxShadow: saved ? 'var(--neo-pressed)' : 'var(--neo-convex)',
-          border: saved ? '1px solid var(--accent)' : 'none',
+          border: saved ? '1px solid var(--border-accent)' : 'none',
           borderRadius: 'var(--radius-input)',
-          color: saved ? 'var(--accent)' : 'var(--text-on-accent)',
+          color: saved ? 'var(--accent-text)' : 'var(--text-on-accent)',
           fontSize: '17px',
-          fontWeight: 600,
+          fontWeight: 700,
+          letterSpacing: '0.02em',
           cursor: saved ? 'default' : 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: '8px',
-          transition: 'background 300ms ease, color 300ms ease, border 300ms ease',
+          transition:
+            'background 300ms var(--ease-out), box-shadow 300ms var(--ease-out), color 300ms var(--ease-out)',
         }}
         disabled={saved}
       >
@@ -400,7 +421,7 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
           {saved ? (
             <motion.span
               key="saved"
-              initial={reduced ? false : { opacity: 0, scale: 0.5 }}
+              initial={reduced ? false : { opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1 }}
               style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
             >
@@ -414,18 +435,18 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
           )}
         </AnimatePresence>
       </motion.button>
-
     </form>
   );
 }
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
-  fontSize: '13px',
-  fontWeight: 500,
-  color: 'var(--text-secondary)',
+  fontSize: '11px',
+  fontWeight: 700,
+  color: 'var(--text-tertiary)',
   marginBottom: '8px',
-  letterSpacing: '0.02em',
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
 };
 
 const suggestionButtonStyle: React.CSSProperties = {
@@ -441,5 +462,5 @@ const suggestionButtonStyle: React.CSSProperties = {
   justifyContent: 'space-between',
   gap: '12px',
   cursor: 'pointer',
-  transition: 'background var(--transition-fast)',
+  transition: 'background 120ms ease',
 };

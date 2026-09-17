@@ -24,14 +24,15 @@ export function ConfirmSheet({
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '8px' }}>
-        {/* Icon */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', paddingBottom: '8px' }}>
+        {/* Icon-Well — Danger-Pressed */}
         <div style={{
-          width: '52px',
-          height: '52px',
-          borderRadius: '16px',
+          width: '56px',
+          height: '56px',
+          borderRadius: 'var(--radius-md)',
           background: 'var(--danger-dim)',
           boxShadow: 'var(--neo-pressed)',
+          border: '1px solid var(--danger-border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -41,15 +42,16 @@ export function ConfirmSheet({
 
         <div>
           <h2 style={{
-            fontFamily: "var(--font-display)",
-            fontSize: '22px',
-            fontWeight: 600,
+            fontFamily: 'var(--font-display)',
+            fontSize: '24px',
+            fontWeight: 700,
             color: 'var(--text-primary)',
-            marginBottom: '6px',
+            letterSpacing: 'var(--tracking-display)',
+            marginBottom: '8px',
           }}>
             {title}
           </h2>
-          <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
             {message}
           </p>
         </div>
@@ -58,29 +60,29 @@ export function ConfirmSheet({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <motion.button
             onClick={onConfirm}
-            whileTap={reduced ? undefined : { scale: 0.97 }}
+            whileTap={reduced ? undefined : { scale: 0.96 }}
             style={{
               width: '100%',
-              padding: '16px',
+              padding: '17px',
               background: 'var(--danger)',
               boxShadow: 'var(--neo-convex)',
               border: 'none',
               borderRadius: 'var(--radius-input)',
               color: 'var(--on-danger)',
               fontSize: '16px',
-              fontWeight: 600,
+              fontWeight: 700,
               cursor: 'pointer',
-              transition: 'background var(--transition-fast)',
+              transition: 'box-shadow var(--duration-press) var(--ease-press)',
             }}
           >
             {confirmLabel}
           </motion.button>
           <motion.button
             onClick={onClose}
-            whileTap={reduced ? undefined : { scale: 0.97 }}
+            whileTap={reduced ? undefined : { scale: 0.96 }}
             style={{
               width: '100%',
-              padding: '16px',
+              padding: '17px',
               background: 'var(--bg-input)',
               boxShadow: 'var(--neo-raised)',
               border: '1px solid var(--border)',
@@ -89,7 +91,8 @@ export function ConfirmSheet({
               fontSize: '16px',
               fontWeight: 500,
               cursor: 'pointer',
-              transition: 'background var(--transition-fast)',
+              transition:
+                'box-shadow var(--duration-press) var(--ease-press), background var(--duration-fast) var(--ease-out)',
             }}
           >
             Abbrechen

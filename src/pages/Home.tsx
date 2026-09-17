@@ -7,19 +7,28 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 
 export function Home() {
   const summaries = useMachineSummaries();
-  const reduced = useReducedMotion();
+  const reduced   = useReducedMotion();
 
   return (
     <div className="page-container">
-      {/* Header */}
+      {/* ── Header ─────────────────────────────────────────────────────── */}
       <header style={{ marginBottom: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '4px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          marginBottom: '4px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+            {/* App-Icon als Pressed-Well */}
             <div style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '10px',
+              width: '36px',
+              height: '36px',
+              borderRadius: 'var(--radius-sm)',
               background: 'var(--accent-dim)',
+              boxShadow: 'var(--neo-pressed)',
+              border: '1px solid var(--border-accent)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -28,11 +37,11 @@ export function Home() {
               <Dumbbell size={18} color="var(--accent-text)" strokeWidth={1.5} />
             </div>
             <h1 style={{
-              fontFamily: "var(--font-display)",
-              fontSize: '28px',
-              fontWeight: 700,
+              fontFamily: 'var(--font-display)',
+              fontSize: '30px',
+              fontWeight: 800,
               color: 'var(--text-primary)',
-              letterSpacing: '-0.01em',
+              letterSpacing: 'var(--tracking-display)',
               whiteSpace: 'nowrap',
             }}>
               Gym Log
@@ -40,22 +49,18 @@ export function Home() {
           </div>
           <ThemeSwitcher />
         </div>
-        <p style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>
+        <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', paddingLeft: '48px' }}>
           Deine Maschineneinstellungen
         </p>
       </header>
 
-      {/* Stats Bar */}
+      {/* ── Stats Bar ──────────────────────────────────────────────────── */}
       {summaries && summaries.length > 0 && (
         <motion.div
           initial={reduced ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 26, delay: 0.05 }}
-          style={{
-            display: 'flex',
-            gap: '12px',
-            marginBottom: '24px',
-          }}
+          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}
         >
           <StatChip
             value={summaries.length}
@@ -70,7 +75,7 @@ export function Home() {
         </motion.div>
       )}
 
-      {/* Maschinenliste */}
+      {/* ── Maschinenliste ─────────────────────────────────────────────── */}
       {summaries === undefined ? (
         <SkeletonList />
       ) : summaries.length === 0 ? (
@@ -86,25 +91,43 @@ export function Home() {
   );
 }
 
-function StatChip({ value, label, icon }: { value: number; label: string; icon: React.ReactNode }) {
+function StatChip({ value, label, icon }: {
+  value: number;
+  label: string;
+  icon: React.ReactNode;
+}) {
   return (
     <div style={{
       flex: 1,
       background: 'var(--bg-card)',
       border: '1px solid var(--border)',
-      borderRadius: '16px',
+      borderRadius: 'var(--radius-md)',
       boxShadow: 'var(--neo-raised)',
-      padding: '14px 16px',
+      /* Erhöhtes Inset-Padding für Atmen / Anti-Hit Schattenkante */
+      padding: '24px 20px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '4px',
+      gap: '12px',
+      justifyContent: 'space-between',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        {icon}
+        {/* Icon in kleinem Pressed-Well */}
+        <div style={{
+          width: '24px',
+          height: '24px',
+          borderRadius: '8px',
+          background: 'var(--accent-dim)',
+          boxShadow: 'var(--neo-pressed)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          {icon}
+        </div>
         <span style={{
-          fontFamily: "var(--font-display)",
-          fontSize: '26px',
-          fontWeight: 700,
+          fontFamily: 'var(--font-display)',
+          fontSize: '36px',
+          fontWeight: 800,
           fontVariantNumeric: 'tabular-nums',
           color: 'var(--text-primary)',
           lineHeight: 1,
@@ -112,7 +135,9 @@ function StatChip({ value, label, icon }: { value: number; label: string; icon: 
           {value}
         </span>
       </div>
-      <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{label}</span>
+      <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', letterSpacing: '0.02em' }}>
+        {label}
+      </span>
     </div>
   );
 }
@@ -127,35 +152,45 @@ function EmptyState() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '16px',
+        gap: '20px',
         paddingTop: '80px',
         textAlign: 'center',
       }}
     >
+      {/* Großes Dumbbell-Icon im tiefen Pressed-Well */}
       <div style={{
-        width: '72px',
-        height: '72px',
-        borderRadius: '24px',
+        width: '80px',
+        height: '80px',
+        borderRadius: '26px',
         background: 'var(--accent-dim)',
         boxShadow: 'var(--neo-pressed)',
+        border: '1px solid var(--border-accent)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
       }}>
-        <Dumbbell size={32} color="var(--accent-text)" strokeWidth={1.5} />
+        <Dumbbell size={36} color="var(--accent-text)" strokeWidth={1.5} />
       </div>
       <div>
         <h2 style={{
-          fontFamily: "var(--font-display)",
-          fontSize: '22px',
-          fontWeight: 600,
+          fontFamily: 'var(--font-display)',
+          fontSize: '24px',
+          fontWeight: 700,
           color: 'var(--text-primary)',
-          marginBottom: '6px',
+          marginBottom: '8px',
+          letterSpacing: 'var(--tracking-display)',
         }}>
           Noch nichts eingetragen
         </h2>
-        <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-          Tippe auf das <span style={{ color: 'var(--accent-text)' }}>+</span> um deine erste<br />Maschine einzutragen.
+        <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+          Tippe auf das{' '}
+          <span style={{
+            color: 'var(--accent-text)',
+            fontWeight: 700,
+          }}>
+            +
+          </span>
+          {' '}um deine erste<br />Maschine einzutragen.
         </p>
       </div>
     </motion.div>
@@ -165,16 +200,14 @@ function EmptyState() {
 function SkeletonList() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      {[1, 2, 3].map(i => (
+      {[0, 1, 2].map((i) => (
         <div
           key={i}
+          className="skeleton"
           style={{
-            height: '74px',
+            height: '78px',
             borderRadius: 'var(--radius-card)',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border)',
-            animation: 'pulse 1.5s ease-in-out infinite',
-            opacity: 1 - i * 0.2,
+            opacity: 1 - i * 0.22,
           }}
         />
       ))}

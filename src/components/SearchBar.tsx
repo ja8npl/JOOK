@@ -9,20 +9,26 @@ interface Props {
   autoFocus?: boolean;
 }
 
-export function SearchBar({ value, onChange, placeholder = 'Maschine, Einstellung, Notiz…', autoFocus }: Props) {
+export function SearchBar({
+  value,
+  onChange,
+  placeholder = 'Maschine, Einstellung, Notiz…',
+  autoFocus,
+}: Props) {
   const reduced = useReducedMotion();
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
       <Search
-        size={18}
+        size={17}
         color="var(--text-tertiary)"
         style={{
           position: 'absolute',
-          left: '14px',
+          left: '16px',
           top: '50%',
           transform: 'translateY(-50%)',
           pointerEvents: 'none',
+          zIndex: 1,
         }}
       />
       <input
@@ -34,46 +40,49 @@ export function SearchBar({ value, onChange, placeholder = 'Maschine, Einstellun
         autoCorrect="off"
         autoCapitalize="none"
         spellCheck={false}
+        aria-label="Suchen nach Maschinen oder Notizen"
         style={{
-          paddingLeft: '44px',
-          paddingRight: value ? '44px' : '16px',
+          paddingLeft: '46px',
+          paddingRight: value ? '52px' : '16px',
+          /* Suchfeld liegt tiefer als die Umgebung — Pressed-Well */
+          background: 'var(--bg-input)',
+          boxShadow: 'var(--neo-pressed)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-pill)',
+          height: '50px',
+          fontSize: '15px',
         }}
       />
       <AnimatePresence>
         {value && (
-          <div style={{
-            position: 'absolute',
-            right: '12px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 10,
-          }}>
-            <motion.button
-              initial={reduced ? undefined : { opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={reduced ? undefined : { opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.15 }}
-              onClick={() => onChange('')}
-              aria-label="Suche löschen"
-              style={{
-                background: 'var(--bg-input)',
-                border: 'none',
-                borderRadius: '50%',
-                width: '44px',
-                height: '44px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: 'var(--text-secondary)',
-              }}
-            >
-              <X size={15} />
-            </motion.button>
-          </div>
+          <motion.button
+            initial={reduced ? undefined : { opacity: 0, scale: 0.75 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={reduced ? undefined : { opacity: 0, scale: 0.75 }}
+            transition={{ duration: 0.12, ease: 'easeOut' }}
+            onClick={() => onChange('')}
+            aria-label="Suche löschen"
+            style={{
+              position: 'absolute',
+              right: '8px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'var(--bg-chip-inset)',
+              boxShadow: 'var(--neo-pressed)',
+              border: '1px solid var(--border)',
+              borderRadius: '50%',
+              width: '34px',
+              height: '34px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: 'var(--text-tertiary)',
+              zIndex: 2,
+            }}
+          >
+            <X size={14} strokeWidth={2.5} />
+          </motion.button>
         )}
       </AnimatePresence>
     </div>

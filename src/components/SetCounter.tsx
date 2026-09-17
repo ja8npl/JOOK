@@ -4,9 +4,7 @@ import { Check, Minus, Plus } from 'lucide-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 
 interface Props {
-  /** Vorbelegung: letztes genutztes Gewicht dieser Maschine */
   defaultWeight?: number;
-  /** Wird nach "Satz abschließen" aufgerufen */
   onComplete: (gewicht: number, wiederholungen: number) => void;
 }
 
@@ -17,8 +15,6 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
   const [gewicht, setGewicht] = useState<number>(defaultWeight ?? 20);
   const [wiederholungen, setWiederholungen] = useState(0);
 
-  // Vorbelegung nachladen, sobald das letzte Gewicht aus der DB da ist
-  // (State-Anpassung während des Renderns statt Effekt — React-Empfehlung)
   const [prevDefault, setPrevDefault] = useState(defaultWeight);
   if (defaultWeight !== undefined && defaultWeight !== prevDefault) {
     setPrevDefault(defaultWeight);
@@ -35,16 +31,20 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
     setWiederholungen(0);
   };
 
+  const canComplete = wiederholungen > 0;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {/* Gewicht */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {/* ── Gewicht ─────────────────────────────────────────────────────── */}
       <div>
-        <div style={counterLabelStyle}>Gewicht (kg)</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <label htmlFor="gewicht-input" style={{ ...sectionLabelStyle, display: 'block' }}>Gewicht (kg)</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <StepperButton onClick={() => bumpGewicht(-GEWICHT_STEP)} label="2,5 kg weniger">
-            <Minus size={16} />
+            <Minus size={16} strokeWidth={2.5} />
           </StepperButton>
+
           <input
+            id="gewicht-input"
             type="number"
             inputMode="decimal"
             step={GEWICHT_STEP}
@@ -55,72 +55,93 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
               setGewicht(isFinite(v) && v >= 0 ? v : 0);
             }}
             aria-label="Gewicht in Kilogramm"
-            style={{ textAlign: 'center', fontWeight: 600, fontSize: '17px' }}
+            style={{
+              textAlign: 'center',
+              fontFamily: 'var(--font-display)',
+              fontWeight: 700,
+              fontSize: '22px',
+              fontVariantNumeric: 'tabular-nums',
+              /* Input als tiefes Well — klar von Buttons abgegrenzt */
+              background: 'var(--bg-input)',
+              boxShadow: 'var(--neo-pressed)',
+              borderRadius: 'var(--radius-input)',
+              padding: '14px 8px',
+            }}
           />
+
           <StepperButton onClick={() => bumpGewicht(GEWICHT_STEP)} label="2,5 kg mehr">
-            <Plus size={16} />
+            <Plus size={16} strokeWidth={2.5} />
           </StepperButton>
         </div>
       </div>
 
-      {/* Wiederholungen */}
+      {/* ── Wiederholungen ──────────────────────────────────────────────── */}
       <div>
-        <div style={counterLabelStyle}>Wiederholungen</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <StepperButton onClick={() => setWiederholungen((w) => Math.max(0, w - 1))} label="Eine Wiederholung weniger">
-            <Minus size={16} />
+        <div id="wiederholungen-label" style={sectionLabelStyle}>Wiederholungen</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <StepperButton onClick={() => setWiederholungen((w) => Math.max(0, w - 1))} label="Eine weniger">
+            <Minus size={16} strokeWidth={2.5} />
           </StepperButton>
+
+          {/* Großer Tap-Counter — konvex, aktiv wird es pressed */}
           <motion.button
             type="button"
             onClick={() => setWiederholungen((w) => w + 1)}
-            whileTap={reduced ? undefined : { scale: 0.94 }}
-            aria-label="Wiederholung zählen"
+            whileTap={reduced ? undefined : { scale: 0.96 }}
+            aria-labelledby="wiederholungen-label"
+            aria-live="polite"
             style={{
               flex: 1,
-              minHeight: '72px',
-              background: 'var(--accent-dim)',
-              border: '1px solid var(--border-accent)',
-              borderRadius: 'var(--radius-input)',
-              color: 'var(--accent-text)',
-              fontFamily: "var(--font-display)",
+              minHeight: '80px',
+              background: wiederholungen > 0 ? 'var(--accent-dim)' : 'var(--bg-input)',
+              border: `1px solid ${wiederholungen > 0 ? 'var(--border-accent)' : 'var(--border)'}`,
+              borderRadius: 'var(--radius-md)',
+              color: wiederholungen > 0 ? 'var(--accent-text)' : 'var(--text-tertiary)',
+              fontFamily: 'var(--font-display)',
               fontVariantNumeric: 'tabular-nums',
-              fontSize: '34px',
-              fontWeight: 700,
+              fontSize: '42px',
+              fontWeight: 800,
               cursor: 'pointer',
               lineHeight: 1,
-              boxShadow: 'var(--neo-raised)',
+              boxShadow: wiederholungen > 0 ? 'var(--neo-raised)' : 'var(--neo-pressed)',
+              transition:
+                'box-shadow 160ms var(--ease-out), background 160ms var(--ease-out), color 160ms var(--ease-out), border-color 160ms var(--ease-out)',
             }}
           >
             {wiederholungen}
           </motion.button>
-          <StepperButton onClick={() => setWiederholungen((w) => w + 1)} label="Eine Wiederholung mehr">
-            <Plus size={16} />
+
+          <StepperButton onClick={() => setWiederholungen((w) => w + 1)} label="Eine mehr">
+            <Plus size={16} strokeWidth={2.5} />
           </StepperButton>
         </div>
       </div>
 
-      {/* Satz abschließen */}
+      {/* ── Satz abschließen ────────────────────────────────────────────── */}
       <motion.button
         type="button"
         onClick={complete}
-        disabled={wiederholungen <= 0}
-        whileTap={reduced || wiederholungen <= 0 ? undefined : { scale: 0.97 }}
+        disabled={!canComplete}
+        whileTap={reduced || !canComplete ? undefined : { scale: 0.96 }}
         style={{
           width: '100%',
-          padding: '14px',
-          background: wiederholungen > 0 ? 'var(--accent)' : 'var(--bg-input)',
-          boxShadow: wiederholungen > 0 ? 'var(--neo-convex)' : 'var(--neo-pressed)',
-          border: wiederholungen > 0 ? 'none' : '1px solid var(--border)',
+          padding: '16px',
+          minHeight: '54px',
+          background: canComplete ? 'var(--accent)' : 'var(--bg-input)',
+          boxShadow: canComplete ? 'var(--neo-convex)' : 'var(--neo-pressed)',
+          border: canComplete ? 'none' : '1px solid var(--border)',
           borderRadius: 'var(--radius-input)',
-          color: wiederholungen > 0 ? 'var(--text-on-accent)' : 'var(--text-tertiary)',
+          color: canComplete ? 'var(--text-on-accent)' : 'var(--text-tertiary)',
           fontSize: '16px',
-          fontWeight: 600,
-          cursor: wiederholungen > 0 ? 'pointer' : 'default',
+          fontWeight: 700,
+          letterSpacing: '0.02em',
+          cursor: canComplete ? 'pointer' : 'default',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: '8px',
-          minHeight: '48px',
+          transition:
+            'background 200ms var(--ease-out), box-shadow 200ms var(--ease-out), color 200ms var(--ease-out)',
         }}
       >
         <Check size={18} strokeWidth={2.5} />
@@ -130,6 +151,7 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
   );
 }
 
+/** Stepper-Button — quadratisch, eingestanzt, haptisches Active-Feedback */
 function StepperButton({ onClick, label, children }: {
   onClick: () => void;
   label: string;
@@ -139,11 +161,11 @@ function StepperButton({ onClick, label, children }: {
     <motion.button
       type="button"
       onClick={onClick}
-      whileTap={{ scale: 0.90 }}
+      whileTap={{ scale: 0.96 }}
       aria-label={label}
       style={{
-        width: '44px',
-        height: '44px',
+        width: '48px',
+        height: '48px',
         flexShrink: 0,
         background: 'var(--bg-input)',
         boxShadow: 'var(--neo-pressed)',
@@ -154,6 +176,7 @@ function StepperButton({ onClick, label, children }: {
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
+        transition: 'box-shadow var(--duration-press) var(--ease-press)',
       }}
     >
       {children}
@@ -161,10 +184,11 @@ function StepperButton({ onClick, label, children }: {
   );
 }
 
-const counterLabelStyle: React.CSSProperties = {
+const sectionLabelStyle: React.CSSProperties = {
   fontSize: '11px',
-  fontWeight: 500,
+  fontWeight: 600,
   color: 'var(--text-tertiary)',
-  letterSpacing: '0.04em',
-  marginBottom: '6px',
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+  marginBottom: '8px',
 };

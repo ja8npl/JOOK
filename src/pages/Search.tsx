@@ -80,7 +80,7 @@ export function Search() {
                     initial={reduced ? false : { opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={reduced ? { duration: 0 } : { delay: index * 0.04 }}
-                    whileTap={reduced ? undefined : { scale: 0.97 }}
+                    whileTap={reduced ? undefined : { scale: 0.96 }}
                     onClick={() => navigate(`/new?name=${encodeURIComponent(exercise.name)}`)}
                     style={staticResultStyle}
                   >
@@ -168,7 +168,7 @@ function SearchResult({ entry, query, index, reduced, onClick }: {
         ? { duration: 0 }
         : { type: 'spring', stiffness: 300, damping: 26, delay: index * 0.04 }
       }
-      whileTap={reduced ? undefined : { scale: 0.97 }}
+      whileTap={reduced ? undefined : { scale: 0.96 }}
       onClick={onClick}
       style={{
         display: 'flex',

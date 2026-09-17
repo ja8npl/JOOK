@@ -17,7 +17,7 @@ export function EditEntry() {
       <div style={{ marginBottom: '24px' }}>
         <motion.button
           onClick={() => navigate(-1)}
-          whileTap={reduced ? undefined : { scale: 0.95 }}
+          whileTap={reduced ? undefined : { scale: 0.96 }}
           aria-label="Zurück"
           style={{
             display: 'flex',
@@ -26,8 +26,8 @@ export function EditEntry() {
             background: 'none',
             border: 'none',
             color: 'var(--accent-text)',
-            fontSize: '16px',
-            fontWeight: 500,
+            fontSize: '15px',
+            fontWeight: 600,
             cursor: 'pointer',
             padding: '8px 0',
             minHeight: '44px',
@@ -41,11 +41,11 @@ export function EditEntry() {
       {/* Header */}
       <header style={{ marginBottom: '28px' }}>
         <h1 style={{
-          fontFamily: "var(--font-display)",
-          fontSize: '30px',
-          fontWeight: 700,
+          fontFamily: 'var(--font-display)',
+          fontSize: '32px',
+          fontWeight: 800,
           color: 'var(--text-primary)',
-          letterSpacing: '-0.01em',
+          letterSpacing: 'var(--tracking-display)',
         }}>
           Eintrag bearbeiten
         </h1>
