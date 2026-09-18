@@ -40,8 +40,8 @@ export function storeTheme(theme: ThemeName): void {
 
 /** Status-Bar-Farbe pro Theme (bg-base). */
 const META_COLORS: Record<ThemeName, string> = {
-  garmin: '#0A0A0B',
-  bordeaux: '#0D0D0F',
+  garmin: '#1F2024',
+  bordeaux: '#1F2024',
   whoop: '#1F2024',
 };
 

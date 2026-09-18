@@ -9,6 +9,11 @@ import { Search } from './pages/Search';
 import { Warmup } from './pages/Warmup';
 import { ThemeProvider } from './theme/ThemeContext';
 import { useReducedMotion } from './hooks/useReducedMotion';
+import { WorkoutSessionProvider } from './hooks/useWorkoutSession';
+import { WorkoutSessionModal } from './components/WorkoutSessionModal';
+import { WorkoutLauncher } from './components/WorkoutLauncher';
+import { Progress } from './pages/Progress';
+import { Settings } from './pages/Settings';
 
 // Seitenwechsel-Transition — Fade + leichter Y-Slide
 function AnimatedRoutes() {
@@ -35,6 +40,8 @@ function AnimatedRoutes() {
           <Route path="/edit/:id" element={<EditEntry />} />
           <Route path="/search" element={<Search />} />
           <Route path="/warmup" element={<Warmup />} />
+          <Route path="/progress" element={<Progress />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </motion.div>
     </AnimatePresence>
@@ -44,6 +51,7 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <ThemeProvider>
+      <WorkoutSessionProvider>
       <HashRouter>
         <div style={{
           display: 'flex',
@@ -54,8 +62,11 @@ export default function App() {
         }}>
           <AnimatedRoutes />
           <BottomNav />
+          <WorkoutSessionModal />
+          <WorkoutLauncher />
         </div>
       </HashRouter>
+      </WorkoutSessionProvider>
     </ThemeProvider>
   );
 }

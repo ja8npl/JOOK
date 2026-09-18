@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
-import { Dumbbell, TrendingUp } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Activity, ArrowUpRight, Dumbbell, Settings, Sparkles, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useMachineSummaries } from '../hooks/useEntries';
 import { MachineCard } from '../components/MachineCard';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
@@ -7,210 +9,112 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 
 export function Home() {
   const summaries = useMachineSummaries();
-  const reduced   = useReducedMotion();
+  const reduced = useReducedMotion();
+  const navigate = useNavigate();
+  const totalEntries = summaries?.reduce((total, item) => total + item.count, 0) ?? 0;
 
   return (
-    <div className="page-container">
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <header style={{ marginBottom: '28px' }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
-          marginBottom: '4px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-            {/* App-Icon als Pressed-Well */}
-            <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--accent-dim)',
-              boxShadow: 'var(--neo-pressed)',
-              border: '1px solid var(--border-accent)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <Dumbbell size={18} color="var(--accent-text)" strokeWidth={1.5} />
-            </div>
-            <h1 style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '30px',
-              fontWeight: 800,
-              color: 'var(--text-primary)',
-              letterSpacing: 'var(--tracking-display)',
-              whiteSpace: 'nowrap',
-            }}>
-              Gym Log
-            </h1>
+    <main className="home page-container">
+      <div className="ambient ambient-one" aria-hidden="true" />
+      <div className="ambient ambient-two" aria-hidden="true" />
+
+      <header className="home-header">
+        <div className="brand-lockup">
+          <div className="brand-mark" aria-hidden="true"><Sparkles size={17} /></div>
+          <div>
+            <span className="eyebrow">Personal training log</span>
+            <h1 className="brand-title">Gym Log</h1>
           </div>
+        </div>
+        <div className="home-header-actions">
+          <button className="header-icon-button" type="button" onClick={() => navigate('/settings')} aria-label="Einstellungen öffnen"><Settings size={17} /></button>
           <ThemeSwitcher />
         </div>
-        <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', paddingLeft: '48px' }}>
-          Deine Maschineneinstellungen
-        </p>
       </header>
 
-      {/* ── Stats Bar ──────────────────────────────────────────────────── */}
+      <section className="hero-panel glass-panel" aria-labelledby="home-heading">
+        <div className="hero-copy">
+          <span className="eyebrow accent-copy">{summaries?.length ? 'Dein Rhythmus' : 'Dein nächster Schritt'}</span>
+          <h2 id="home-heading">Trainiere mit<br /><em>Gedächtnis.</em></h2>
+          <p>Maschinen, Einstellungen und Fortschritt. Alles an einem ruhigen Ort.</p>
+        </div>
+        <div className="hero-orbit" aria-hidden="true">
+          <div className="orbit-ring ring-one" />
+          <div className="orbit-ring ring-two" />
+          <div className="orbit-core"><Activity size={27} /></div>
+        </div>
+        <button className="hero-link" type="button" onClick={() => navigate('/new')}>
+          <span>{summaries?.length ? 'Eintrag hinzufügen' : 'Erste Übung loggen'}</span>
+          <ArrowUpRight size={17} />
+        </button>
+      </section>
+
       {summaries && summaries.length > 0 && (
-        <motion.div
-          initial={reduced ? false : { opacity: 0, y: 8 }}
+        <motion.section
+          className="metrics-grid"
+          initial={reduced ? false : { opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 26, delay: 0.05 }}
-          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          aria-label="Trainingsübersicht"
         >
-          <StatChip
-            value={summaries.length}
-            label={summaries.length === 1 ? 'Maschine' : 'Maschinen'}
-            icon={<Dumbbell size={14} color="var(--accent-text)" />}
-          />
-          <StatChip
-            value={summaries.reduce((acc, s) => acc + s.count, 0)}
-            label="Einträge gesamt"
-            icon={<TrendingUp size={14} color="var(--accent-text)" />}
-          />
-        </motion.div>
+          <Metric label="Übungen" value={summaries.length} icon={<Dumbbell size={16} />} />
+          <Metric label="Einträge" value={totalEntries} icon={<TrendingUp size={16} />} />
+        </motion.section>
       )}
 
-      {/* ── Maschinenliste ─────────────────────────────────────────────── */}
-      {summaries === undefined ? (
-        <SkeletonList />
-      ) : summaries.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {summaries.map((summary, index) => (
-            <MachineCard key={summary.machineId} summary={summary} index={index} />
-          ))}
+      <section className="library-section" aria-labelledby="library-heading">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">Deine Bibliothek</span>
+            <h2 id="library-heading">Übungen</h2>
+          </div>
+          {summaries && summaries.length > 0 && <span className="count-pill">{summaries.length}</span>}
         </div>
-      )}
-    </div>
+
+        {summaries === undefined ? (
+          <SkeletonList />
+        ) : summaries.length === 0 ? (
+          <EmptyState onCreate={() => navigate('/new')} />
+        ) : (
+          <div className="machine-list">
+            {summaries.map((summary, index) => (
+              <MachineCard key={summary.machineId} summary={summary} index={index} />
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
   );
 }
 
-function StatChip({ value, label, icon }: {
-  value: number;
-  label: string;
-  icon: React.ReactNode;
-}) {
+function Metric({ value, label, icon }: { value: number; label: string; icon: ReactNode }) {
   return (
-    <div style={{
-      flex: 1,
-      background: 'var(--bg-card)',
-      border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-md)',
-      boxShadow: 'var(--neo-raised)',
-      /* Erhöhtes Inset-Padding für Atmen / Anti-Hit Schattenkante */
-      padding: '24px 20px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '12px',
-      justifyContent: 'space-between',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        {/* Icon in kleinem Pressed-Well */}
-        <div style={{
-          width: '24px',
-          height: '24px',
-          borderRadius: '8px',
-          background: 'var(--accent-dim)',
-          boxShadow: 'var(--neo-pressed)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          {icon}
-        </div>
-        <span style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: '36px',
-          fontWeight: 800,
-          fontVariantNumeric: 'tabular-nums',
-          color: 'var(--text-primary)',
-          lineHeight: 1,
-        }}>
-          {value}
-        </span>
-      </div>
-      <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', letterSpacing: '0.02em' }}>
-        {label}
-      </span>
+    <div className="metric-card glass-panel">
+      <span className="metric-icon">{icon}</span>
+      <strong className="metric-value">{value}</strong>
+      <span className="metric-label">{label}</span>
     </div>
   );
 }
 
-function EmptyState() {
+function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '20px',
-        paddingTop: '80px',
-        textAlign: 'center',
-      }}
+      className="empty-state glass-panel"
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.45 }}
     >
-      {/* Großes Dumbbell-Icon im tiefen Pressed-Well */}
-      <div style={{
-        width: '80px',
-        height: '80px',
-        borderRadius: '26px',
-        background: 'var(--accent-dim)',
-        boxShadow: 'var(--neo-pressed)',
-        border: '1px solid var(--border-accent)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <Dumbbell size={36} color="var(--accent-text)" strokeWidth={1.5} />
-      </div>
+      <div className="empty-icon"><Dumbbell size={25} /></div>
       <div>
-        <h2 style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: '24px',
-          fontWeight: 700,
-          color: 'var(--text-primary)',
-          marginBottom: '8px',
-          letterSpacing: 'var(--tracking-display)',
-        }}>
-          Noch nichts eingetragen
-        </h2>
-        <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-          Tippe auf das{' '}
-          <span style={{
-            color: 'var(--accent-text)',
-            fontWeight: 700,
-          }}>
-            +
-          </span>
-          {' '}um deine erste<br />Maschine einzutragen.
-        </p>
+        <h3>Dein Log ist bereit.</h3>
+        <p>Speichere deine erste Maschine und finde beim nächsten Training sofort zurück.</p>
       </div>
+      <button className="primary-button" type="button" onClick={onCreate}>Übung anlegen <ArrowUpRight size={16} /></button>
     </motion.div>
   );
 }
 
 function SkeletonList() {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          className="skeleton"
-          style={{
-            height: '78px',
-            borderRadius: 'var(--radius-card)',
-            opacity: 1 - i * 0.22,
-          }}
-        />
-      ))}
-    </div>
-  );
+  return <div className="machine-list" aria-label="Laden"><div className="skeleton-row" /><div className="skeleton-row" /><div className="skeleton-row" /></div>;
 }

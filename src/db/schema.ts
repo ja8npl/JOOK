@@ -35,6 +35,68 @@ export function toMachineId(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, '-');
 }
 
+/** Eine Übung, die in einer Session ausgewählt werden kann. */
+export interface Exercise {
+  id: string;
+  name: string;
+  equipment?: string;
+  target?: string;
+}
+
+/** Ein editierbarer Satz innerhalb einer aktiven oder gespeicherten Session. */
+export interface SessionSet {
+  id: string;
+  setNumber: number;
+  gewicht: number;
+  wiederholungen: number;
+  completed: boolean;
+  timestamp?: number;
+}
+
+/** Letzte bekannte Leistung als Grundlage für Smart Defaults und Overload. */
+export interface PerformanceSnapshot {
+  maxGewicht: number;
+  bestReps: number;
+  estimatedOneRepMax: number;
+  datum: number;
+}
+
+/** Eine Übung mit ihren Sätzen innerhalb einer Trainingseinheit. */
+export interface SessionExercise {
+  exercise: Exercise;
+  sets: SessionSet[];
+  previous?: PerformanceSnapshot;
+}
+
+/** Persistierte Trainingseinheit mit mehreren Übungen. */
+export interface WorkoutSession {
+  id?: number;
+  name: string;
+  startedAt: number;
+  endedAt?: number;
+  durationSeconds?: number;
+  status: 'completed' | 'discarded';
+  exercises: SessionExercise[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** Einzelner Progress-Punkt für eine Übung und eine abgeschlossene Session. */
+export interface ProgressHistory {
+  id?: number;
+  sessionId: number;
+  exerciseId: string;
+  exerciseName: string;
+  datum: number;
+  maxGewicht: number;
+  bestReps: number;
+  totalVolume: number;
+  estimatedOneRepMax: number;
+  setCount: number;
+  overloadKg: number;
+  overloadReps: number;
+}
+
 /** Gruppiertes Format für die Home-Ansicht */
 export interface MachineSummary {
   machineId: string;
