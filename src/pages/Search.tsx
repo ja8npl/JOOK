@@ -40,7 +40,7 @@ export function Search() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ textAlign: 'center', paddingTop: '60px', color: 'var(--text-tertiary)' }}
+            style={{ textAlign: 'center', paddingTop: '44px', color: 'var(--text-tertiary)' }}
           >
             <SearchIcon size={32} style={{ margin: '0 auto 12px', display: 'block', opacity: 0.4 }} />
             <p style={{ fontSize: '15px' }}>Suche nach Maschine, Einstellung oder Notiz</p>

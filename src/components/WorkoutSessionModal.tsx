@@ -24,6 +24,7 @@ export function WorkoutSessionModal() {
     const previousHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    document.documentElement.classList.add('overlay-open');
     const tick = () => setSeconds(Math.max(0, Math.floor((Date.now() - activeSession.startedAt) / 1000)));
     tick();
     const interval = window.setInterval(tick, 1000);
@@ -31,6 +32,7 @@ export function WorkoutSessionModal() {
       window.clearInterval(interval);
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousHtmlOverflow;
+      document.documentElement.classList.remove('overlay-open');
     };
   }, [activeSession]);
 
@@ -53,6 +55,7 @@ export function WorkoutSessionModal() {
       {!activeSession ? null : (
         <motion.div className="session-shell" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
           <motion.section className="session-sheet" initial={reduced ? false : { y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 360, damping: 34 }} aria-label="Aktive Trainingseinheit">
+            <div className="sheet-handle" aria-hidden="true" />
             <header className="session-header">
               <div>
                 <span className="eyebrow accent-copy">Live session</span>
@@ -90,7 +93,7 @@ function ExercisePicker({ query, setQuery, suggestions, onSelect }: { query: str
 
 function ExerciseCard({ item, progress, reduced, onRemove, onChange }: { item: SessionExercise; progress: { current?: import('../db/schema').ProgressHistory; previous?: import('../db/schema').ProgressHistory }; reduced: boolean; onRemove: () => void; onChange: (item: SessionExercise) => void }) {
   const completed = item.sets.filter((set) => set.completed).length;
-  return <motion.article className="workout-exercise-card glass-panel" layout initial={reduced ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+  return <motion.article className="workout-exercise-card glass-panel" initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={reduced ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }}>
     <div className="exercise-card-header"><div><span className="eyebrow">{item.exercise.target ?? 'Exercise'}</span><h2>{item.exercise.name}</h2></div><button className="icon-button subtle" type="button" aria-label={`${item.exercise.name} entfernen`} onClick={onRemove}><Trash2 size={16} /></button></div>
     <ProgressBadge current={progress.current} previous={progress.previous} />
     <div className="set-table"><div className="set-table-head"><span>Satz</span><span>Gewicht</span><span>Reps</span><span>Done</span></div>{item.sets.map((set) => <div className={`session-set-row${set.completed ? ' is-complete' : ''}`} key={set.id}><span className="set-number">{set.setNumber}</span><input type="number" inputMode="decimal" min="0" step="2.5" value={set.gewicht} onChange={(event) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { gewicht: Number(event.target.value) || 0 }) : candidate) })} aria-label={`Satz ${set.setNumber} Gewicht`} /><input type="number" inputMode="numeric" min="0" step="1" value={set.wiederholungen} onChange={(event) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { wiederholungen: Number(event.target.value) || 0 }) : candidate) })} aria-label={`Satz ${set.setNumber} Wiederholungen`} /><button className="set-check" type="button" aria-label={`Satz ${set.setNumber} ${set.completed ? 'offen' : 'abhaken'}`} aria-pressed={set.completed} onClick={() => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { completed: !candidate.completed, timestamp: Date.now() }) : candidate) })}><Check size={16} /></button></div>)}</div><button className="add-set-button" type="button" onClick={() => onChange({ ...item, sets: [...item.sets, { id: crypto.randomUUID(), setNumber: item.sets.length + 1, gewicht: item.previous?.maxGewicht ?? 20, wiederholungen: item.previous?.bestReps ?? 8, completed: false }] })}><Plus size={14} /> Satz ergänzen <span>{completed}/{item.sets.length}</span></button>

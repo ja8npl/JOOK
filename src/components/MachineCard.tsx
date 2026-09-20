@@ -25,13 +25,11 @@ export function MachineCard({ summary, index }: Props) {
 
   return (
     <motion.button
-      layout
-      layoutId={`machine-card-${summary.machineId}`}
       initial={reduced ? false : { opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={reduced
         ? { duration: 0 }
-        : { type: 'spring', stiffness: 300, damping: 26, delay: index * 0.05 }
+        : { duration: 0.24, ease: 'easeOut', delay: Math.min(index, 5) * 0.03 }
       }
       whileTap={reduced ? undefined : { scale: 0.96 }}
       onClick={() => navigate(`/machine/${encodeURIComponent(summary.machineId)}`)}

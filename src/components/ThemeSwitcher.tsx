@@ -15,6 +15,7 @@ export function ThemeSwitcher() {
     <div
       role="group"
       aria-label="Farbschema wählen"
+      className="theme-switcher"
       style={{
         display: 'inline-flex',
         gap: '3px',
@@ -36,8 +37,7 @@ export function ThemeSwitcher() {
             aria-pressed={active}
             aria-label={`Farbschema ${meta.label}`}
             whileTap={reduced ? undefined : { scale: 0.96 }}
-            layout
-            transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 480, damping: 32 }}
+            transition={reduced ? { duration: 0 } : { duration: 0.16, ease: 'easeOut' }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -74,11 +74,7 @@ export function ThemeSwitcher() {
             />
             {/* Label nur beim aktiven Theme */}
             {active && (
-              <motion.span
-                initial={reduced ? false : { width: 0, opacity: 0 }}
-                animate={{ width: 'auto', opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={reduced ? { duration: 0 } : { duration: 0.18, ease: 'easeOut' }}
+              <span
                 style={{
                   overflow: 'hidden',
                   whiteSpace: 'nowrap',
@@ -90,7 +86,7 @@ export function ThemeSwitcher() {
                 }}
               >
                 {meta.label}
-              </motion.span>
+              </span>
             )}
           </motion.button>
         );

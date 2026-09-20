@@ -17,11 +17,16 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.classList.add('overlay-open');
       sheetRef.current?.focus();
     } else {
       document.body.style.overflow = '';
+      document.documentElement.classList.remove('overlay-open');
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.classList.remove('overlay-open');
+    };
   }, [isOpen]);
 
   useEffect(() => {

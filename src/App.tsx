@@ -29,7 +29,7 @@ function AnimatedRoutes() {
         exit={reduced ? undefined : { opacity: 0, y: -8 }}
         transition={reduced
           ? { duration: 0 }
-          : { type: 'spring', stiffness: 380, damping: 35 }
+          : { duration: 0.18, ease: 'easeOut' }
         }
         style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}
       >

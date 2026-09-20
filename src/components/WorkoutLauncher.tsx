@@ -23,9 +23,11 @@ export function WorkoutLauncher() {
     const previousHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    document.documentElement.classList.add('overlay-open');
     return () => {
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousHtmlOverflow;
+      document.documentElement.classList.remove('overlay-open');
     };
   }, [startMenuOpen]);
 
@@ -56,7 +58,8 @@ export function WorkoutLauncher() {
   };
 
   return <AnimatePresence>{startMenuOpen && <motion.div className="launcher-shell" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
-    <motion.section className="launcher-sheet" initial={reduced ? false : { y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 360, damping: 34 }} onClick={(event) => event.stopPropagation()} aria-label="Workout starten">
+    <motion.section className="launcher-sheet" initial={reduced ? false : { y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={reduced ? { duration: 0 } : { duration: 0.22, ease: 'easeOut' }} onClick={(event) => event.stopPropagation()} aria-label="Workout starten">
+      <div className="sheet-handle" aria-hidden="true" />
       <header className="launcher-header"><div><span className="eyebrow accent-copy">New session</span><h2>{mode === 'create' ? 'Workout erstellen' : 'Wie möchtest du trainieren?'}</h2></div><button className="icon-button" type="button" onClick={close} aria-label="Schließen"><X size={19} /></button></header>
       {mode === 'menu' ? <div className="launcher-content">
         <button className="launcher-option launcher-option-primary" type="button" onClick={() => { startSession(); close(); }}><span className="launcher-option-icon"><Dumbbell size={21} /></span><span><strong>Freies Training</strong><small>Starte leer und füge Übungen live hinzu.</small></span><ArrowRight size={17} /></button>

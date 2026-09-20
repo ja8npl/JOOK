@@ -50,7 +50,7 @@ export function SearchBar({
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius-pill)',
           height: '50px',
-          fontSize: '15px',
+          fontSize: '16px',
         }}
       />
       <AnimatePresence>

@@ -17,7 +17,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       startViewTransition?: (callback: () => void) => unknown;
     };
 
-    if (viewTransitionApi.startViewTransition && !reduceMotion) {
+    if (viewTransitionApi.startViewTransition && !reduceMotion && window.innerWidth > 520) {
       viewTransitionApi.startViewTransition(update);
     } else {
       update();
