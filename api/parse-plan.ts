@@ -8,7 +8,7 @@
  * (Vercel Environment Variables bzw. lokale .env.local) — niemals im Frontend.
  *
  * Fehlercodes (JSON { error: { code, message } }):
- *  - invalid_request   400  Kein Text und kein Bild übergeben
+ *  - invalid_request   400  Kein Text und kein Bild übergeben / kein gültiges JSON
  *  - too_large         413  Text/Bild überschreitet die Limits
  *  - nothing_found     422  Modell konnte keinen Plan erkennen
  *  - rate_limit        429  OpenRouter-Free-Tier ausgereizt
@@ -199,7 +199,8 @@ async function attemptModel(model: string, request: ParsePlanRequest): Promise<A
   }
 }
 
-export default async function handler(request: Request): Promise<Response> {
+/** Benannter POST-Export (Vercel Web-Signatur) — andere Methoden beantwortet Vercel automatisch mit 405. */
+export async function POST(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
     return errorResponse('invalid_request', 405, 'Nur POST-Anfragen werden unterstützt.');
   }
