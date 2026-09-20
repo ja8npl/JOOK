@@ -18,14 +18,14 @@ export function Search() {
   return (
     <div className="page-container">
       {/* Header */}
-      <header style={{ marginBottom: '20px' }}>
+      <header style={{ marginBottom: '28px' }}>
         <h1 style={{
           fontFamily: "var(--font-display)",
           fontSize: '28px',
           fontWeight: 700,
           color: 'var(--text-primary)',
-          letterSpacing: '-0.01em',
-          marginBottom: '16px',
+          letterSpacing: 'var(--tracking-display)',
+          marginBottom: '18px',
         }}>
           Suche
         </h1>
@@ -71,7 +71,7 @@ export function Search() {
           >
             {staticResults.length > 0 && (
               <>
-                <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '0' }}>
+                <p style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
                   Übungen aus der Datenbank
                 </p>
                 {staticResults.map((exercise, index) => (
@@ -96,7 +96,7 @@ export function Search() {
             )}
             {results !== undefined && results.length > 0 && (
               <>
-                <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '0', marginTop: '8px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginTop: '26px', marginBottom: '10px' }}>
                   Deine Einträge · {results.length}
                 </p>
                 {results.map((entry, index) => (
@@ -138,6 +138,7 @@ const staticResultStyle: React.CSSProperties = {
   alignItems: 'center',
   gap: '12px',
   width: '100%',
+  minHeight: '52px',
   background: 'var(--bg-card)',
   border: '1px solid var(--border)',
   borderRadius: 'var(--radius-card)',

@@ -151,7 +151,8 @@ export function Warmup() {
                     borderRadius: '22px',
                     background: showSet3 ? 'var(--accent)' : 'var(--bg-chip-inset)',
                     boxShadow: showSet3 ? 'inset 0 1px 2px rgba(0, 0, 0, 0.2)' : 'var(--neo-pressed)',
-                    border: showSet3 ? 'none' : '1px solid var(--border)',
+                    /* Transparent statt none — verhindert 1px-Layoutshift beim Toggle */
+                    border: showSet3 ? '1px solid transparent' : '1px solid var(--border)',
                     position: 'relative',
                     cursor: 'pointer',
                     transition: 'background 0.2s ease',
@@ -166,7 +167,7 @@ export function Warmup() {
                       borderRadius: '50%',
                       background: showSet3 ? 'var(--bg-base)' : 'var(--text-tertiary)',
                       position: 'absolute',
-                      top: '12px',
+                      top: '11px',
                       left: showSet3 ? 'auto' : '12px',
                       right: showSet3 ? '12px' : 'auto',
                       boxShadow: 'var(--neo-knob)',
@@ -241,13 +242,19 @@ function SetCard({ setNum, percentage, weight, reps, icon, isHighlight = false }
       display: 'flex',
       alignItems: 'center',
       gap: '16px',
-      boxShadow: isHighlight ? 'var(--shadow-accent)' : 'var(--shadow-card)',
+      /* Highlight als Inset-Glow: Der Animationswrapper (overflow: hidden) würde
+         einen äußeren Halo abschneiden — Inset liegt sicher innerhalb der Box. */
+      boxShadow: isHighlight
+        ? 'var(--shadow-card), inset 0 0 0 1px var(--border-accent), inset 0 0 24px var(--accent-dim)'
+        : 'var(--shadow-card)',
     }}>
       <div style={{
         width: '40px',
         height: '40px',
         borderRadius: '12px',
         background: 'var(--accent-dim)',
+        border: '1px solid var(--border-accent)',
+        boxShadow: 'var(--neo-pressed)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -279,9 +286,9 @@ function SetCard({ setNum, percentage, weight, reps, icon, isHighlight = false }
         </div>
       </div>
 
-      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500, letterSpacing: '0.04em' }}>
-          WPS
+      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
+        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase' }}>
+          Reps
         </span>
         <span style={{
           fontFamily: "var(--font-display)",
