@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { Activity, BarChart3, Dumbbell, Home, Plus, Search } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -17,7 +18,7 @@ export function BottomNav() {
   const reduced = useReducedMotion();
   const { activeSession, openStartMenu } = useWorkoutSession();
 
-  return (
+  const navigation = (
     <nav className="bottom-nav" aria-label="Hauptnavigation">
       <div className="nav-inner">
         <TabButton tab={tabs[0]} active={location.pathname === '/'} navigate={navigate} reduced={reduced} />
@@ -36,6 +37,10 @@ export function BottomNav() {
       </div>
     </nav>
   );
+
+  // Keep the fixed dock outside the app shell. This prevents future transforms,
+  // filters, or motion wrappers in the shell from changing its containing block.
+  return createPortal(navigation, document.body);
 }
 
 function TabButton({ tab, active, navigate, reduced }: {
