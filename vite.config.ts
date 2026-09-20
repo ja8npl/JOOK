@@ -7,13 +7,14 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon-192.png', 'icon-512.png', 'icon-maskable-512.png'],
+      includeAssets: ['apple-touch-icon.png', 'favicon.svg'],
       manifest: {
         name: 'Gym Log',
         short_name: 'Gym Log',
         description: 'Maschineneinstellungen & Trainingsnotizen, komplett offline.',
-        theme_color: '#0A0A0B',
-        background_color: '#0A0A0B',
+        lang: 'de',
+        theme_color: '#1F2024',
+        background_color: '#1F2024',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
