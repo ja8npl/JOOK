@@ -65,8 +65,10 @@ export function SearchBar({
             style={{
               position: 'absolute',
               right: '8px',
-              top: '50%',
-              transform: 'translateY(-50%)',
+              /* Feste Top-Position statt translateY(-50%): framer-motion überschreibt
+                 den CSS-Transform beim Scale-Tween und würde die Zentrierung killen.
+                 (Input 50px − Button 34px) / 2 = 8px */
+              top: '8px',
               background: 'var(--bg-chip-inset)',
               boxShadow: 'var(--neo-pressed)',
               border: '1px solid var(--border)',
