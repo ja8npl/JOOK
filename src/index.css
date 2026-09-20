@@ -101,19 +101,25 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; scrollbar-width: none; }
 *::-webkit-scrollbar { width: 0; height: 0; display: none; }
-html { background: var(--bg-base); color: var(--text-main); font-family: var(--font-body); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scrollbar-width: none; }
-body { min-width: 320px; min-height: 100dvh; overflow-x: hidden; background: radial-gradient(circle at 50% -12%, color-mix(in srgb, var(--accent-primary) 8%, transparent), transparent 35%), var(--bg-base); scrollbar-width: none; }
+html { height: 100%; background: var(--bg-base); color: var(--text-main); font-family: var(--font-body); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scrollbar-width: none; }
+body { min-width: 320px; height: 100%; min-height: 100%; overflow-x: hidden; background: radial-gradient(circle at 50% -12%, color-mix(in srgb, var(--accent-primary) 8%, transparent), transparent 35%), var(--bg-base); scrollbar-width: none; }
 html::-webkit-scrollbar, body::-webkit-scrollbar, #root::-webkit-scrollbar { width: 0; height: 0; display: none; }
-#root { height: 100dvh; min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+#root { height: 100%; min-height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 html.overlay-open, html.overlay-open body { overscroll-behavior: none; }
 html.overlay-open .page-container { overflow-y: hidden; }
+/* Standalone (Home-Screen): Viewport einfrieren, damit weder Gummiband noch
+   wiederhergestellte Scroll-Offsets die Shell beim Kaltstart verschieben.
+   Gescrollt wird ausschließlich innerhalb von .page-container. */
+@media all and (display-mode: standalone) {
+  html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; }
+}
 button, input, textarea { font: inherit; }
 button { color: inherit; cursor: pointer; border: 0; }
 button:active { transform: scale(.985); }
 :focus-visible { outline: 2px solid var(--accent-text); outline-offset: 3px; }
 ::selection { background: var(--accent-dim); color: var(--text-main); }
 
-.page-container { position: relative; width: min(100%, 720px); height: 100dvh; max-height: 100dvh; flex: 1; margin: 0 auto; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: none; padding: calc(24px + var(--safe-top)) 20px calc(var(--tab-bar-height) + var(--safe-bottom) + 28px); }
+.page-container { position: relative; width: min(100%, 720px); height: 100%; max-height: 100%; flex: 1; margin: 0 auto; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: none; padding: calc(24px + var(--safe-top)) 20px calc(var(--tab-bar-height) + var(--safe-bottom) + 28px); }
 .page-container::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .eyebrow { display: block; color: var(--text-tertiary); font-size: 10px; font-weight: 700; letter-spacing: .14em; line-height: 1.2; text-transform: uppercase; }
 .accent-copy { color: var(--accent-text); }

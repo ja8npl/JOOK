@@ -56,7 +56,7 @@ export default function App() {
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '100dvh',
+          minHeight: '100%',
           background: 'var(--bg-app)',
           position: 'relative',
         }}>
