@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, ChevronDown, Clock3, Dumbbell, Plus, Save, Trash2, X } from 'lucide-react';
 import { useWorkoutSession } from '../hooks/useWorkoutSession';
@@ -50,7 +51,9 @@ export function WorkoutSessionModal() {
     return { current: entries[0], previous: entries[1] };
   };
 
-  return (
+  // Portal an document.body: Das app-shell ist position:fixed und spannt damit einen
+  // eigenen Stacking Context auf — innere z-Index-Werte würden gegen den Dock (body-Level) verloren.
+  return createPortal(
     <AnimatePresence>
       {!activeSession ? null : (
         <motion.div className="session-shell" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -83,7 +86,8 @@ export function WorkoutSessionModal() {
           </motion.section>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }
 

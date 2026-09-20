@@ -101,10 +101,10 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; scrollbar-width: none; }
 *::-webkit-scrollbar { width: 0; height: 0; display: none; }
-html { height: 100%; margin: 0; background: var(--bg-base); color: var(--text-main); font-family: var(--font-body); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scrollbar-width: none; }
-body { min-width: 320px; height: 100%; min-height: 100dvh; margin: 0; overflow: hidden; background: var(--bg-base); scrollbar-width: none; }
+html { height: 100%; min-height: 100%; margin: 0; background: var(--bg-base); color: var(--text-main); font-family: var(--font-body); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scrollbar-width: none; }
+body { min-width: 320px; width: 100%; height: 100vh; min-height: 100vh; margin: 0; overflow: hidden; background: var(--bg-base); scrollbar-width: none; }
 html::-webkit-scrollbar, body::-webkit-scrollbar, #root::-webkit-scrollbar { width: 0; height: 0; display: none; }
-#root { height: 100%; min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-app); }
+#root { width: 100%; height: 100vh; min-height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-app); }
 html.overlay-open, html.overlay-open body { overscroll-behavior: none; }
 html.overlay-open .page-container { overflow-y: hidden; }
 button, input, textarea { font: inherit; }
@@ -146,7 +146,7 @@ button:active { transform: scale(.985); }
 .metric-value { display: block; margin-top: 9px; color: var(--text-main); font-family: var(--font-display); font-size: 29px; font-variant-numeric: tabular-nums; letter-spacing: var(--tracking-display); line-height: 1; }
 .metric-label { display: block; margin-top: 5px; color: var(--text-tertiary); font-size: 11px; }
 
-.library-section { position: relative; z-index: 1; margin-top: 37px; }
+.library-section { position: relative; z-index: 1; margin-top: 0; }
 .section-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 15px; }
 .section-heading h2 { margin-top: 6px; color: var(--text-main); font-family: var(--font-display); font-size: 27px; letter-spacing: var(--tracking-display); }
 .count-pill { display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 9px; color: var(--accent-text); background: var(--accent-dim); border: 1px solid color-mix(in srgb, var(--accent-primary) 25%, transparent); border-radius: var(--radius-pill); font-size: 12px; font-weight: 800; }
@@ -158,7 +158,8 @@ button:active { transform: scale(.985); }
 .empty-state p { max-width: 290px; margin-top: 5px; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
 .primary-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: fit-content; min-height: 46px; padding: 0 17px; color: var(--text-on-accent); background: var(--accent-primary); border-radius: var(--radius-pill); box-shadow: var(--neo-convex), 0 0 24px var(--accent-glow); font-size: 13px; font-weight: 800; }
 
-.bottom-nav { position: fixed; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) * .5 + 6px); left: 12px; z-index: 20; padding: 0; pointer-events: none; }
+.bottom-nav { position: fixed; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) * .5 + 6px); left: 12px; z-index: 20; padding: 0; pointer-events: none; transition: opacity 220ms var(--ease-out), visibility 220ms; }
+.bottom-nav.is-hidden { opacity: 0; visibility: hidden; }
 .nav-inner { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; width: min(100%, 560px); min-height: 64px; margin: 0 auto; padding: 5px 6px; pointer-events: auto; background: rgba(44,46,54,.84); border: 1px solid var(--border-highlight); border-radius: 25px; box-shadow: var(--neo-float); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
 .nav-tab { position: relative; display: grid; place-items: center; gap: 2px; min-width: 0; min-height: 52px; padding: 5px 2px; color: var(--text-tertiary); background: transparent; border-radius: 16px; font-size: 10px; transition: var(--transition-press); }
 .nav-tab.is-active { color: var(--accent-text); background: var(--bg-chip-inset); box-shadow: var(--neo-pressed); }
@@ -293,13 +294,15 @@ input::placeholder, textarea::placeholder { color: var(--text-tertiary); }
   .page-container { padding-right: 16px; padding-left: 16px; padding-bottom: calc(var(--tab-bar-height) + 38px); }
   .home-header { gap: 8px; margin-bottom: 22px; }
   .brand-lockup { min-width: 0; gap: 7px; }
+  .brand-lockup > div:last-child { min-width: 0; }
+  /* Eyebrow bricht auf schmalen Screens um — Whoop/Apple-Minimalismus: nur Mark + Titel */
+  .brand-lockup .eyebrow { display: none; }
   .brand-mark { width: 36px; height: 36px; flex: 0 0 36px; }
-  .brand-title { white-space: nowrap; font-size: 19px; }
+  .brand-title { white-space: nowrap; font-size: 20px; }
   .home-header-actions { flex: 0 0 auto; gap: 5px; }
   .header-icon-button { width: 40px; height: 40px; }
-  .theme-switcher { gap: 1px !important; padding: 3px !important; }
-  .theme-switcher button { min-width: 30px !important; min-height: 40px !important; gap: 4px !important; padding: 5px 6px !important; }
-  .theme-switcher button span { font-size: 10px !important; }
+  .theme-switcher { gap: 2px !important; padding: 3px !important; }
+  .theme-switcher button { min-width: 32px !important; min-height: 40px !important; gap: 4px !important; padding: 5px 7px !important; }
   .hero-panel { min-height: 258px; padding: 24px 20px 20px; }
   .hero-copy h2 { font-size: clamp(34px, 10vw, 46px); }
   .hero-orbit { right: -70px; opacity: .58; transform: scale(.82) rotate(-17deg); }
@@ -309,6 +312,12 @@ input::placeholder, textarea::placeholder { color: var(--text-tertiary); }
 }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+
+/* Sehr schmale Devices (≤373px): Theme-Switcher ohne Label, damit nichts in die Bruchzone rutscht. */
+@media (max-width: 374px) {
+  .theme-switcher-label { display: none !important; }
+  .theme-switcher button { gap: 0 !important; padding: 5px !important; }
+}
 
 /* Temporary geometry probe: open the app with ?layoutDebug=1. */
 html[data-layout-debug='true'] #root { background: #17843d !important; }

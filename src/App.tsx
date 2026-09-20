@@ -53,13 +53,20 @@ export default function App() {
     <ThemeProvider>
       <WorkoutSessionProvider>
       <HashRouter>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '100%',
-          background: 'var(--bg-app)',
-          position: 'relative',
-        }}>
+        <div
+          className="app-shell"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            width: '100%',
+            height: '100vh',
+            minHeight: '100vh',
+            background: 'var(--bg-app)',
+            position: 'fixed',
+            inset: 0,
+            overflow: 'hidden',
+          }}
+        >
           <AnimatedRoutes />
           <BottomNav />
           <WorkoutSessionModal />

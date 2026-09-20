@@ -16,10 +16,15 @@ export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const reduced = useReducedMotion();
-  const { activeSession, openStartMenu } = useWorkoutSession();
+  const { activeSession, startMenuOpen, openStartMenu } = useWorkoutSession();
+  const overlayOpen = Boolean(activeSession) || startMenuOpen;
 
   const navigation = (
-    <nav className="bottom-nav" aria-label="Hauptnavigation">
+    <nav
+      className={`bottom-nav${overlayOpen ? ' is-hidden' : ''}`}
+      aria-label="Hauptnavigation"
+      aria-hidden={overlayOpen || undefined}
+    >
       <div className="nav-inner">
         <TabButton tab={tabs[0]} active={location.pathname === '/'} navigate={navigate} reduced={reduced} />
         <TabButton tab={tabs[1]} active={location.pathname === '/warmup'} navigate={navigate} reduced={reduced} />

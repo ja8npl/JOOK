@@ -9,6 +9,17 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Gym Log" />
     <meta name="description" content="Gym Log für Übungen, Einstellungen, Sätze und Fortschritt." />
+    <script>
+      (() => {
+        try {
+          const stored = localStorage.getItem('gymlog.theme');
+          const theme = ['garmin', 'bordeaux', 'whoop'].includes(stored || '') ? stored : 'garmin';
+          document.documentElement.dataset.theme = theme;
+        } catch {
+          document.documentElement.dataset.theme = 'garmin';
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" href="/splash-1179x2556.png" />

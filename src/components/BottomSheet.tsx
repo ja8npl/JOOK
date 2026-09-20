@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -37,7 +38,9 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
     return () => document.removeEventListener('keydown', handler);
   }, [isOpen, onClose]);
 
-  return (
+  // Portal an document.body — verhindert, dass Stacking Contexts im Seitenbaum
+  // (z. B. motion-Wrapper in App.tsx) den z-Index des Sheets abschneiden.
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -148,6 +151,7 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

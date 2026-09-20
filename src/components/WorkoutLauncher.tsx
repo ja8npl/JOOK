@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, ClipboardPlus, Dumbbell, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useWorkoutSession } from '../hooks/useWorkoutSession';
 import { useWorkoutTemplates, type WorkoutTemplate } from '../hooks/useWorkoutTemplates';
 import { searchStaticExercises, type StaticExercise } from '../hooks/useExercises';
@@ -57,7 +58,8 @@ export function WorkoutLauncher() {
     close();
   };
 
-  return <AnimatePresence>{startMenuOpen && <motion.div className="launcher-shell" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
+  // Portal an document.body — gleiche Begründung wie Session-Modal (Stacking Context des app-shell).
+  return createPortal(<AnimatePresence>{startMenuOpen && <motion.div className="launcher-shell" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
     <motion.section className="launcher-sheet" initial={reduced ? false : { y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={reduced ? { duration: 0 } : { duration: 0.22, ease: 'easeOut' }} onClick={(event) => event.stopPropagation()} aria-label="Workout starten">
       <div className="sheet-handle" aria-hidden="true" />
       <header className="launcher-header"><div><span className="eyebrow accent-copy">New session</span><h2>{mode === 'create' ? 'Workout erstellen' : 'Wie möchtest du trainieren?'}</h2></div><button className="icon-button" type="button" onClick={close} aria-label="Schließen"><X size={19} /></button></header>
@@ -73,5 +75,5 @@ export function WorkoutLauncher() {
         <div className="launcher-create-actions"><button className="secondary-button" type="button" onClick={() => setMode('menu')}>Zurück</button><button className="primary-button" type="button" onClick={createTemplate} disabled={!selected.length}><ClipboardPlus size={16} /> Vorlage speichern</button></div>
       </div>}
     </motion.section>
-  </motion.div>}</AnimatePresence>;
+  </motion.div>}</AnimatePresence>, document.body);
 }

@@ -75,6 +75,7 @@ export function ThemeSwitcher() {
             {/* Label nur beim aktiven Theme */}
             {active && (
               <span
+                className="theme-switcher-label"
                 style={{
                   overflow: 'hidden',
                   whiteSpace: 'nowrap',

@@ -1,9 +1,14 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { applyTheme, readStoredTheme, storeTheme } from './themes';
 import { ThemeContext } from './context';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState(() => readStoredTheme());
+
+  // Beim App-Start auch das DOM synchronisieren — sonst bleibt die CSS-Fallbackfarbe aktiv.
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
 
   const setTheme = useCallback((next: Parameters<typeof storeTheme>[0]) => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
