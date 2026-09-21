@@ -41,6 +41,10 @@ export interface Exercise {
   name: string;
   equipment?: string;
   target?: string;
+  /** Vorgabe: Satz-Anzahl (z. B. aus importierten Plänen). */
+  saetze?: number;
+  /** Vorgabe: Wiederholungen (z. B. aus importierten Plänen). */
+  wiederholungen?: number;
 }
 
 /** Ein editierbarer Satz innerhalb einer aktiven oder gespeicherten Session. */

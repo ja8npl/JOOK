@@ -50,7 +50,7 @@ export function WorkoutLauncher() {
 
   const addToTemplate = (exercise: StaticExercise) => {
     if (selected.some((item) => item.id === exercise.id)) return;
-    setSelected((current) => [...current, { id: exercise.id, name: exercise.name, equipment: exercise.equipment ?? undefined, target: exercise.target ?? undefined }]);
+    setSelected((current) => [...current, { id: exercise.id, name: exercise.name, equipment: exercise.equipment ?? undefined, target: exercise.target ?? undefined, saetze: 3, wiederholungen: 8 }]);
     setQuery('');
   };
 

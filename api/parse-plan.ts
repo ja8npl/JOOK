@@ -41,8 +41,10 @@ const SLOW_TEXT_TIMEOUT_MS = 50_000;
 
 const PROMPT =
   'Lies den Trainingsplan aus Text und/oder Bild. Antworte NUR mit gültigem JSON, ohne Markdown, Erklärungen oder Zusatztext. ' +
-  'Format: {"templates":[{"name":"Name des Plans","exercises":["Übung 1","Übung 2"]}]}. ' +
-  'Regeln: Jede Übung als klarer, vollständiger Übungsname — ohne Sätze, Wiederholungen oder Gewichtsangaben. ' +
+  'Format: {"templates":[{"name":"Name des Plans","exercises":[{"name":"Übung 1","saetze":3,"wiederholungen":10}]}]}. ' +
+  'Regeln: Für jede Übung Sätze (saetze) und Wiederholungen (wiederholungen) als Zahlen extrahieren. ' +
+  'Steht im Plan keine Angabe (z. B. nur "Bankdrücken"), setze saetze=2 und wiederholungen=8. ' +
+  'Schreibe den Übungsnamen OHNE Sätze/Wiederholungen/Gewichte (aus "Bankdrücken 3x10" wird name="Bankdrücken", saetze=3, wiederholungen=10). ' +
   'Sind mehrere Tage oder Pläne erkennbar, lege pro Tag eine Vorlage mit aussagekräftigem Namen an (z. B. "Push Day"). ' +
   'Behalte die Sprache des Plans bei (Deutsch bevorzugt). Ist kein Trainingsplan erkennbar, antworte {"templates":[]}.';
 
@@ -61,9 +63,15 @@ interface ParsePlanRequest {
   imageBase64?: string;
 }
 
+interface ParsedExercise {
+  name: string;
+  saetze: number;
+  wiederholungen: number;
+}
+
 interface ParsedTemplate {
   name: string;
-  exercises: string[];
+  exercises: ParsedExercise[];
 }
 
 type AttemptResult =
@@ -106,6 +114,51 @@ function extractJsonBlock(raw: string): unknown {
   return undefined;
 }
 
+/** Standard laut Produktvorgabe: 2 Sätze × 8 Wiederholungen, wenn der Plan nichts angibt. */
+const DEFAULT_SETS = 2;
+const DEFAULT_REPS = 8;
+const MAX_SETS = 10;
+const MAX_REPS = 50;
+
+function toPositiveInt(value: unknown): number {
+  const parsed = typeof value === 'number' ? value : typeof value === 'string' ? parseInt(value, 10) : Number.NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? Math.min(99, Math.round(parsed)) : 0;
+}
+
+/**
+ * Übungseintrag normalisieren — Strings ("Bankdrücken 3x10") und Objekte
+ * ({ name, saetze, wiederholungen }) akzeptieren; Sätze/Whd notfalls aus dem
+ * Namen extrahieren und ohne Angabe auf 2×8 fallen.
+ */
+function parseExerciseEntry(item: unknown): ParsedExercise | null {
+  let name = '';
+  let saetze = 0;
+  let wiederholungen = 0;
+  if (typeof item === 'string') {
+    name = item;
+  } else if (item && typeof item === 'object') {
+    const record = item as Record<string, unknown>;
+    name = typeof record.name === 'string' ? record.name : typeof record.uebung === 'string' ? record.uebung : '';
+    saetze = toPositiveInt(record.saetze ?? record.sets ?? record.satze);
+    wiederholungen = toPositiveInt(record.wiederholungen ?? record.reps ?? record.whd ?? record.repetitions);
+  }
+
+  const setRepMatch = name.match(/(\d+)\s*[x×]\s*(\d+)/i);
+  if (setRepMatch) {
+    if (!saetze) saetze = toPositiveInt(setRepMatch[1]);
+    if (!wiederholungen) wiederholungen = toPositiveInt(setRepMatch[2]);
+    name = name.replace(/\d+\s*[x×]\s*\d+/gi, '');
+  }
+
+  name = name.replace(/\s+/g, ' ').trim().replace(/[·,;\-–]\s*$/, '').trim();
+  if (!name) return null;
+  return {
+    name,
+    saetze: Math.min(MAX_SETS, saetze || DEFAULT_SETS),
+    wiederholungen: Math.min(MAX_REPS, wiederholungen || DEFAULT_REPS),
+  };
+}
+
 /** Modell-Antwort auf { templates: [{ name, exercises }] } normalisieren. */
 function normalizeTemplates(data: unknown): ParsedTemplate[] {
   const root = (data && typeof data === 'object' ? data : {}) as Record<string, unknown>;
@@ -122,18 +175,12 @@ function normalizeTemplates(data: unknown): ParsedTemplate[] {
     if (!entry || typeof entry !== 'object') continue;
     const record = entry as Record<string, unknown>;
     const rawExercises = Array.isArray(record.exercises) ? record.exercises : Array.isArray(record.uebungen) ? record.uebungen : [];
-    const exercises: string[] = [];
+    const exercises: ParsedExercise[] = [];
     for (const item of rawExercises.slice(0, MAX_EXERCISES_PER_TEMPLATE)) {
-      if (typeof item !== 'string') continue;
-      // Sätze/Wiederholungen entfernen (z. B. "Bankdrücken 3x10" → "Bankdrücken") —
-      // reine Zahlen bleiben stehen ("45-Grad-Beinpresse").
-      const name = item
-        .replace(/\s*\d+\s*[x×]\s*\d+/gi, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-      if (!name) continue;
-      if (exercises.some((existing) => existing.toLowerCase() === name.toLowerCase())) continue;
-      exercises.push(name);
+      const parsed = parseExerciseEntry(item);
+      if (!parsed) continue;
+      if (exercises.some((existing) => existing.name.toLowerCase() === parsed.name.toLowerCase())) continue;
+      exercises.push(parsed);
     }
     if (exercises.length === 0) continue;
     const rawName = typeof record.name === 'string' ? record.name.replace(/\s+/g, ' ').trim() : '';
@@ -186,7 +233,18 @@ async function attemptModel(model: string, request: ParsePlanRequest, timeoutMs 
       return { ok: false, code: response.status === 429 ? 'rate_limit' : 'model_unreachable' };
     }
 
-    const payload = (await response.json().catch(() => null)) as { choices?: Array<{ message?: { content?: unknown; reasoning?: string } }> } | null;
+    const payload = (await response.json().catch(() => null)) as
+      | { choices?: Array<{ message?: { content?: unknown; reasoning?: string } }>; error?: { code?: unknown } }
+      | null;
+
+    // OpenRouter meldet Provider-Ausfälle teils mit HTTP 200 + error-Body —
+    // das muss wie ein echter Modell-Fehler behandelt werden (nächstes Modell).
+    if (payload && typeof payload === 'object' && payload.error) {
+      const errCode = Number(payload.error.code);
+      console.error(`[parse-plan] ${model} → Upstream-Fehler (code ${payload.error.code})`);
+      return { ok: false, code: errCode === 429 ? 'rate_limit' : 'model_unreachable' };
+    }
+
     const message = payload?.choices?.[0]?.message;
     let content = typeof message?.content === 'string' ? message.content : '';
     if (Array.isArray(message?.content)) {

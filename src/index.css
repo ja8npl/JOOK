@@ -278,7 +278,12 @@ button:active { transform: scale(.985); }
 .import-template-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .import-template-name { flex: 1; min-width: 0; font-family: var(--font-display); font-size: 16px; font-weight: 700; }
 .import-exercise-list { display: grid; gap: 6px; touch-action: pan-y; }
-.import-exercise-row { display: grid; grid-template-columns: 34px 1fr auto auto; align-items: center; gap: 6px; padding: 5px 6px; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 13px; box-shadow: var(--neo-pressed); transition: var(--transition-press); }
+.import-exercise-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto auto auto; align-items: center; gap: 6px; padding: 5px 6px; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 13px; box-shadow: var(--neo-pressed); transition: var(--transition-press); }
+.import-volume { display: inline-flex; align-items: center; gap: 3px; }
+.import-volume-input { width: 44px; padding: 8px 4px; font-size: 13px; text-align: center; font-variant-numeric: tabular-nums; }
+.import-volume-input::-webkit-outer-spin-button, .import-volume-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.import-volume-input[type='number'] { -moz-appearance: textfield; appearance: textfield; }
+.import-volume-x { color: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .import-exercise-row.is-dragging { opacity: .45; border-style: dashed; }
 .import-exercise-row.is-drop-target { border-color: var(--border-accent); box-shadow: var(--neo-pressed), 0 0 0 2px var(--accent-dim); }
 .import-drag-handle { display: grid; place-items: center; width: 34px; height: 40px; color: var(--text-tertiary); background: transparent; cursor: grab; touch-action: none; }

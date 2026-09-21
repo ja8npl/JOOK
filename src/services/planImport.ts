@@ -91,9 +91,17 @@ export async function compressImage(file: File): Promise<string> {
   return dataUrl;
 }
 
+export interface ParsedPlanExercise {
+  name: string;
+  /** Erkannte Satz-Anzahl (Standard 2, wenn der Plan nichts angibt). */
+  saetze: number;
+  /** Erkannte Wiederholungen (Standard 8, wenn der Plan nichts angibt). */
+  wiederholungen: number;
+}
+
 export interface ParsedPlanTemplate {
   name: string;
-  exercises: string[];
+  exercises: ParsedPlanExercise[];
 }
 
 interface ParsePlanResponse {

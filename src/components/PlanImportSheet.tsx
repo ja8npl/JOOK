@@ -20,6 +20,10 @@ interface PreviewExercise {
   key: string;
   /** Anzeigename — editierbar, ohne die Bibliotheks-Verknüpfung zu verlieren. */
   name: string;
+  /** Erkannte Satz-Anzahl (editierbar). */
+  saetze: number;
+  /** Erkannte Wiederholungen (editierbar). */
+  wiederholungen: number;
   /** Verknüpfte Übung (Bibliotheks-Treffer oder neu angelegte Exercise). */
   exercise: Exercise;
   /** true, wenn der Name über die Übungsbibliothek gematcht wurde. */
@@ -43,6 +47,9 @@ interface PlanImportSheetProps {
 
 /** Muss zum Server-Limit in api/parse-plan.ts passen. */
 const MAX_TEXT_LENGTH = 12_000;
+/** Standard-Volumen für manuell hinzugefügte Übungen — wie der API-Default. */
+const DEFAULT_SETS = 2;
+const DEFAULT_REPS = 8;
 
 const PHASE_TITLES: Record<Phase, string> = {
   input: 'Plan importieren',
@@ -55,9 +62,16 @@ function toPreviewTemplates(parsed: ParsedPlanTemplate[]): PreviewTemplate[] {
   return parsed.map((template) => ({
     key: crypto.randomUUID(),
     name: template.name,
-    exercises: template.exercises.map((name) => {
-      const match = matchStaticExercise(name);
-      return { key: crypto.randomUUID(), name, exercise: match.exercise, matched: match.matched };
+    exercises: template.exercises.map((entry) => {
+      const match = matchStaticExercise(entry.name);
+      return {
+        key: crypto.randomUUID(),
+        name: entry.name,
+        saetze: entry.saetze,
+        wiederholungen: entry.wiederholungen,
+        exercise: match.exercise,
+        matched: match.matched,
+      };
     }),
   }));
 }
@@ -230,9 +244,17 @@ function PlanImportForm({ onRequestClose, onSave }: Omit<PlanImportSheetProps, '
     if (!draft) return;
     const match = matchStaticExercise(draft);
     setTemplates((current) => current.map((template) => template.key === templateKey
-      ? { ...template, exercises: [...template.exercises, { key: crypto.randomUUID(), name: draft, exercise: match.exercise, matched: match.matched }] }
+      ? { ...template, exercises: [...template.exercises, { key: crypto.randomUUID(), name: draft, saetze: DEFAULT_SETS, wiederholungen: DEFAULT_REPS, exercise: match.exercise, matched: match.matched }] }
       : template));
     setAddDrafts((current) => ({ ...current, [templateKey]: '' }));
+  };
+
+  /** Sätze/Wiederholungen einer Vorschau-Übung ändern. */
+  const updateVolume = (templateKey: string, exerciseKey: string, patch: Partial<Pick<PreviewExercise, 'saetze' | 'wiederholungen'>>) => {
+    setTemplates((current) => current.map((template) => template.key !== templateKey ? template : {
+      ...template,
+      exercises: template.exercises.map((item) => item.key === exerciseKey ? { ...item, ...patch } : item),
+    }));
   };
 
   const hasSavableTemplates = templates.some((template) => template.exercises.length > 0);
@@ -243,7 +265,11 @@ function PlanImportForm({ onRequestClose, onSave }: Omit<PlanImportSheetProps, '
     for (const template of templates) {
       if (template.exercises.length === 0) continue;
       savedCount += 1;
-      onSave(template.name.trim() || `Importierter Plan ${savedCount}`, template.exercises.map((item) => item.exercise));
+      onSave(template.name.trim() || `Importierter Plan ${savedCount}`, template.exercises.map((item) => ({
+        ...item.exercise,
+        saetze: item.saetze,
+        wiederholungen: item.wiederholungen,
+      })));
     }
     onRequestClose();
   };
@@ -270,7 +296,7 @@ function PlanImportForm({ onRequestClose, onSave }: Omit<PlanImportSheetProps, '
 
     <div className="launcher-content import-content">
       {phase === 'input' && <>
-        <p className="import-hint">Füge den Trainingsplan als Text ein oder wähle ein Foto/einen Screenshot — beides zusammen geht auch. Übungen werden automatisch mit deiner Bibliothek abgeglichen.</p>
+        <p className="import-hint">Füge den Trainingsplan als Text ein oder wähle ein Foto/einen Screenshot — beides zusammen geht auch. Übungen werden mit deiner Bibliothek abgeglichen; erkannte Sätze &amp; Wiederholungen werden übernommen (ohne Angabe 2×8).</p>
         <textarea
           className="import-plan-text"
           value={planText}
@@ -361,6 +387,23 @@ function PlanImportForm({ onRequestClose, onSave }: Omit<PlanImportSheetProps, '
                   onChange={(event) => renameExercise(template.key, item.key, event.target.value)}
                   aria-label={`Übung ${index + 1}`}
                 />
+                <span className="import-volume" title="Sätze × Wiederholungen">
+                  <input
+                    className="import-volume-input"
+                    type="number" inputMode="numeric" min={1} max={10}
+                    value={item.saetze}
+                    onChange={(event) => updateVolume(template.key, item.key, { saetze: Math.max(1, Math.min(10, Number(event.target.value) || 1)) })}
+                    aria-label={`Sätze für ${item.name}`}
+                  />
+                  <span className="import-volume-x" aria-hidden="true">×</span>
+                  <input
+                    className="import-volume-input"
+                    type="number" inputMode="numeric" min={1} max={50}
+                    value={item.wiederholungen}
+                    onChange={(event) => updateVolume(template.key, item.key, { wiederholungen: Math.max(1, Math.min(50, Number(event.target.value) || 1)) })}
+                    aria-label={`Wiederholungen für ${item.name}`}
+                  />
+                </span>
                 <span
                   className={`import-match-badge ${item.matched ? 'library' : 'new'}`}
                   title={item.matched ? 'Aus deiner Bibliothek' : 'Wird als neue Übung angelegt'}

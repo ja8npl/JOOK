@@ -30,21 +30,27 @@ export function snapshotForExercise(exercise: SessionExercise): PerformanceSnaps
   };
 }
 
-export function createSessionSet(setNumber: number, previous?: PerformanceSnapshot): SessionSet {
+export function createSessionSet(setNumber: number, previous?: PerformanceSnapshot, targetReps?: number): SessionSet {
   return {
     id: crypto.randomUUID(),
     setNumber,
     gewicht: previous?.maxGewicht ?? 20,
-    wiederholungen: previous?.bestReps ?? 8,
+    wiederholungen: targetReps ?? previous?.bestReps ?? 8,
     completed: false,
   };
 }
 
+/**
+ * Baut eine Session-Übung: Ohne Vorgabe 3 Sätze (Smart Defaults), mit
+ * saetze/wiederholungen-Vorgabe (importierte Pläne) genau die Vorgabe.
+ */
 export function sessionExerciseWithDefaults(exercise: Exercise, previous?: PerformanceSnapshot): SessionExercise {
+  const targetReps = exercise.wiederholungen ?? previous?.bestReps ?? 8;
+  const setCount = exercise.saetze ?? 3;
   return {
     exercise,
     previous,
-    sets: [createSessionSet(1, previous), createSessionSet(2, previous), createSessionSet(3, previous)],
+    sets: Array.from({ length: setCount }, (_, index) => createSessionSet(index + 1, previous, targetReps)),
   };
 }
 

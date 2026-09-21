@@ -8,6 +8,7 @@ export function updateSessionSet(set: SessionSet, patch: Partial<SessionSet>): S
 export function appendSessionSet(exercise: SessionExercise): SessionExercise {
   return {
     ...exercise,
-    sets: [...exercise.sets, createSessionSet(exercise.sets.length + 1, exercise.previous)],
+    // Neue Sätze übernehmen die Whd-Vorgabe der Übung (importierte Pläne), sonst die letzte Leistung.
+    sets: [...exercise.sets, createSessionSet(exercise.sets.length + 1, exercise.previous, exercise.exercise.wiederholungen)],
   };
 }
