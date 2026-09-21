@@ -20,17 +20,24 @@ export const maxDuration = 60;
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 /**
- * Modell-Kette in Prioritätsreihenfolge — bei jedem Fehler wird das nächste probiert (gilt auch für reinen Text).
- * Alle drei sind multimodal und free-tier: ling ist der schnellste Vision-Parser (gemessen ~7 s),
- * nex-n2.5-pro der langsamere Backup (~20 s), nemotron-omni braucht für Bilder oft >30 s (Timeout-Risiko,
- * für reinen Text aber brauchbar) — daher hinten.
- * Hinweis: openrouter/free ist NICHT geeignet — liefert für Bilder nur "User Safety: safe" statt Plan-JSON.
+ * Modell-Ketten in Prioritätsreihenfolge — bei jedem Fehler wird das nächste probiert.
+ * Bild: ling-3.0-flash-vl (schnellster Vision-Parser, ~7 s), Fallback nex-n2.5-pro (~20 s).
+ * Text: nemotron-3-ultra (550B, bestes Text-Parsing inkl. Multi-Day-Plänen, ~45 s), Fallback ling.
+ * Hinweis: openrouter/free ist NICHT geeignet — liefert für Bilder nur "User Safety: safe".
  */
-const MODELS = [
+const IMAGE_MODELS = [
   'inclusionai/ling-3.0-flash-vl:free',
   'nex-agi/nex-n2.5-pro:free',
-  'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
 ];
+
+const TEXT_MODELS = [
+  'nvidia/nemotron-3-ultra-550b-a55b:free',
+  'inclusionai/ling-3.0-flash-vl:free',
+];
+
+/** Timeout pro Modellversuch: Ultra ist langsam (~48 s gemessen), Vision-Modelle schnell. */
+const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+const SLOW_TEXT_TIMEOUT_MS = 50_000;
 
 const PROMPT =
   'Lies den Trainingsplan aus Text und/oder Bild. Antworte NUR mit gültigem JSON, ohne Markdown, Erklärungen oder Zusatztext. ' +
@@ -42,9 +49,8 @@ const PROMPT =
 const MAX_TEXT_LENGTH = 12_000;
 /** ~2,7 MB Binärdaten als Base64 — bleibt sicher unter dem Vercel-Body-Limit. */
 const MAX_IMAGE_BASE64_LENGTH = 3_600_000;
-const REQUEST_TIMEOUT_MS = 30_000;
 /** Gesamtbudget über alle Modellversuche — Function-Limit 60 s nicht reißen. */
-const TOTAL_BUDGET_MS = 52_000;
+const TOTAL_BUDGET_MS = 56_000;
 const MAX_TEMPLATES = 8;
 const MAX_EXERCISES_PER_TEMPLATE = 30;
 
@@ -119,7 +125,12 @@ function normalizeTemplates(data: unknown): ParsedTemplate[] {
     const exercises: string[] = [];
     for (const item of rawExercises.slice(0, MAX_EXERCISES_PER_TEMPLATE)) {
       if (typeof item !== 'string') continue;
-      const name = item.replace(/\s+/g, ' ').trim();
+      // Sätze/Wiederholungen entfernen (z. B. "Bankdrücken 3x10" → "Bankdrücken") —
+      // reine Zahlen bleiben stehen ("45-Grad-Beinpresse").
+      const name = item
+        .replace(/\s*\d+\s*[x×]\s*\d+/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
       if (!name) continue;
       if (exercises.some((existing) => existing.toLowerCase() === name.toLowerCase())) continue;
       exercises.push(name);
@@ -147,12 +158,12 @@ function buildContent(request: ParsePlanRequest): Array<{ type: 'text'; text: st
   return parts;
 }
 
-async function attemptModel(model: string, request: ParsePlanRequest): Promise<AttemptResult> {
+async function attemptModel(model: string, request: ParsePlanRequest, timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS): Promise<AttemptResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return { ok: false, code: 'model_unreachable' };
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(OPENROUTER_URL, {
       method: 'POST',
@@ -227,9 +238,14 @@ export async function POST(request: Request): Promise<Response> {
 
   const startedAt = Date.now();
   const failureCodes: ErrorCode[] = [];
-  for (const model of MODELS) {
+  // Erster Versuch bekommt den langen Timeout (Ultra braucht ~48 s), Rettungsversuche laufen mit dem Default.
+  const chain = imageBase64 ? IMAGE_MODELS : TEXT_MODELS;
+  for (let i = 0; i < chain.length; i++) {
     if (Date.now() - startedAt > TOTAL_BUDGET_MS) break;
-    const result = await attemptModel(model, { text, imageBase64 });
+    const remaining = TOTAL_BUDGET_MS - (Date.now() - startedAt);
+    const timeout = Math.min(i === 0 ? SLOW_TEXT_TIMEOUT_MS : DEFAULT_REQUEST_TIMEOUT_MS, remaining);
+    if (timeout < 5_000) break;
+    const result = await attemptModel(chain[i], { text, imageBase64 }, timeout);
     if (result.ok) return jsonResponse(200, { templates: result.templates });
     failureCodes.push(result.code);
   }
