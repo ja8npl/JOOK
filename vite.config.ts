@@ -63,4 +63,15 @@ export default defineConfig({
       },
     }),
   ],
+  // Dev-only: Der Vite-Dev-Server führt keine Vercel Serverless Functions aus —
+  // /api/* wird an die Production-Deployment-URL weitergereicht (dort lebt die echte Function).
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.API_PROXY_TARGET || 'https://gym-log-virid.vercel.app',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
 })

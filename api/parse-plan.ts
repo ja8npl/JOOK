@@ -21,11 +21,15 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 /**
  * Modell-Kette in Prioritätsreihenfolge — bei jedem Fehler wird das nächste probiert (gilt auch für reinen Text).
- * Das Omni-Modell ist multimodal (Text + Bild), openrouter/free dient als Catch-All-Fallback.
+ * Alle drei sind multimodal und free-tier: ling ist der schnellste Vision-Parser (gemessen ~7 s),
+ * nex-n2.5-pro der langsamere Backup (~20 s), nemotron-omni braucht für Bilder oft >30 s (Timeout-Risiko,
+ * für reinen Text aber brauchbar) — daher hinten.
+ * Hinweis: openrouter/free ist NICHT geeignet — liefert für Bilder nur "User Safety: safe" statt Plan-JSON.
  */
 const MODELS = [
+  'inclusionai/ling-3.0-flash-vl:free',
+  'nex-agi/nex-n2.5-pro:free',
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
-  'openrouter/free',
 ];
 
 const PROMPT =
