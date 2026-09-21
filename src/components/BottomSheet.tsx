@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 
@@ -8,12 +8,40 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  /** Kleine Overline über dem Titel (z. B. „Dein Verlauf"). */
+  eyebrow?: string;
   children: React.ReactNode;
+  /** Hebt das Sheet über die iOS-Tastatur (Visual-Viewport-Offset). */
+  avoidKeyboard?: boolean;
 }
 
-export function BottomSheet({ isOpen, onClose, title, children }: Props) {
+/** Abstand, den die geöffnete Tastatur vom Viewport nimmt (0 ohne Tastatur). */
+function useKeyboardInset(active: boolean): number {
+  const [inset, setInset] = useState(0);
+  useEffect(() => {
+    if (!active) return undefined;
+    const viewport = window.visualViewport;
+    if (!viewport) return undefined;
+    const update = () => {
+      const overlap = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      setInset(Math.round(overlap));
+    };
+    update();
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    return () => {
+      viewport.removeEventListener('resize', update);
+      viewport.removeEventListener('scroll', update);
+    };
+  }, [active]);
+  return inset;
+}
+
+export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKeyboard = false }: Props) {
   const reduced  = useReducedMotion();
   const sheetRef = useRef<HTMLDivElement>(null);
+  const dragControls = useDragControls();
+  const keyboardInset = useKeyboardInset(isOpen && avoidKeyboard);
 
   useEffect(() => {
     if (isOpen) {
@@ -76,11 +104,23 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
               ? { duration: 0 }
               : { type: 'spring', stiffness: 340, damping: 34 }
             }
+            drag={reduced ? false : 'y'}
+            dragListener={false}
+            dragControls={dragControls}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.55 }}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 110 || info.velocity.y > 550) onClose();
+            }}
             style={{
               position: 'fixed',
-              bottom: 0,
+              bottom: keyboardInset,
               left: 0,
               right: 0,
+              width: 'min(100%, 560px)',
+              margin: '0 auto',
+              /* Container-Fokus ohne Outline — Fokus bleibt für Bedienelemente sichtbar */
+              outline: 'none',
               /* Float-Level — höchste Neo-Ebene */
               background: 'var(--bg-elevated)',
               backdropFilter: 'blur(28px)',
@@ -97,33 +137,54 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
               overflowY: 'auto',
             }}
           >
-            {/* Drag Handle — Neo-Pressed-Pill */}
-            <div style={{
-              width: '40px',
-              height: '4px',
-              background: 'var(--bg-chip-inset)',
-              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.50), 0 1px 0 rgba(255,255,255,0.04)',
-              borderRadius: '2px',
-              margin: '0 auto 22px',
-            }} />
+            {/* Drag-Grifffläche — große Touch-Zone, visueller Pill sauber mittig */}
+            <div
+              onPointerDown={(event) => dragControls.start(event)}
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                width: '100%',
+                padding: '10px 0 12px',
+                margin: '-6px 0 10px',
+                cursor: 'grab',
+                touchAction: 'none',
+              }}
+              aria-hidden="true"
+            >
+              <div style={{
+                width: '40px',
+                height: '4px',
+                borderRadius: '2px',
+                background: 'var(--border-highlight)',
+                opacity: 0.8,
+              }} />
+            </div>
 
             {/* Header */}
             {title && (
               <div style={{
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: 'flex-start',
                 justifyContent: 'space-between',
-                marginBottom: '22px',
+                marginBottom: '18px',
               }}>
-                <h2 style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '22px',
-                  fontWeight: 700,
-                  color: 'var(--text-primary)',
-                  letterSpacing: 'var(--tracking-display)',
-                }}>
-                  {title}
-                </h2>
+                <div style={{ minWidth: 0 }}>
+                  {eyebrow && (
+                    <span className="eyebrow accent-copy" style={{ display: 'block', marginBottom: '5px' }}>
+                      {eyebrow}
+                    </span>
+                  )}
+                  <h2 style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '22px',
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    letterSpacing: 'var(--tracking-display)',
+                    lineHeight: 1.15,
+                  }}>
+                    {title}
+                  </h2>
+                </div>
                 <motion.button
                   onClick={onClose}
                   whileTap={reduced ? undefined : { scale: 0.96 }}
@@ -140,6 +201,7 @@ export function BottomSheet({ isOpen, onClose, title, children }: Props) {
                     justifyContent: 'center',
                     cursor: 'pointer',
                     color: 'var(--text-tertiary)',
+                    flexShrink: 0,
                   }}
                 >
                   <X size={16} strokeWidth={2.5} />

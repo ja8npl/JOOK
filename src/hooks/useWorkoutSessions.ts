@@ -17,7 +17,8 @@ export function estimateOneRepMax(gewicht: number, reps: number): number {
 }
 
 export function snapshotForExercise(exercise: SessionExercise): PerformanceSnapshot | undefined {
-  const completed = exercise.sets.filter((set) => set.completed && set.gewicht > 0 && set.wiederholungen > 0);
+  // Warm-up-Sätze fließen nicht in Performance-/Progressions-Analytics ein.
+  const completed = exercise.sets.filter((set) => set.completed && !set.warmup && set.gewicht > 0 && set.wiederholungen > 0);
   if (completed.length === 0) return undefined;
   const maxGewicht = Math.max(...completed.map((set) => set.gewicht));
   const bestReps = Math.max(...completed.map((set) => set.wiederholungen));
@@ -87,10 +88,10 @@ export async function saveWorkoutSession(input: Omit<WorkoutSession, 'id' | 'cre
         maxGewicht: snapshot.maxGewicht,
         bestReps: snapshot.bestReps,
         totalVolume: exercise.sets
-          .filter((set) => set.completed)
+          .filter((set) => set.completed && !set.warmup)
           .reduce((total, set) => total + set.gewicht * set.wiederholungen, 0),
         estimatedOneRepMax: snapshot.estimatedOneRepMax,
-        setCount: exercise.sets.filter((set) => set.completed).length,
+        setCount: exercise.sets.filter((set) => set.completed && !set.warmup).length,
         overloadKg: previous ? snapshot.maxGewicht - previous.maxGewicht : 0,
         overloadReps: previous ? snapshot.bestReps - previous.bestReps : 0,
       } satisfies ProgressHistory;

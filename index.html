@@ -13,7 +13,7 @@
       (() => {
         try {
           const stored = localStorage.getItem('gymlog.theme');
-          const theme = ['garmin', 'bordeaux', 'whoop'].includes(stored || '') ? stored : 'garmin';
+          const theme = ['garmin', 'bordeaux', 'whoop', 'ember'].includes(stored || '') ? stored : 'garmin';
           document.documentElement.dataset.theme = theme;
         } catch {
           document.documentElement.dataset.theme = 'garmin';

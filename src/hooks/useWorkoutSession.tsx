@@ -6,6 +6,7 @@ import {
   saveWorkoutSession,
   sessionExerciseWithDefaults,
 } from './useWorkoutSessions';
+import { autoWarmupForNewExercise, withoutWarmupSets } from './warmup';
 
 export interface ActiveWorkoutSession {
   name: string;
@@ -23,6 +24,8 @@ interface WorkoutSessionContextValue {
   addExercise: (exercise: Exercise) => Promise<void>;
   removeExercise: (exerciseId: string) => void;
   updateExercise: (exerciseId: string, updater: (exercise: SessionExercise) => SessionExercise) => void;
+  /** Entfernt alle Warm-up-Sätze der Übung. */
+  clearWarmup: (exerciseId: string) => void;
   finishSession: () => Promise<number | null>;
   discardSession: () => void;
 }
@@ -75,11 +78,20 @@ export function WorkoutSessionProvider({ children }: { children: ReactNode }) {
 
   const addExercise = useCallback(async (exercise: Exercise) => {
     const previous = await getPreviousPerformance(exercise.id);
+    // Warm-up-Sätze aus der heutigen Konfiguration (pro Übung + Tag) automatisch voranstellen.
+    const warmupSets = await autoWarmupForNewExercise(exercise);
     setActiveSession((current) => {
       if (!current || current.exercises.some((item) => item.exercise.id === exercise.id)) return current;
+      const base = sessionExerciseWithDefaults(exercise, previous);
+      const mergedSets = (!warmupSets || warmupSets.length === 0)
+        ? base.sets
+        : [
+            ...warmupSets.map((set, index) => ({ ...set, setNumber: index + 1 })),
+            ...base.sets.map((set, index) => ({ ...set, setNumber: warmupSets.length + index + 1 })),
+          ];
       return {
         ...current,
-        exercises: [...current.exercises, sessionExerciseWithDefaults(exercise, previous)],
+        exercises: [...current.exercises, { ...base, sets: mergedSets }],
       };
     });
   }, []);
@@ -97,6 +109,11 @@ export function WorkoutSessionProvider({ children }: { children: ReactNode }) {
       exercises: current.exercises.map((item) => item.exercise.id === exerciseId ? updater(item) : item),
     } : current);
   }, []);
+
+  /** Entfernt alle Warm-up-Sätze der Übung (z. B. beim manuellen Zurücksetzen). */
+  const clearWarmup = useCallback((exerciseId: string) => {
+    updateExercise(exerciseId, withoutWarmupSets);
+  }, [updateExercise]);
 
   const finishSession = useCallback(async () => {
     if (!activeSession) return null;
@@ -126,9 +143,10 @@ export function WorkoutSessionProvider({ children }: { children: ReactNode }) {
     addExercise,
     removeExercise,
     updateExercise,
+    clearWarmup,
     finishSession,
     discardSession,
-  }), [activeSession, startMenuOpen, openStartMenu, closeStartMenu, startSession, updateSession, addExercise, removeExercise, updateExercise, finishSession, discardSession]);
+  }), [activeSession, startMenuOpen, openStartMenu, closeStartMenu, startSession, updateSession, addExercise, removeExercise, updateExercise, clearWarmup, finishSession, discardSession]);
 
   return <WorkoutSessionContext.Provider value={value}>{children}</WorkoutSessionContext.Provider>;
 }

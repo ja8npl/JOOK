@@ -1,5 +1,5 @@
 /** Verfügbare Themes. `garmin` ist der historische Default. */
-export const THEMES = ['garmin', 'bordeaux', 'whoop'] as const;
+export const THEMES = ['garmin', 'bordeaux', 'whoop', 'ember'] as const;
 
 export type ThemeName = (typeof THEMES)[number];
 
@@ -13,6 +13,7 @@ export const THEME_META: Record<ThemeName, ThemeMeta> = {
   garmin: { label: 'Garmin', swatch: '#C8FF00' },
   bordeaux: { label: 'Bordeaux', swatch: '#8C232B' },
   whoop: { label: 'Whoop', swatch: '#5CB88E' },
+  ember: { label: 'Ember', swatch: '#D58936' },
 };
 
 const STORAGE_KEY = 'gymlog.theme';
@@ -43,6 +44,7 @@ const META_COLORS: Record<ThemeName, string> = {
   garmin: '#0A0A0B',
   bordeaux: '#0D0D0F',
   whoop: '#1F2024',
+  ember: '#3C1518',
 };
 
 /** Wendet das Theme auf <html data-theme> und die theme-color-Meta an. */

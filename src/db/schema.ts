@@ -28,6 +28,8 @@ export interface WorkoutSet {
   wiederholungen: number;
   /** Zeitpunkt des Satz-Abschlusses (Date.now()) */
   timestamp: number;
+  /** Warm-up-Satz (nur SessionSets; bei persistierten Einträgen immer absent) */
+  warmup?: boolean;
 }
 
 /** Hilfsfunktion: Name → machineId normalisieren */
@@ -55,6 +57,59 @@ export interface SessionSet {
   wiederholungen: number;
   completed: boolean;
   timestamp?: number;
+  /** Warm-up-Satz: visuell getrennt, ohne Prozent-Volumen in der Progression */
+  warmup?: boolean;
+  /** Label wie „Warm-up 25 %" */
+  warmupLabel?: string;
+  /** Ziel-Reps-Bereich [min, max] des Warm-up-Satzes */
+  zielRepsMin?: number;
+  zielRepsMax?: number;
+}
+
+/** Warm-up-Konfiguration pro Übung und Tag (Dexie v4). */
+export interface WarmupConfig {
+  /** Primärschlüssel: `${machineId}__${YYYY-MM-DD}` */
+  key: string;
+  machineId: string;
+  /** Lokales Datum YYYY-MM-DD */
+  tag: string;
+  /** Ziel-Max-Gewicht der heutigen Einheit in kg */
+  maxGewicht: number;
+  /** Optionaler dritter Warm-up-Satz (75 %) */
+  dritterSatz: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** Modus für die Trainingsphase (Settings + Home-Header). */
+export type TrainingMode = 'bulk' | 'cut' | 'recomp';
+
+export const TRAINING_MODES: readonly TrainingMode[] = ['bulk', 'cut', 'recomp'];
+
+export const TRAINING_MODE_LABELS: Record<TrainingMode, string> = {
+  bulk: 'Bulk',
+  cut: 'Cut',
+  recomp: 'Bodyrecomposition',
+};
+
+/** App-Einstellungen als einzelner Datensatz (Dexie v5). */
+export interface AppSettings {
+  key: 'app';
+  modus: TrainingMode;
+  modusSeit: number;
+  /** Einheiten: 'kg' | 'lb' (derzeit nur kg im UI). */
+  einheit: 'kg' | 'lb';
+  updatedAt: number;
+}
+
+/** Körpergewicht-Messung (Dexie v5). */
+export interface BodyWeight {
+  /** Unix-Timestamp der Messung (Date.now()). */
+  id: number;
+  /** Gewicht in kg. */
+  gewicht: number;
+  /** Lokales Tages-Datum YYYY-MM-DD (eine Messung pro Tag, upsert). */
+  tag: string;
 }
 
 /** Letzte bekannte Leistung als Grundlage für Smart Defaults und Overload. */
