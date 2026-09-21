@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Lokale Dev-Test-Assets (Testbilder, API-Checks)
+dev/
