@@ -9,6 +9,18 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Gym Log" />
     <meta name="description" content="Gym Log für Übungen, Einstellungen, Sätze und Fortschritt." />
+    <style>
+      /* Kritisches Inline-CSS: verhindert den weißen Blitz vor dem ersten Paint,
+         solange App-CSS (und damit --bg-base) noch nicht geladen ist. Muss mit dem
+         Launch-Hintergrund übereinstimmen (iOS-Splash-PNGs, .splash-intro: #1F2024).
+         Ember nutzt eine eigene Basisfarbe — der Attribut-Selektor verliert sich
+         automatisch, sobald App-CSS html { background: var(--bg-base) } setzt. */
+      html { background: #1f2024; color-scheme: dark; }
+      html[data-theme='ember'] { background: #3c1518; }
+      html, body { margin: 0; }
+      #root { background: #1f2024; min-height: 100vh; }
+      html[data-theme='ember'] #root { background: #3c1518; }
+    </style>
     <script>
       (() => {
         try {

@@ -223,7 +223,8 @@ button:active { transform: scale(.985); }
 .greeting-expand:hover { background: var(--bg-chip-inset); }
 .analyse-section { margin-top: 34px; }
 .analyse-window { color: var(--text-tertiary); font-size: 11px; font-variant-numeric: tabular-nums; }
-.analyse-rail { display: grid; grid-auto-flow: column; grid-auto-columns: 78%; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; padding: 2px 2px 14px; margin: 0 -2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+/* Schatten-Freiraum: Padding + scroll-padding, damit Snap die Neo-Schatten nicht an der Clip-Kante abschneidet */
+.analyse-rail { display: grid; grid-auto-flow: column; grid-auto-columns: 78%; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding: 0 16px; padding: 16px 16px 30px; margin: -16px -16px -30px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .analyse-rail::-webkit-scrollbar { width: 0; height: 0; }
 .analyse-card { scroll-snap-align: start; display: grid; align-content: start; gap: 9px; padding: 16px; border-radius: var(--radius-card); }
 .analyse-card-top { display: flex; align-items: center; justify-content: space-between; }
