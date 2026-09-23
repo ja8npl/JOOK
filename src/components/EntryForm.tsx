@@ -54,6 +54,33 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
 
   const hasSuggestions = customSuggestions.length > 0 || staticSuggestions.length > 0;
 
+  /* Tastaturbedienung der Vorschlagsliste (Combobox-Muster):
+     Pfeiltasten wählen, Enter übernimmt, Escape schließt die Liste.
+     aria-activedescendant markiert die aktive Option für Screenreader. */
+  const suggestionNames = [...customSuggestions, ...staticSuggestions.map((ex) => ex.name)];
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const onNameKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!hasSuggestions || !showAutocomplete) return;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveSuggestion((current) => {
+        const delta = event.key === 'ArrowDown' ? 1 : -1;
+        const next = current + delta;
+        if (next < 0) return suggestionNames.length - 1;
+        if (next >= suggestionNames.length) return 0;
+        return next;
+      });
+    } else if (event.key === 'Enter' && activeSuggestion >= 0 && activeSuggestion < suggestionNames.length) {
+      event.preventDefault();
+      setName(suggestionNames[activeSuggestion]);
+      setShowAutocomplete(false);
+      setActiveSuggestion(-1);
+    } else if (event.key === 'Escape') {
+      setShowAutocomplete(false);
+      setActiveSuggestion(-1);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -97,9 +124,14 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
           id="machine-name"
           type="text"
           value={name}
-          onChange={(e) => { setName(e.target.value); setShowAutocomplete(true); }}
+          onChange={(e) => { setName(e.target.value); setShowAutocomplete(true); setActiveSuggestion(-1); }}
           onBlur={() => setTimeout(() => setShowAutocomplete(false), 150)}
           onFocus={() => setShowAutocomplete(true)}
+          onKeyDown={onNameKeyDown}
+          role="combobox"
+          aria-expanded={showAutocomplete && hasSuggestions}
+          aria-controls="machine-name-suggestions"
+          aria-activedescendant={activeSuggestion >= 0 ? `machine-name-option-${activeSuggestion}` : undefined}
           placeholder="z.B. Beinpresse, Lat-Zug, Bankdrücken…"
           autoComplete="off"
           required
@@ -114,6 +146,7 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
               transition={{ duration: 0.14, ease: 'easeOut' }}
               role="listbox"
               aria-label="Vorschläge"
+              id="machine-name-suggestions"
               style={{
                 position: 'absolute',
                 top: 'calc(100% + 6px)',
@@ -131,12 +164,13 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
                 overflowY: 'auto',
               }}
             >
-              {customSuggestions.map((suggestion) => (
+              {customSuggestions.map((suggestion, index) => (
                 <li key={suggestion}>
                   <button
                     type="button"
                     role="option"
-                    aria-selected={false}
+                    id={`machine-name-option-${index}`}
+                    aria-selected={index === activeSuggestion}
                     onClick={() => { setName(suggestion); setShowAutocomplete(false); }}
                     style={suggestionButtonStyle}
                     onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--bg-input)')}
@@ -161,12 +195,13 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
               {customSuggestions.length > 0 && staticSuggestions.length > 0 && (
                 <div style={{ height: '1px', background: 'var(--border)', margin: '4px 8px' }} />
               )}
-              {staticSuggestions.map((ex) => (
+              {staticSuggestions.map((ex, staticIndex) => (
                 <li key={ex.id}>
                   <button
                     type="button"
                     role="option"
-                    aria-selected={false}
+                    id={`machine-name-option-${customSuggestions.length + staticIndex}`}
+                    aria-selected={customSuggestions.length + staticIndex === activeSuggestion}
                     onClick={() => { setName(ex.name); setShowAutocomplete(false); }}
                     style={suggestionButtonStyle}
                     onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--bg-input)')}

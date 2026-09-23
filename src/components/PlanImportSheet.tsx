@@ -3,6 +3,7 @@ import { Camera, Check, GripVertical, Plus, ScanLine, Sparkles, Trash2, Triangle
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { matchStaticExercise } from '../hooks/useExercises';
+import { useOverlayFocus } from '../hooks/useOverlayFocus';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import {
   compressImage,
@@ -105,6 +106,7 @@ function PlanImportForm({ onRequestClose, onSave }: Omit<PlanImportSheetProps, '
   const [dropIndex, setDropIndex] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importSheetRef = useOverlayFocus(true, onRequestClose);
   const dragState = useRef<{ templateKey: string; exerciseKey: string } | null>(null);
   const dropIndexRef = useRef<number | null>(null);
   const listRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -115,17 +117,12 @@ function PlanImportForm({ onRequestClose, onSave }: Omit<PlanImportSheetProps, '
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
     document.documentElement.classList.add('overlay-open');
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onRequestClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
     return () => {
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousHtmlOverflow;
       document.documentElement.classList.remove('overlay-open');
-      document.removeEventListener('keydown', onKeyDown);
     };
-  }, [onRequestClose]);
+  }, []);
 
   const canSubmit = Boolean(planText.trim()) || Boolean(image);
 
@@ -275,10 +272,13 @@ function PlanImportForm({ onRequestClose, onSave }: Omit<PlanImportSheetProps, '
   };
 
   return <motion.section
+    ref={importSheetRef}
+    tabIndex={-1}
     className="launcher-sheet"
     role="dialog"
     aria-modal="true"
     aria-label="Plan importieren"
+    style={{ outline: 'none' }}
     initial={reduced ? false : { y: '100%' }}
     animate={{ y: 0 }}
     exit={{ y: '100%' }}

@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import {
   ChevronLeft, Plus, Pencil, Trash2,
   Target, AlertCircle, Settings, Dumbbell,
@@ -9,9 +9,11 @@ import { useEntriesForMachine } from '../hooks/useEntries';
 import { deleteEntry } from '../hooks/useEntries';
 import { bestSetOf, setsOf } from '../hooks/useSets';
 import { ConfirmSheet } from '../components/ConfirmSheet';
-import { ProgressionChart } from '../components/ProgressionChart';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { type GymEntry } from '../db/schema';
+
+/* recharts + d3 (≈35 % des Bundles) nur laden, wenn der Chart wirklich gerendert wird. */
+const ProgressionChart = lazy(() => import('../components/ProgressionChart').then((m) => ({ default: m.ProgressionChart })));
 
 export function Detail() {
   const { machineId } = useParams<{ machineId: string }>();
@@ -105,7 +107,9 @@ export function Detail() {
 
       {/* Chart */}
       {entries !== undefined && entries.length > 0 && (
-        <ProgressionChart entries={entries} reduced={reduced} />
+        <Suspense fallback={<div className="skeleton-row" style={{ height: 260, borderRadius: 20 }} />}>
+          <ProgressionChart entries={entries} reduced={reduced} />
+        </Suspense>
       )}
 
       {/* Eintrags-Verlauf */}

@@ -6,6 +6,8 @@ export interface WorkoutTemplate {
   name: string;
   exercises: Exercise[];
   createdAt: number;
+  /** Fest eingebaute Vorlage — nicht löschbar und nicht im localStorage gespeichert. */
+  builtin?: boolean;
 }
 
 const STORAGE_KEY = 'gymlog.workout-templates';
@@ -46,5 +48,6 @@ export function useWorkoutTemplates() {
     });
   }, []);
 
+  /** Eigene Vorlagen (localStorage) — eingebaute Pläne werden separat angehängt. */
   return { templates, saveTemplate, deleteTemplate };
 }

@@ -210,6 +210,27 @@ interface ModeCardProps {
 }
 
 function ModeCard({ modus, tage, open, onToggle, onSelect, triggerRef }: ModeCardProps) {
+
+  /* Tastaturbedienung per Dokument-Listener — unabhängig davon, wo der Fokus
+     liegt (Touch-Nutzer haben keinen Fokus im Menü): Pfeiltasten wählen,
+     Escape schließt zurück auf den Trigger. */
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        const index = TRAINING_MODES.indexOf(modus);
+        const delta = event.key === 'ArrowDown' ? 1 : -1;
+        onSelect(TRAINING_MODES[(index + delta + TRAINING_MODES.length) % TRAINING_MODES.length]);
+      } else if (event.key === 'Escape') {
+        event.stopPropagation();
+        onToggle();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open, modus, onSelect, onToggle]);
+
   return (
     <div className="mode-card glass-panel" ref={triggerRef}>
       <button type="button" className="mode-trigger" onClick={onToggle} aria-expanded={open} aria-haspopup="listbox">
@@ -218,7 +239,7 @@ function ModeCard({ modus, tage, open, onToggle, onSelect, triggerRef }: ModeCar
         <span className="mode-since">{tage === 0 ? 'Seit heute' : `Seit ${tage} ${tage === 1 ? 'Tag' : 'Tagen'}`}</span>
       </button>
       {open && (
-        <div className="mode-menu glass-panel" role="listbox" aria-label="Trainingsmodus wählen">
+        <div className="mode-menu glass-panel" role="listbox" aria-label="Trainingsmodus wählen" tabIndex={-1}>
           {TRAINING_MODES.map((m) => (
             <button key={m} type="button" role="option" aria-selected={m === modus} onClick={() => onSelect(m)}>
               <span>{TRAINING_MODE_LABEL(m)}</span>

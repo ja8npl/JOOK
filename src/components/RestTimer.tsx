@@ -158,7 +158,7 @@ export function RestTimer({ startKey, onDone }: Props) {
           <circle
             cx="100" cy="100" r={RING_RADIUS}
             fill="none"
-            stroke="rgba(255,255,255,0.05)"
+            stroke="var(--ring-track)"
             strokeWidth="8"
           />
           {/* Progress */}

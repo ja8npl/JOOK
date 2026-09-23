@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useDragControls } from 'framer-motion';
 import { Check, ChevronDown, Clock3, Dumbbell, Flame, History, Plus, Save, Trash2, X } from 'lucide-react';
 import { useWorkoutSession } from '../hooks/useWorkoutSession';
+import { useOverlayFocus } from '../hooks/useOverlayFocus';
 import { updateSessionSet } from '../hooks/workoutSessionUtils';
 import { searchStaticExercises, type StaticExercise } from '../hooks/useExercises';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -10,6 +11,7 @@ import { ProgressBadge } from './ProgressBadge';
 import { useProgressHistory } from '../hooks/useWorkoutSessions';
 import { HistorySheet } from './HistorySheet';
 import { WarmupSheet } from './WarmupSheet';
+import { ConfirmSheet } from './ConfirmSheet';
 import { applyWarmupToSessionExercise, todayKey, useTodayWarmupConfig, warmupExerciseKey } from '../hooks/warmup';
 import { db } from '../db/db';
 import { type Exercise, type SessionExercise } from '../db/schema';
@@ -22,10 +24,26 @@ export function WorkoutSessionModal() {
   const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [query, setQuery] = useState('');
   const [saving, setSaving] = useState(false);
+  /** Abschlusbeat: 'saving' während des Schreibvorgangs, 'success' zeigt den Save-Moment (~900ms) und schließt dann automatisch. */
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'success'>('idle');
+  const saveStateRef = useRef(saveState);
+  const setSaveStateTracked = (value: 'idle' | 'saving' | 'success') => { saveStateRef.current = value; setSaveState(value); };
+  const saveAutoCloseTimerRef = useRef<number | null>(null);
+  const saveErrorTimerRef = useRef<number | null>(null);
+  // Timer bei Unmount räumen — sonst feuert der Beat noch in den Home-Screen hinein.
+  useEffect(() => () => {
+    if (saveAutoCloseTimerRef.current !== null) window.clearTimeout(saveAutoCloseTimerRef.current);
+    if (saveErrorTimerRef.current !== null) window.clearTimeout(saveErrorTimerRef.current);
+  }, []);
   // In-Training-Features: Warm-up-Konfiguration und Verlauf pro Session-Übung.
   const [warmupTargetId, setWarmupTargetId] = useState<string | null>(null);
   const [historyTargetKey, setHistoryTargetKey] = useState<string | null>(null);
   const [historyTargetName, setHistoryTargetName] = useState('');
+  /* Verwerfen erst nach Bestätigung — Escape/X löscht nicht unabsichtlich ein laufendes Training. */
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
+  const requestDiscard = () => setDiscardConfirmOpen(true);
+  const sessionSheetRef = useOverlayFocus(Boolean(activeSession) && !discardConfirmOpen, requestDiscard);
+  const dragControls = useDragControls();
 
   useEffect(() => {
     if (!activeSession) return undefined;
@@ -49,9 +67,27 @@ export function WorkoutSessionModal() {
   const formatTime = (value: number) => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
 
   const handleFinish = async () => {
-    if (!activeSession || saving) return;
+    if (!activeSession || saving || saveState === 'success') return;
     setSaving(true);
-    try { await finishSession(); } finally { setSaving(false); }
+    setSaveStateTracked('saving');
+    try {
+      await finishSession();
+      // Der Save-Moment lebt im BLEIBENDEN Modal-Portal: activeSession ist jetzt null,
+      // aber das Sheet rendert weiter, bis der Beat nach 900ms auto-schließt.
+      setSaveStateTracked('success');
+      saveAutoCloseTimerRef.current = window.setTimeout(() => {
+        setSaveStateTracked('idle');
+        setSaving(false);
+      }, 900);
+    } finally {
+      // Fehlerfall (throw): Beat abbrechen, Sheet bleibt offen — die Session ist unverändert.
+      saveErrorTimerRef.current = window.setTimeout(() => {
+        if (saveStateRef.current === 'saving') {
+          setSaveStateTracked('idle');
+          setSaving(false);
+        }
+      }, 0);
+    }
   };
 
   const previousFor = (exerciseId: string) => {
@@ -74,43 +110,68 @@ export function WorkoutSessionModal() {
     clearWarmup(warmupTarget.exercise.id);
   };
 
+  const session = activeSession;
+  const renderSession = (
+    <motion.div className="session-shell" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <motion.section ref={sessionSheetRef} tabIndex={-1} className="session-sheet" style={{ outline: 'none' }} initial={reduced ? false : { y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 360, damping: 34 }} drag={reduced ? false : 'y'} dragListener={false} dragControls={dragControls} dragConstraints={{ top: 0, bottom: 0 }} dragElastic={{ top: 0, bottom: 0.55 }} onDragEnd={(_, info) => { if (info.offset.y > 110 || info.velocity.y > 550) requestDiscard(); }} aria-label="Aktive Trainingseinheit">
+        {/* Griffleiste als Ziehl-Fläche — gleiche Physik wie im BottomSheet (110px / 550px/s) */}
+        <div className="sheet-handle-zone" onPointerDown={(event) => dragControls.start(event)} aria-hidden="true"><div className="sheet-handle" /></div>
+        {session && (<>
+          <header className="session-header">
+            <div>
+              <span className="eyebrow accent-copy">Live session</span>
+              <input className="session-name-input" value={session.name} onChange={(event) => updateSession((current) => ({ ...current, name: event.target.value }))} aria-label="Name der Trainingseinheit" />
+              <div className="session-time"><Clock3 size={15} /> <span>{formatTime(seconds)}</span><span className="session-live-dot" aria-label="Training läuft" /></div>
+            </div>
+            <button className="icon-button" type="button" onClick={requestDiscard} aria-label="Training verwerfen"><X size={20} /></button>
+          </header>
+
+          <div className="session-content">
+            {session.exercises.length === 0 ? (
+              <div className="session-empty glass-panel"><Dumbbell size={25} /><h2>Dein Training wartet.</h2><p>Füge deine erste Übung hinzu und logge jeden Satz live.</p></div>
+            ) : (
+              <div className="session-exercises">
+                {session.exercises.map((item) => (
+                  <ExerciseCard key={item.exercise.id} exerciseId={item.exercise.id} item={item} progress={previousFor(item.exercise.id)} reduced={reduced} onRemove={() => removeExercise(item.exercise.id)} onChange={(next) => updateExercise(item.exercise.id, () => next)}
+                    onOpenWarmup={() => setWarmupTargetId(item.exercise.id)}
+                    onOpenHistory={() => { setHistoryTargetKey(warmupExerciseKey(item.exercise)); setHistoryTargetName(item.exercise.name); }}
+                  />
+                ))}
+              </div>
+            )}
+            <button className="add-exercise-button" type="button" onClick={() => setShowExercisePicker((value) => !value)}><Plus size={17} /> Übung hinzufügen <ChevronDown size={15} className={showExercisePicker ? 'rotate-icon' : ''} /></button>
+          <AnimatePresence>{showExercisePicker && <ExercisePicker query={query} setQuery={setQuery} suggestions={suggestions} onSelect={async (exercise) => { await addExercise(exercise); setQuery(''); setShowExercisePicker(false); }} />}</AnimatePresence>
+          </div>
+
+          <footer className="session-footer"><button className="primary-button session-finish-button" type="button" onClick={handleFinish} disabled={saving || session.exercises.length === 0}><Save size={17} /> {saving ? 'Speichert…' : 'Training beenden & speichern'}</button></footer>
+        </>)}
+
+      </motion.section>
+    </motion.div>
+  );
+
   // Portal an document.body: Das app-shell ist position:fixed und spannt damit einen
   // eigenen Stacking Context auf — innere z-Index-Werte würden gegen den Dock (body-Level) verloren.
   return createPortal(
     <>
     <AnimatePresence>
-      {!activeSession ? null : (
-        <motion.div className="session-shell" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <motion.section className="session-sheet" initial={reduced ? false : { y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 360, damping: 34 }} aria-label="Aktive Trainingseinheit">
-            <div className="sheet-handle" aria-hidden="true" />
-            <header className="session-header">
-              <div>
-                <span className="eyebrow accent-copy">Live session</span>
-                <input className="session-name-input" value={activeSession.name} onChange={(event) => updateSession((session) => ({ ...session, name: event.target.value }))} aria-label="Name der Trainingseinheit" />
-                <div className="session-time"><Clock3 size={15} /> <span>{formatTime(seconds)}</span><span className="session-live-dot" aria-label="Training läuft" /></div>
-              </div>
-              <button className="icon-button" type="button" onClick={discardSession} aria-label="Training verwerfen"><X size={20} /></button>
-            </header>
+      {activeSession ? renderSession : null}
+    </AnimatePresence>
 
-            <div className="session-content">
-              {activeSession.exercises.length === 0 ? (
-                <div className="session-empty glass-panel"><Dumbbell size={25} /><h2>Dein Training wartet.</h2><p>Füge deine erste Übung hinzu und logge jeden Satz live.</p></div>
-              ) : (
-                <div className="session-exercises">
-                  {activeSession.exercises.map((item) => (
-                    <ExerciseCard key={item.exercise.id} item={item} progress={previousFor(item.exercise.id)} reduced={reduced} onRemove={() => removeExercise(item.exercise.id)} onChange={(next) => updateExercise(item.exercise.id, () => next)}
-                      onOpenWarmup={() => setWarmupTargetId(item.exercise.id)}
-                      onOpenHistory={() => { setHistoryTargetKey(warmupExerciseKey(item.exercise)); setHistoryTargetName(item.exercise.name); }}
-                    />
-                  ))}
-                </div>
-              )}
-              <button className="add-exercise-button" type="button" onClick={() => setShowExercisePicker((value) => !value)}><Plus size={17} /> Übung hinzufügen <ChevronDown size={15} className={showExercisePicker ? 'rotate-icon' : ''} /></button>
-              <AnimatePresence>{showExercisePicker && <ExercisePicker query={query} setQuery={setQuery} suggestions={suggestions} onSelect={async (exercise) => { await addExercise(exercise); setQuery(''); setShowExercisePicker(false); }} />}</AnimatePresence>
+    {/* Save-Moment als eigenes Portal ÜBER der App: Das Session-Sheet exitet parallel
+        normal, während der Beat (Häkchen + „Gespeichert.“ + Glow) frei darüber steht.
+        Kein Backdrop, pointer-events none — der Moment blockiert nichts. */}
+    <AnimatePresence>
+      {saveState === 'success' && (
+        <motion.div className="session-save-beat" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={reduced ? undefined : { opacity: 0, scale: 1.05 }} transition={{ duration: reduced ? 0 : 0.18, ease: 'easeOut' }}>
+          <motion.div style={{ display: 'grid', justifyItems: 'center' }} initial={reduced ? false : { scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 24 }}>
+            <div className={`session-save-check${reduced ? '' : ' is-pulsing'}`}>
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                <motion.path d="M10 21.5L17.5 29L30.5 13.5" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" initial={reduced ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={reduced ? { duration: 0 } : { duration: 0.3, ease: 'easeOut', delay: 0.12 }} />
+              </svg>
             </div>
-
-            <footer className="session-footer"><button className="primary-button session-finish-button" type="button" onClick={handleFinish} disabled={saving || activeSession.exercises.length === 0}><Save size={17} /> {saving ? 'Speichert…' : 'Training beenden & speichern'}</button></footer>
-          </motion.section>
+            <motion.p className="session-save-label" initial={reduced ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={reduced ? { duration: 0 } : { delay: 0.26, duration: 0.18, ease: 'easeOut' }}>Gespeichert.</motion.p>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
@@ -132,6 +193,16 @@ export function WorkoutSessionModal() {
       machineId={historyTargetKey ?? ''}
       exerciseName={historyTargetName}
     />
+
+    {/* Verwerfen bestätigen — ein laufendes Training geht sonst unwiderruflich verloren */}
+    <ConfirmSheet
+      isOpen={discardConfirmOpen}
+      onClose={() => setDiscardConfirmOpen(false)}
+      onConfirm={() => { setDiscardConfirmOpen(false); discardSession(); }}
+      title="Training verwerfen?"
+      message="Alle Sätze dieser Einheit gehen verloren. Die Aktion kann nicht rückgängig gemacht werden."
+      confirmLabel="Verwerfen"
+    />
     </>,
     document.body,
   );
@@ -141,13 +212,21 @@ function ExercisePicker({ query, setQuery, suggestions, onSelect }: { query: str
   return <motion.div className="exercise-picker glass-panel" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Übung suchen…" autoFocus aria-label="Übung suchen" /><div className="exercise-suggestions">{suggestions.map((exercise) => <button key={exercise.id} type="button" onClick={() => onSelect({ id: exercise.id, name: exercise.name, equipment: exercise.equipment ?? undefined, target: exercise.target ?? undefined })}><span>{exercise.name}</span><small>{exercise.target ?? exercise.equipment ?? 'Übung'}</small></button>)}</div></motion.div>;
 }
 
-function ExerciseCard({ item, progress, reduced, onRemove, onChange, onOpenWarmup, onOpenHistory }: { item: SessionExercise; progress: { current?: import('../db/schema').ProgressHistory; previous?: import('../db/schema').ProgressHistory }; reduced: boolean; onRemove: () => void; onChange: (item: SessionExercise) => void; onOpenWarmup: () => void; onOpenHistory: () => void }) {
+function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange, onOpenWarmup, onOpenHistory }: { exerciseId: string; item: SessionExercise; progress: { current?: import('../db/schema').ProgressHistory; previous?: import('../db/schema').ProgressHistory }; reduced: boolean; onRemove: () => void; onChange: (item: SessionExercise) => void; onOpenWarmup: () => void; onOpenHistory: () => void }) {
+  /** Inkrement-Key für den Häkchen-Pop: zählt jeden Abhak-Vorgang, damit das Keyframe auch bei erneutem Abhaken derselben Zeile neu feuert. */
+  const [checkPopKey, setCheckPopKey] = useState(0);
+  const cardRef = useRef<HTMLElement | null>(null);
+  // Frisch hinzugefügte Übung sanft in den Viewport bringen, damit der Eintritts-Übergang auch sichtbar ist.
+  useEffect(() => {
+    if (item.sets.length > 0) return;
+    cardRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' });
+  }, [exerciseId, reduced, item.sets.length]);
   const completed = item.sets.filter((set) => set.completed).length;
   const warmupSets = item.sets.filter((set) => set.warmup);
   const workSets = item.sets.filter((set) => !set.warmup);
   const warmupConfig = useTodayWarmupConfig(warmupExerciseKey(item.exercise));
-  const renderSet = (set: import('../db/schema').SessionSet, isWarmup: boolean) => <div className={`session-set-row${set.completed ? ' is-complete' : ''}${isWarmup ? ' is-warmup' : ''}`} key={set.id}><span className="set-number">{set.setNumber}</span><input type="number" inputMode="decimal" min="0" step="2.5" value={set.gewicht} onChange={(event) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { gewicht: Number(event.target.value) || 0 }) : candidate) })} aria-label={`Satz ${set.setNumber} Gewicht`} /><input type="number" inputMode="numeric" min="0" step="1" value={set.wiederholungen} onChange={(event) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { wiederholungen: Number(event.target.value) || 0 }) : candidate) })} aria-label={`Satz ${set.setNumber} Wiederholungen`} /><button className="set-check" type="button" aria-label={`Satz ${set.setNumber} ${set.completed ? 'offen' : 'abhaken'}`} aria-pressed={set.completed} onClick={() => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { completed: !candidate.completed, timestamp: Date.now() }) : candidate) })}><Check size={16} /></button></div>;
-  return <motion.article className="workout-exercise-card glass-panel" initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={reduced ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }}>
+  const renderSet = (set: import('../db/schema').SessionSet, isWarmup: boolean) => <div className={`session-set-row${set.completed ? ' is-complete' : ''}${isWarmup ? ' is-warmup' : ''}`} key={set.id}><span className="set-number">{set.setNumber}</span><input type="number" inputMode="decimal" min="0" step="2.5" value={set.gewicht} onChange={(event) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { gewicht: Number(event.target.value) || 0 }) : candidate) })} aria-label={`Satz ${set.setNumber} Gewicht`} /><input type="number" inputMode="numeric" min="0" step="1" value={set.wiederholungen} onChange={(event) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { wiederholungen: Number(event.target.value) || 0 }) : candidate) })} aria-label={`Satz ${set.setNumber} Wiederholungen`} /><button className="set-check" type="button" aria-label={`Satz ${set.setNumber} ${set.completed ? 'offen' : 'abhaken'}`} aria-pressed={set.completed} onClick={() => { setCheckPopKey((key) => key + 1); onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { completed: !candidate.completed, timestamp: Date.now() }) : candidate) }); }}><Check size={16} key={set.completed ? `done-${checkPopKey}` : 'open'} /></button></div>;
+  return <motion.article ref={cardRef} className="workout-exercise-card glass-panel" initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -8 }} transition={reduced ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }}>
     <div className="exercise-card-header"><div><span className="eyebrow">{item.exercise.target ?? 'Exercise'}</span><h2>{item.exercise.name}</h2></div>
       <div className="exercise-card-actions">
         <button className={`icon-button subtle exercise-action-warmup${warmupConfig || warmupSets.length > 0 ? ' is-active' : ''}`} type="button" aria-label={`Warm-up für ${item.exercise.name} ${warmupConfig ? 'ändern' : 'einrichten'}`} onClick={onOpenWarmup}><Flame size={16} /></button>

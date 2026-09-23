@@ -9,14 +9,16 @@
   --bg-app: var(--bg-base);
   --bg-card: var(--bg-surface);
   --bg-glass: rgba(44, 46, 54, .76);
+  --nav-bg: color-mix(in srgb, var(--bg-surface) 84%, transparent);
+  --ring-track: rgba(247, 248, 250, .05);
   --border-subtle: rgba(255,255,255,.08);
   --border: var(--border-subtle);
   --border-highlight: rgba(255,255,255,.16);
   --text-main: #f7f8fa;
   --text-primary: var(--text-main);
-  --text-muted: #a4a7b0;
+  --text-muted: #aeb2bd;
   --text-secondary: var(--text-muted);
-  --text-tertiary: #777b86;
+  --text-tertiary: #979ba8;
   --accent-primary: #5cb88e;
   --accent: var(--accent-primary);
   --accent-secondary: #f4c754;
@@ -107,14 +109,16 @@
   --bg-elevated: #69140e;
   --bg-input: #451513;
   --bg-glass: rgba(88, 24, 18, .78);
+  --nav-bg: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+  --ring-track: rgba(242, 243, 174, .07);
   --border-subtle: rgba(242,243,174,.10);
   --border: var(--border-subtle);
   --border-highlight: rgba(242,243,174,.19);
   --text-main: #f2f3ae;
   --text-primary: var(--text-main);
-  --text-muted: color-mix(in srgb, #f2f3ae 68%, #3c1518);
+  --text-muted: color-mix(in srgb, #f2f3ae 74%, #3c1518);
   --text-secondary: var(--text-muted);
-  --text-tertiary: color-mix(in srgb, #f2f3ae 46%, #3c1518);
+  --text-tertiary: color-mix(in srgb, #f2f3ae 60%, #3c1518);
   --accent-primary: #d58936;
   --accent: var(--accent-primary);
   --accent-secondary: #a44200;
@@ -262,16 +266,42 @@ button:active { transform: scale(.985); }
 
 .bottom-nav { position: fixed; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) * .5 + 6px); left: 12px; z-index: 20; padding: 0; pointer-events: none; transition: opacity 220ms var(--ease-out), visibility 220ms; }
 .bottom-nav.is-hidden { opacity: 0; visibility: hidden; }
-.nav-inner { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; width: min(100%, 560px); min-height: 64px; margin: 0 auto; padding: 5px 6px; pointer-events: auto; background: rgba(44,46,54,.84); border: 1px solid var(--border-highlight); border-radius: 25px; box-shadow: var(--neo-float); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
+.nav-inner { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; width: min(100%, 560px); min-height: 64px; margin: 0 auto; padding: 5px 6px; pointer-events: auto; background: var(--nav-bg); border: 1px solid var(--border-highlight); border-radius: 25px; box-shadow: var(--neo-float); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
 .nav-tab { position: relative; display: grid; place-items: center; gap: 2px; min-width: 0; min-height: 52px; padding: 5px 2px; color: var(--text-tertiary); background: transparent; border-radius: 16px; font-size: 10px; transition: var(--transition-press); }
 .nav-tab.is-active { color: var(--accent-text); background: var(--bg-chip-inset); box-shadow: var(--neo-pressed); }
 .nav-dot { position: absolute; bottom: 2px; width: 4px; height: 4px; background: var(--accent-text); border-radius: 50%; box-shadow: 0 0 8px var(--accent-glow); }
 .create-button { display: grid; place-items: center; justify-self: center; width: 48px; height: 48px; color: var(--text-on-accent); background: var(--accent-primary); border: 3px solid var(--bg-surface); border-radius: 50%; box-shadow: var(--neo-convex), 0 0 22px var(--accent-glow); }
 
+/* Touch-Ziele (HIG ≥44px): visuelle Größe bleibt, Hit-Area wird per Pseudo-Element
+   gestreckt — radius-inherit hält die Neo-Form. Einzige bewusste Ausnahme: die
+   Entfernen-Pills im Vorlagen-Editor (33px), weil 44px in Nachbar-Pills übergreifen
+   und dort die falsche Übung entfernen würden. */
+.set-check, .warmup-set-row .set-check, .template-delete, .import-exercise-remove,
+.import-image-remove, .import-drag-handle, .icon-button.subtle, .selected-exercises button { position: relative; }
+.set-check::after, .warmup-set-row .set-check::after, .template-delete::after, .import-exercise-remove::after,
+.import-image-remove::after, .import-drag-handle::after, .icon-button.subtle::after, .selected-exercises button::after {
+  content: '';
+  position: absolute;
+  inset: var(--hit-bleed, -4px);
+  border-radius: inherit;
+}
+.warmup-set-row .set-check, .import-exercise-remove, .import-drag-handle { --hit-bleed: -5px; }
+.template-delete, .icon-button.subtle { --hit-bleed: -3px; }
+.selected-exercises button { --hit-bleed: -8px; border-radius: 50%; }
+
 /* Workout session overlay */
 .session-shell { position: fixed; inset: 0; z-index: 100; display: flex; align-items: flex-end; overflow: hidden; background: var(--overlay); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 .session-sheet { display: flex; flex-direction: column; width: min(100%, 720px); max-height: 94dvh; margin: 0 auto; overflow: hidden; background: var(--bg-base); border: 1px solid var(--border-highlight); border-bottom: 0; border-radius: 28px 28px 0 0; box-shadow: var(--neo-float), inset 0 1px 0 rgba(255,255,255,.08); }
 .sheet-handle { width: 36px; height: 4px; margin: 10px auto 0; background: var(--bg-chip-inset); border-radius: 2px; box-shadow: inset 0 1px 2px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.05); }
+/* Ziehl-Fläche um die Griffleiste: groß genug zum Greifen (≥44px), visuell bleibt die schlanke Pill. */
+.sheet-handle-zone { display: flex; justify-content: center; width: 100%; padding: 10px 0 12px; margin: 0; cursor: grab; touch-action: none; }
+/* Save-Moment: eigenes Portal über der App — pointer-events none, blockiert nichts. */
+.session-save-beat { position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; pointer-events: none; }
+.session-save-check { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: var(--accent-dim); border: 1px solid var(--border-accent); box-shadow: var(--neo-convex), 0 0 34px var(--accent-glow); }
+.session-save-check svg { color: var(--accent-text); }
+.session-save-label { margin-top: 14px; color: var(--text-main); font-family: var(--font-display); font-size: 17px; font-weight: 800; letter-spacing: var(--tracking-display); }
+@keyframes save-glow-pulse { 0% { box-shadow: var(--neo-convex), 0 0 0 var(--accent-glow); } 45% { box-shadow: var(--neo-convex), 0 0 46px 6px var(--accent-glow); } 100% { box-shadow: var(--neo-convex), 0 0 0 var(--accent-glow); } }
+.session-save-check.is-pulsing { animation: save-glow-pulse 600ms var(--ease-out) 1; }
 .session-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 22px 20px 16px; border-bottom: 1px solid var(--border-subtle); }
 .session-name-input { display: block; width: min(68vw, 310px); margin-top: 5px; padding: 0; color: var(--text-main); background: transparent; border: 0; box-shadow: none; font-family: var(--font-display); font-size: 25px; font-weight: 800; letter-spacing: var(--tracking-display); }
 .session-name-input:focus { box-shadow: none; }
@@ -333,8 +363,8 @@ button:active { transform: scale(.985); }
 .warmup-toggle-sub { display: block; margin-top: 2px; color: var(--text-tertiary); font-size: 11px; }
 .warmup-switch { position: relative; width: 48px; height: 28px; flex: 0 0 48px; background: var(--bg-chip-inset); border: 1px solid var(--border-subtle); border-radius: 999px; box-shadow: var(--neo-pressed); transition: background 180ms var(--ease-out), border-color 180ms var(--ease-out); }
 .warmup-switch.is-on { background: var(--accent-dim); border-color: var(--border-accent); }
-.warmup-switch-knob { position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; background: var(--bg-elevated); border-radius: 50%; box-shadow: var(--neo-knob); }
-.warmup-switch.is-on .warmup-switch-knob { background: var(--accent-primary); }
+.warmup-switch-knob { position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; background: var(--bg-elevated); border-radius: 50%; box-shadow: var(--neo-knob); transition: transform 180ms var(--ease-out); }
+.warmup-switch.is-on .warmup-switch-knob { background: var(--accent-primary); transform: translateX(20px); }
 .warmup-reset { display: grid; place-items: center; width: 52px; min-height: 50px; color: var(--danger); background: var(--danger-dim); border: 1px solid var(--danger-border); border-radius: var(--radius-pill); box-shadow: var(--neo-pressed); }
 .warmup-confirm { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; color: var(--text-on-accent); background: var(--accent-primary); border-radius: var(--radius-pill); box-shadow: var(--neo-convex), 0 0 24px var(--accent-glow); font-size: 14px; font-weight: 800; opacity: 1; }
 .warmup-confirm:disabled { opacity: .7; }
@@ -354,8 +384,11 @@ button:active { transform: scale(.985); }
 .history-empty h3 { color: var(--text-main); font-family: var(--font-display); font-size: 20px; letter-spacing: var(--tracking-display); }
 .history-empty p { max-width: 280px; color: var(--text-muted); font-size: 12.5px; line-height: 1.55; }
 .history-empty-cta { display: inline-flex; align-items: center; gap: 7px; margin-top: 9px; min-height: 44px; padding: 0 16px; color: var(--text-on-accent); background: var(--accent-primary); border-radius: var(--radius-pill); box-shadow: var(--neo-convex), 0 0 20px var(--accent-glow); font-size: 12.5px; font-weight: 800; }
-.set-check { display: grid; place-items: center; width: 36px; height: 36px; color: var(--text-tertiary); background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; box-shadow: var(--neo-knob); }
-.session-set-row.is-complete .set-check { color: var(--text-on-accent); background: var(--accent-primary); }
+.set-check { display: grid; place-items: center; width: 36px; height: 36px; color: var(--text-tertiary); background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; box-shadow: var(--neo-knob); transition: background 140ms var(--ease-out), color 140ms var(--ease-out), box-shadow 140ms var(--ease-out); }
+.session-set-row.is-complete .set-check, .warmup-set-row.is-complete .set-check { color: var(--text-on-accent); background: var(--accent-primary); }
+/* Häkchen-Pop beim Abhaken: Keyframe am Icon (nicht am Button), damit die 44px-Hit-Area nie wackelt. */
+@keyframes check-pop { from { transform: scale(.85); } to { transform: scale(1); } }
+.session-set-row.is-complete .set-check svg, .warmup-set-row.is-complete .set-check svg { animation: check-pop 160ms var(--ease-out) 1; }
 .add-set-button, .add-exercise-button, .secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; color: var(--text-muted); background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); box-shadow: var(--neumorph-inset); font-size: 12px; font-weight: 700; }
 .add-set-button { width: 100%; margin-top: 10px; }
 .add-set-button span { margin-left: 2px; color: var(--accent-text); font-variant-numeric: tabular-nums; }
@@ -518,12 +551,20 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
   .hero-panel { min-height: 258px; padding: 24px 20px 20px; }
   .hero-copy h2 { font-size: clamp(34px, 10vw, 46px); }
   .hero-orbit { right: -70px; opacity: .58; transform: scale(.82) rotate(-17deg); }
-  .nav-inner { background: rgba(44,46,54,.96); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .nav-inner { backdrop-filter: none; -webkit-backdrop-filter: none; }
   .ambient { filter: blur(42px); opacity: .08; }
   .session-shell, .launcher-shell { backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+/* Reduced Motion: Entrances/Schleifen werden gekillt — aber Zustands-Feedback
+   (is-complete-Färbung des Satz-Checks, Pressed-Übergänge) bleibt als sofortiger
+   Zustandswechsel erkennbar. Der Zustand selbst ändert sich ja, nur die Bewegung entfällt. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  *, *::before, *::after { transition-duration: .01ms !important; }
+  .session-set-row, .session-set-row .set-check, .warmup-set-row, .warmup-set-row .set-check,
+  .warmup-switch, .nav-tab, .import-exercise-row, .mode-value svg { transition-duration: 0.01ms !important; transition-property: background-color, border-color, color, box-shadow !important; }
+}
 
 /* Sehr schmale Devices (≤373px): Theme-Switcher ohne Label, damit nichts in die Bruchzone rutscht. */
 @media (max-width: 374px) {
