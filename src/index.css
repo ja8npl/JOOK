@@ -572,6 +572,22 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
   .theme-switcher button { gap: 0 !important; padding: 5px !important; }
 }
 
+/* ═════════ Launch-Sequenz (SplashIntro) — z-Index über allem inkl. Overlays (300+) ═════════ */
+.splash-intro { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1F2024; /* wie --bg-base der App-Icons, theme-unabhängig */ }
+.splash-stage { position: absolute; top: 50%; left: 50%; width: 0; height: 0; /* Anker: exaktes Screen-Zentrum, wie im iOS-Splash-PNG */ }
+.splash-intro-tile { position: absolute; top: 0; left: 0; display: grid; place-items: center; /* Zentrierung über negative Margins (inline) — Framer Motion überschreibt transform */ background: #09090B; box-shadow: 0 22px 55px rgba(3,4,7,.56), 0 0 0 1px rgba(255,255,255,.08), inset 0 1px 0 rgba(255,255,255,.11); }
+.splash-intro-glyph { position: relative; z-index: 1; display: grid; place-items: center; color: #CAFE00; }
+.splash-intro-ring { position: absolute; inset: 0; pointer-events: none; border: 1px solid rgba(202, 254, 0, .7); }
+.splash-intro-wordmark { position: absolute; left: 0; right: 0; display: flex; align-items: baseline; justify-content: center; font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 21px; font-weight: 800; letter-spacing: -.035em; color: #F7F8FA; }
+.splash-intro-letter { display: inline-block; will-change: transform, opacity; }
+.splash-intro-space { width: .32em; }
+
+/* Reduced Motion: keine Ring-/Bounce-Optik, nur weicher Cross-Fade (in TSX geregelt). */
+@media (prefers-reduced-motion: reduce) {
+  .splash-intro-ring { display: none; }
+  .splash-intro-letter { will-change: auto; }
+}
+
 /* Temporary geometry probe: open the app with ?layoutDebug=1. */
 html[data-layout-debug='true'] #root { background: #17843d !important; }
 html[data-layout-debug='true'] .bottom-nav { outline: 3px solid #ff2d2d; }

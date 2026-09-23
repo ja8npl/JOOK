@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import { SplashIntro } from './components/SplashIntro';
 import { BottomNav } from './components/BottomNav';
 import { Home } from './pages/Home';
 import { Detail } from './pages/Detail';
@@ -49,6 +51,11 @@ function AnimatedRoutes() {
 }
 
 export default function App() {
+  // Launch-Sequenz: Das Intro-Overlay liegt über der bereits gerenderten App,
+  // damit nach dem Abflug der Kachel sofort echte Inhalte sichtbar sind.
+  // SplashIntro terminiert selbst (onDone) und braucht hier keinen State.
+  const [introDone, setIntroDone] = useState(false);
+
   return (
     <ThemeProvider>
       <WorkoutSessionProvider>
@@ -71,6 +78,9 @@ export default function App() {
           <BottomNav />
           <WorkoutSessionModal />
           <WorkoutLauncher />
+          {!introDone && (
+            <SplashIntro onDone={() => setIntroDone(true)} />
+          )}
         </div>
       </HashRouter>
       </WorkoutSessionProvider>

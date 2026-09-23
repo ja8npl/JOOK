@@ -7,7 +7,19 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['apple-touch-icon.png', 'favicon.svg', 'splash-1179x2556.png', 'splash-1290x2796.png', 'splash-1170x2532.png', 'splash-750x1334.png'],
+      includeAssets: [
+        'apple-touch-icon.png',
+        'favicon.svg',
+        'splash-1320x2868.png',
+        'splash-1290x2796.png',
+        'splash-1284x2778.png',
+        'splash-1260x2736.png',
+        'splash-1206x2622.png',
+        'splash-1179x2556.png',
+        'splash-1170x2532.png',
+        'splash-1125x2436.png',
+        'splash-750x1334.png',
+      ],
       manifest: {
         name: 'Gym Log',
         short_name: 'Gym Log',
