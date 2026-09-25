@@ -15,6 +15,14 @@ import { useEffect, useRef } from 'react';
  */
 export function useOverlayFocus(open: boolean, onClose: () => void) {
   const sheetRef = useRef<HTMLDivElement>(null);
+  /* onClose im Ref halten: Der Effekt hängt nur von `open` ab. Eine neue Callback-
+     Identität pro Render (z. B. der Sekunden-Tick im Session-Modal) würde sonst den
+     Effekt ständig neu starten — und den Fokus per Focus-Timer zurück aufs Sheet
+     reißen, während der Nutzer in ein Input tippt („Eingabe wird sofort abgebrochen“). */
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   useEffect(() => {
     if (!open) return undefined;
@@ -26,7 +34,7 @@ export function useOverlayFocus(open: boolean, onClose: () => void) {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.stopPropagation();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (event.key !== 'Tab') return;
@@ -55,7 +63,7 @@ export function useOverlayFocus(open: boolean, onClose: () => void) {
       window.clearTimeout(focusTimer);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   return sheetRef;
 }
