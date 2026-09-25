@@ -27,3 +27,8 @@ dist-ssr
 
 # Lokale Dev-Test-Assets (Testbilder, API-Checks)
 dev/
+
+# Große Installer/Binärdateien nicht committen
+*.msix
+*.exe
+*.msi
