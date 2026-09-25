@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Minus, Plus } from 'lucide-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { RirPicker } from './RirPicker';
+import { type RirValue } from '../db/schema';
 
 interface Props {
   defaultWeight?: number;
-  onComplete: (gewicht: number, wiederholungen: number) => void;
+  onComplete: (gewicht: number, wiederholungen: number, rir?: RirValue) => void;
 }
 
 const GEWICHT_STEP = 2.5;
@@ -14,6 +16,7 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
   const reduced = useReducedMotion();
   const [gewicht, setGewicht] = useState<number>(defaultWeight ?? 20);
   const [wiederholungen, setWiederholungen] = useState(0);
+  const [rir, setRir] = useState<RirValue | undefined>(undefined);
 
   const [prevDefault, setPrevDefault] = useState(defaultWeight);
   if (defaultWeight !== undefined && defaultWeight !== prevDefault) {
@@ -27,8 +30,9 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
 
   const complete = () => {
     if (wiederholungen <= 0) return;
-    onComplete(gewicht, wiederholungen);
+    onComplete(gewicht, wiederholungen, rir);
     setWiederholungen(0);
+    setRir(undefined);
   };
 
   const canComplete = wiederholungen > 0;
@@ -83,6 +87,8 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
             <Minus size={16} strokeWidth={2.5} />
           </StepperButton>
 
+          {/* RIR-Chip neben Reps — optional, leer = „RIR“ */}
+
           {/* Großer Tap-Counter — konvex, aktiv wird es pressed */}
           <motion.button
             type="button"
@@ -114,6 +120,10 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
           <StepperButton onClick={() => setWiederholungen((w) => w + 1)} label="Eine mehr">
             <Plus size={16} strokeWidth={2.5} />
           </StepperButton>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+          {/* RIR-Chip unter den Reps — optional, leer = „RIR“ */}
+          <RirPicker value={rir} setLabel="diesem Satz" onChange={setRir} />
         </div>
       </div>
 

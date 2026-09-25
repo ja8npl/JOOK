@@ -8,7 +8,10 @@ import { updateSessionSet } from '../hooks/workoutSessionUtils';
 import { searchStaticExercises, type StaticExercise } from '../hooks/useExercises';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { ProgressBadge } from './ProgressBadge';
+import { ProgressionChip } from './ProgressionChip';
+import { RirPicker } from './RirPicker';
 import { useProgressHistory } from '../hooks/useWorkoutSessions';
+import { useLastFirstSetForMachine } from '../hooks/useSets';
 import { HistorySheet } from './HistorySheet';
 import { WarmupSheet } from './WarmupSheet';
 import { ConfirmSheet } from './ConfirmSheet';
@@ -225,7 +228,10 @@ function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange,
   const warmupSets = item.sets.filter((set) => set.warmup);
   const workSets = item.sets.filter((set) => !set.warmup);
   const warmupConfig = useTodayWarmupConfig(warmupExerciseKey(item.exercise));
-  const renderSet = (set: import('../db/schema').SessionSet, isWarmup: boolean) => <div className={`session-set-row${set.completed ? ' is-complete' : ''}${isWarmup ? ' is-warmup' : ''}`} key={set.id}><span className="set-number">{set.setNumber}</span><input type="number" inputMode="decimal" min="0" step="2.5" value={set.gewicht} onChange={(event) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { gewicht: Number(event.target.value) || 0 }) : candidate) })} aria-label={`Satz ${set.setNumber} Gewicht`} /><input type="number" inputMode="numeric" min="0" step="1" value={set.wiederholungen} onChange={(event) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { wiederholungen: Number(event.target.value) || 0 }) : candidate) })} aria-label={`Satz ${set.setNumber} Wiederholungen`} /><button className="set-check" type="button" aria-label={`Satz ${set.setNumber} ${set.completed ? 'offen' : 'abhaken'}`} aria-pressed={set.completed} onClick={() => { setCheckPopKey((key) => key + 1); onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { completed: !candidate.completed, timestamp: Date.now() }) : candidate) }); }}><Check size={16} key={set.completed ? `done-${checkPopKey}` : 'open'} /></button></div>;
+  /** Steigerungs-Signal: erster Satz des letzten Eintrags dieser Übung (per Name-Key). */
+  const firstSetOfPrevious = useLastFirstSetForMachine(warmupExerciseKey(item.exercise));
+  const isWarmupOnly = warmupSets.length > 0 && workSets.length === 0;
+  const renderSet = (set: import('../db/schema').SessionSet, isWarmup: boolean) => <div className={`session-set-row${set.completed ? ' is-complete' : ''}${isWarmup ? ' is-warmup' : ''}`} key={set.id}><span className="set-number">{set.setNumber}</span><input type="number" inputMode="decimal" min="0" step="2.5" value={set.gewicht} onChange={(event) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { gewicht: Number(event.target.value) || 0 }) : candidate) })} aria-label={`Satz ${set.setNumber} Gewicht`} /><input type="number" inputMode="numeric" min="0" step="1" value={set.wiederholungen} onChange={(event) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { wiederholungen: Number(event.target.value) || 0 }) : candidate) })} aria-label={`Satz ${set.setNumber} Wiederholungen`} /><RirPicker value={set.rir} setLabel={`Satz ${set.setNumber}`} onChange={(rir) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { rir }) : candidate) })} /><button className="set-check" type="button" aria-label={`Satz ${set.setNumber} ${set.completed ? 'offen' : 'abhaken'}`} aria-pressed={set.completed} onClick={() => { setCheckPopKey((key) => key + 1); onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { completed: !candidate.completed, timestamp: Date.now() }) : candidate) }); }}><Check size={16} key={set.completed ? `done-${checkPopKey}` : 'open'} /></button></div>;
   return <motion.article ref={cardRef} className="workout-exercise-card glass-panel" initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -8 }} transition={reduced ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }}>
     <div className="exercise-card-header"><div><span className="eyebrow">{item.exercise.target ?? 'Exercise'}</span><h2>{item.exercise.name}</h2></div>
       <div className="exercise-card-actions">
@@ -235,6 +241,13 @@ function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange,
       </div></div>
     <ProgressBadge current={progress.current} previous={progress.previous} />
     <div className="set-table">
+      {!isWarmupOnly && (
+        <ProgressionChip
+          last={firstSetOfPrevious}
+          zielReps={item.exercise.wiederholungen}
+          settled={workSets.some((set) => set.completed)}
+        />
+      )}
       {warmupSets.length > 0 && (
         <div className="warmup-block">
           <div className="warmup-block-label"><Flame size={12} /> Warm-up · Ziel-Reps je Satz</div>
@@ -250,7 +263,7 @@ function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange,
           ))}
         </div>
       )}
-      <div className="set-table-head"><span>Satz</span><span>Gewicht</span><span>Reps</span><span>Done</span></div>
+      <div className="set-table-head"><span>Satz</span><span>Gewicht</span><span>Reps</span><span>RIR</span><span>Done</span></div>
       {workSets.map((set) => renderSet(set, false))}
     </div>
     <button className="add-set-button" type="button" onClick={() => onChange({ ...item, sets: [...item.sets, { id: crypto.randomUUID(), setNumber: item.sets.length + 1, gewicht: item.previous?.maxGewicht ?? 20, wiederholungen: item.previous?.bestReps ?? 8, completed: false }] })}><Plus size={14} /> Satz ergänzen <span>{completed}/{item.sets.length}</span></button>

@@ -40,6 +40,16 @@ export class GymLogDB extends Dexie {
       bodyweights: '++id, tag',
       settings: 'key',
     });
+    // v6: RIR pro Satz (WorkoutSet.rir / SessionSet.rir) — nicht indiziertes Feld,
+    // Store-Schemas unverändert. Alte Sätze bleiben ohne rir (optional), nichts geht verloren.
+    this.version(6).stores({
+      entries: '++id, machineId, datum',
+      sessions: '++id, startedAt, endedAt, status',
+      progressHistory: '++id, sessionId, exerciseId, datum',
+      warmupConfigs: 'key, machineId, tag',
+      bodyweights: '++id, tag',
+      settings: 'key',
+    });
   }
 }
 

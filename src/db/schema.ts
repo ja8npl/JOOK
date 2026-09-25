@@ -20,6 +20,12 @@ export interface GymEntry {
   sets?: WorkoutSet[];
 }
 
+/**
+ * Reps in Reserve (RIR) eines Satzes: 0–4 (4 = „4+“) oder 'failure'.
+ * Optionale Zusatzinfo — fließt bewusst NICHT in die 1RM-Schätzung ein.
+ */
+export type RirValue = 0 | 1 | 2 | 3 | 4 | 'failure';
+
 /** Ein abgeschlossener Satz während einer Trainingseinheit */
 export interface WorkoutSet {
   /** Arbeitsgewicht in kg */
@@ -30,6 +36,8 @@ export interface WorkoutSet {
   timestamp: number;
   /** Warm-up-Satz (nur SessionSets; bei persistierten Einträgen immer absent) */
   warmup?: boolean;
+  /** Reps in Reserve beim Satz-Ende (optional, Zusatzinfo) */
+  rir?: RirValue;
 }
 
 /** Hilfsfunktion: Name → machineId normalisieren */
@@ -64,6 +72,8 @@ export interface SessionSet {
   /** Ziel-Reps-Bereich [min, max] des Warm-up-Satzes */
   zielRepsMin?: number;
   zielRepsMax?: number;
+  /** Reps in Reserve beim Satz-Ende (optional, Zusatzinfo) */
+  rir?: RirValue;
 }
 
 /** Warm-up-Konfiguration pro Übung und Tag (Dexie v4). */

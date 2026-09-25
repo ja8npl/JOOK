@@ -10,6 +10,7 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 import { searchStaticExercises } from '../hooks/useExercises';
 import { SetCounter } from './SetCounter';
 import { RestTimer } from './RestTimer';
+import { rirLabel } from '../lib/progression';
 
 interface Props {
   initialEntry?: Partial<GymEntry>;
@@ -273,6 +274,11 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
                   fontVariantNumeric: 'tabular-nums',
                 }}>
                   {s.gewicht} kg × {s.wiederholungen}
+                  {s.rir !== undefined && (
+                    <span style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 800, color: 'var(--accent-text)' }}>
+                      @ RIR {rirLabel(s.rir)}
+                    </span>
+                  )}
                 </span>
                 <motion.button
                   type="button"
@@ -318,8 +324,8 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
 
         <SetCounter
           defaultWeight={lastWeight ?? (sets.length > 0 ? sets[sets.length - 1].gewicht : undefined)}
-          onComplete={(gewicht, wiederholungen) => {
-            setSets((prev) => [...prev, { gewicht, wiederholungen, timestamp: Date.now() }]);
+          onComplete={(gewicht, wiederholungen, rir) => {
+            setSets((prev) => [...prev, { gewicht, wiederholungen, timestamp: Date.now(), rir }]);
             setTimerStartKey((k) => k + 1);
           }}
         />

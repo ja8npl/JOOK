@@ -327,7 +327,7 @@ button:active { transform: scale(.985); }
 .progress-badge-muted { color: var(--text-tertiary); background: var(--bg-input); border: 1px solid var(--border-subtle); }
 .progress-badge-detail { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; color: color-mix(in srgb, var(--accent-secondary) 74%, var(--text-main)); font-weight: 600; }
 .set-table { margin-top: 14px; }
-.set-table-head, .session-set-row { display: grid; grid-template-columns: 38px 1fr 1fr 42px; align-items: center; gap: 7px; }
+.set-table-head, .session-set-row { display: grid; grid-template-columns: 38px 1fr 1fr 46px 42px; align-items: center; gap: 6px; }
 .set-table-head { padding: 0 6px 5px; color: var(--text-tertiary); font-size: 9px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
 .session-set-row { margin-top: 6px; padding: 6px; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 13px; box-shadow: var(--neo-pressed); transition: var(--transition-press); }
 .session-set-row.is-complete { background: var(--accent-dim); border-color: var(--border-accent); box-shadow: var(--neumorph-pressed); }
@@ -395,6 +395,25 @@ button:active { transform: scale(.985); }
 .add-set-button span { margin-left: 2px; color: var(--accent-text); font-variant-numeric: tabular-nums; }
 .add-exercise-button { width: 100%; margin-top: 14px; color: var(--accent-text); }
 .rotate-icon { transform: rotate(180deg); }
+
+/* ═════════ RIR (Reps in Reserve) — Chip pro Satz-Zeile + Auswahl-Popover ═════════ */
+.rir-wrap { position: relative; }
+.rir-chip { display: grid; place-items: center; width: 42px; height: 34px; color: var(--text-tertiary); background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; box-shadow: var(--neo-knob); font-size: 10.5px; font-weight: 800; letter-spacing: .03em; font-variant-numeric: tabular-nums; transition: background 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out); }
+.rir-chip.is-set { color: var(--accent-text); background: var(--accent-dim); border-color: var(--border-accent); }
+.rir-popover { position: absolute; top: calc(100% + 6px); right: 0; z-index: 40; display: flex; gap: 4px; padding: 6px; background: var(--bg-elevated); border: 1px solid var(--border-highlight); border-radius: 13px; box-shadow: var(--neo-float); animation: rir-pop 150ms var(--ease-out); }
+@keyframes rir-pop { from { opacity: 0; transform: translateY(-4px) scale(.96); } to { opacity: 1; transform: none; } }
+.rir-popover button { display: grid; place-items: center; min-width: 34px; height: 36px; padding: 0 6px; color: var(--text-secondary); background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 9px; box-shadow: var(--neo-raised); font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.rir-popover button[aria-checked='true'] { color: var(--text-on-accent); background: var(--accent-primary); border-color: var(--border-accent); box-shadow: var(--neo-pressed); }
+
+/* ═════════ Steigerungs-Signal — pulsierender Chip über der Satz-Tabelle ═════════ */
+.progression-chip { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding: 10px 13px; color: var(--text-secondary); background: var(--bg-input); border: 1px solid color-mix(in srgb, var(--accent-primary) 38%, transparent); border-radius: 13px; font-size: 12px; line-height: 1.4; }
+.progression-chip.is-pulsing { animation: progression-glow 2.4s ease-in-out infinite; }
+@keyframes progression-glow { 0%, 100% { box-shadow: var(--neo-pressed), 0 0 0 0 var(--accent-glow); } 50% { box-shadow: var(--neo-pressed), 0 0 22px 2px var(--accent-glow); } }
+.progression-chip-eyebrow { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-text); font-size: 9px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.progression-chip-hint { flex-basis: 100%; color: var(--text-tertiary); font-size: 11px; }
+.progression-chip.is-settled { border-color: var(--border-subtle); }
+.progression-chip.is-settled .progression-chip-eyebrow { color: var(--text-tertiary); }
+@media (prefers-reduced-motion: reduce) { .progression-chip.is-pulsing { animation: none; box-shadow: var(--neo-pressed); } }
 .exercise-picker { margin-top: 10px; padding: 10px; overflow: hidden; border-radius: var(--radius-md); }
 .exercise-picker input { padding: 12px 14px; }
 .exercise-suggestions { display: grid; gap: 4px; max-height: 230px; margin-top: 7px; overflow: auto; scrollbar-width: none; }

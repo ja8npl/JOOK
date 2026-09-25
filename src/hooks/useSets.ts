@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
-import { type GymEntry, type WorkoutSet } from '../db/schema';
+import { toMachineId, type GymEntry, type RirValue, type WorkoutSet, type WorkoutSession } from '../db/schema';
 
 /** Sichere Sets eines Eintrags (defensiv gegen fehlende/kaputte Felder) */
 export function setsOf(entry: GymEntry | undefined): WorkoutSet[] {
@@ -28,6 +28,58 @@ export function useLastWeightForMachine(machineId: string): number | undefined {
       if (last) return last.gewicht;
     }
     return undefined;
+  }, [machineId]);
+}
+
+/** Erster Satz des letzten Eintrags einer Maschine — Grundlage für das Steigerungs-Signal. */
+export interface FirstSetSnapshot {
+  gewicht: number;
+  reps: number;
+  /** RIR des ersten Satzes, falls beim Loggen erfasst. */
+  rir?: RirValue;
+}
+
+/**
+ * Erster abgeschlossener Arbeitssatz der letzten abgeschlossenen Session für
+ * eine Übung (per warmupExerciseKey/Namen) — ergänzt die entries-Suche, damit
+ * der Chip auch bei reinem Session-Flow gefüllt ist. undefined = nichts gefunden.
+ */
+async function lastFirstSetFromSessions(machineId: string): Promise<FirstSetSnapshot | undefined> {
+  const sessions: WorkoutSession[] = await db.sessions
+    .where('status')
+    .equals('completed')
+    .reverse()
+    .sortBy('startedAt');
+  for (const session of sessions) {
+    for (const exercise of session.exercises) {
+      const key = exercise.exercise.id === machineId || toMachineId(exercise.exercise.name) === machineId;
+      if (!key) continue;
+      const first = exercise.sets.find((set) => set.completed && !set.warmup && set.gewicht > 0 && set.wiederholungen > 0);
+      if (first) return { gewicht: first.gewicht, reps: first.wiederholungen, rir: first.rir };
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Live-Query: erster Satz des letzten Eintrags dieser Maschine — zuerst aus
+ * klassischen Einträgen, ergänzend aus abgeschlossenen Sessions. Grundlage
+ * für das Steigerungs-Signal über der Satz-Tabelle.
+ */
+export function useLastFirstSetForMachine(machineId: string): FirstSetSnapshot | undefined {
+  return useLiveQuery(async () => {
+    if (!machineId) return undefined;
+    const entries = await db.entries
+      .where('machineId')
+      .equals(machineId)
+      .reverse()
+      .sortBy('datum');
+    for (const entry of entries) {
+      const sets = setsOf(entry);
+      const first = sets[0];
+      if (first) return { gewicht: first.gewicht, reps: first.wiederholungen, rir: first.rir };
+    }
+    return lastFirstSetFromSessions(machineId);
   }, [machineId]);
 }
 
