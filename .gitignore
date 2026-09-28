@@ -25,8 +25,7 @@ dist-ssr
 
 .vercel
 
-# Lokale Dev-Test-Assets (Testbilder, API-Checks)
-dev/
+_local/
 
 # Große Installer/Binärdateien nicht committen
 *.msix

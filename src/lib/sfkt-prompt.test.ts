@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { ANALYSIS_SYSTEM_PROMPT } from "../../lib/prompts/analysis-system-prompt";
+import { ANALYSIS_SYSTEM_PROMPT } from "./prompts/analysis-system-prompt";
 
 /**
  * Guard-Tests für den Analyse-System-Prompt:
- * Die Regeln stammen aus knowledge/pushit/SFKT.pdf (aufbereitet in
- * lib/prompts/knowledge/sfkt-rules.md). Der Prompt darf keine Zahlen erfinden,
+ * Die Regeln stammen aus knowledge/sfkt/SFKT.pdf (aufbereitet in
+ * src/lib/prompts/knowledge/sfkt-rules.md). Der Prompt darf keine Zahlen erfinden,
  * die nicht in der Quelle stehen, und darf die gekennzeichneten Lücken
  * (RIR/RPE-Schwellen, Deload-Regeln) nicht stillschweigend füllen.
  */
