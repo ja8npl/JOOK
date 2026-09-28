@@ -1,8 +1,8 @@
 /**
  * System-Prompt für die KI-Trainingsanalyse.
  *
- * Wissensbasis: lib/prompts/knowledge/sfkt-rules.md — extrahiert aus
- * knowledge/pushit/SFKT.pdf („Wie oft muss man sich steigern?", ACSM Position
+ * Wissensbasis: src/lib/prompts/knowledge/sfkt-rules.md — extrahiert aus
+ * knowledge/sfkt/SFKT.pdf („Wie oft muss man sich steigern?", ACSM Position
  * Stand 2026 & 2009 u. a.). Nur handlungsrelevante Regeln; Lücken (RIR/RPE,
  * Deload) sind als solche gekennzeichnet und dürfen im Prompt nicht gefüllt
  * werden.

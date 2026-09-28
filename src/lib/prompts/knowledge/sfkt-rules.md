@@ -1,6 +1,6 @@
 # SFKT-Regeln: Steigerungsfrequenz & Progression
 
-> Quelle: `knowledge/pushit/SFKT.pdf` („Wie oft muss man sich steigern?", Sportliteratur-Stand ACSM Position Stand 2026 & 2009).
+> Quelle: `knowledge/sfkt/SFKT.pdf` („Wie oft muss man sich steigern?", Sportliteratur-Stand ACSM Position Stand 2026 & 2009).
 > Nur Aussagen, die explizit im Dokument stehen. Lücken sind als „Lücke" gekennzeichnet und dürfen nicht mit Allgemeinwissen gefüllt werden.
 > Tabellen im PDF nutzen verbundene Zellen; die Zeilenzuordnung wurde aus dem Layout rekonstruiert und gegen die Einordnungs-Tabelle (Abschnitt 2) verifiziert.
 
