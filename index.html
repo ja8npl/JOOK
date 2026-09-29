@@ -32,12 +32,6 @@
           const meta = document.querySelector('meta[name="theme-color"]');
           if (meta) meta.setAttribute('content', bgColor);
           document.documentElement.style.backgroundColor = bgColor;
-          // When the DOM is fully loaded, update body and #root as well
-          document.addEventListener('DOMContentLoaded', () => {
-            document.body.style.backgroundColor = bgColor;
-            const root = document.getElementById('root');
-            if (root) root.style.backgroundColor = bgColor;
-          });
         } catch {
           document.documentElement.dataset.theme = 'garmin';
         }
@@ -56,11 +50,7 @@
     <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" href="/splash-750x1334.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="preconnect" href="https://api.fontshare.com" />
-    <link rel="preload" as="style" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,800,900&f[]=general-sans@500,600,700&f[]=cabinet-grotesk@700,800&display=swap" />
-    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,800,900&f[]=general-sans@500,600,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-    <noscript>
-      <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,800,900&f[]=general-sans@500,600,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" />
-    </noscript>
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,800,900&f[]=general-sans@500,600,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" />
     <title>Gym Log</title>
   </head>
   <body style="background-color: #1f2024; margin: 0;">
