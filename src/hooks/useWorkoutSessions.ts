@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { type Exercise, type PerformanceSnapshot, type ProgressHistory, type SessionExercise, type SessionSet, type WorkoutSession } from '../db/schema';
+import { BACKUP_FORMAT_VERSION, type BackupData, parseBackup } from '../lib/backup';
 
 export interface ExerciseAnalytics {
   exercise: Exercise;
@@ -135,27 +136,45 @@ export function useExerciseAnalytics(): ExerciseAnalytics[] | undefined {
 }
 
 export async function exportWorkoutData(): Promise<string> {
-  const [entries, sessions, progressHistory] = await Promise.all([
+  const [entries, sessions, progressHistory, warmupConfigs, bodyweights, settings] = await Promise.all([
     db.entries.toArray(),
     db.sessions.toArray(),
     db.progressHistory.toArray(),
+    db.warmupConfigs.toArray(),
+    db.bodyweights.toArray(),
+    db.settings.toArray(),
   ]);
-  return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), entries, sessions, progressHistory }, null, 2);
+  return JSON.stringify(
+    { version: BACKUP_FORMAT_VERSION, exportedAt: new Date().toISOString(), entries, sessions, progressHistory, warmupConfigs, bodyweights, settings } satisfies BackupData,
+    null,
+    2,
+  );
 }
 
-export async function importWorkoutData(json: string): Promise<void> {
-  const parsed: unknown = JSON.parse(json);
-  if (!parsed || typeof parsed !== 'object') throw new Error('Ungültiges Backup.');
-  const data = parsed as { entries?: unknown; sessions?: unknown; progressHistory?: unknown };
-  if (!Array.isArray(data.entries) || !Array.isArray(data.sessions) || !Array.isArray(data.progressHistory)) {
-    throw new Error('Backup enthält nicht alle Gym-Log-Daten.');
-  }
-  await db.transaction('rw', db.entries, db.sessions, db.progressHistory, async () => {
-    await db.entries.clear();
-    await db.sessions.clear();
-    await db.progressHistory.clear();
-    await db.entries.bulkAdd(data.entries as never[]);
-    await db.sessions.bulkAdd(data.sessions as never[]);
-    await db.progressHistory.bulkAdd(data.progressHistory as never[]);
+/**
+ * Backup importieren: validiert + normalisiert (v1 und v2), ersetzt dann in
+ * einer Transaktion ALLE lokalen Daten. Vorhandene Daten gehen dabei verloren —
+ * der Aufrufer sollte vorher bestätigen lassen (Settings-UI fragt nach).
+ */
+export async function importWorkoutData(json: string): Promise<{ entries: number; sessions: number; progressHistory: number }> {
+  const data = parseBackup(json);
+  await db.transaction('rw', [db.entries, db.sessions, db.progressHistory, db.warmupConfigs, db.bodyweights, db.settings], async () => {
+    await Promise.all([
+      db.entries.clear(),
+      db.sessions.clear(),
+      db.progressHistory.clear(),
+      db.warmupConfigs.clear(),
+      db.bodyweights.clear(),
+      db.settings.clear(),
+    ]);
+    await Promise.all([
+      db.entries.bulkAdd(data.entries),
+      db.sessions.bulkAdd(data.sessions),
+      db.progressHistory.bulkAdd(data.progressHistory),
+      db.warmupConfigs.bulkAdd(data.warmupConfigs),
+      db.bodyweights.bulkAdd(data.bodyweights, { allKeys: true }),
+      db.settings.bulkAdd(data.settings),
+    ]);
   });
+  return { entries: data.entries.length, sessions: data.sessions.length, progressHistory: data.progressHistory.length };
 }
