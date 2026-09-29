@@ -1,0 +1,436 @@
+import { useMemo, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
+import {
+  BarChart3, CalendarDays, Download, Dumbbell, FileJson, Flame, History,
+  Layers, Trophy, Upload, Volume2, Vibrate,
+} from 'lucide-react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../db/db';
+import { ThemeSwitcher } from '../components/ThemeSwitcher';
+import {
+  RIR_DEFAULT_OPTIONS, REST_DURATION_OPTIONS, useBasePrefs,
+} from '../hooks/useBasePrefs';
+import { computeBaseStats, computePrs, computeVolumeSeries } from '../lib/baseStats';
+import { exportWorkoutData, importWorkoutData } from '../hooks/useWorkoutSessions';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+
+/* ════════════════════════ Formatierung ════════════════════════ */
+
+const fmtInt = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
+const fmtKg = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
+
+const RIR_LABELS: Record<string, string> = { none: 'Aus', 0: '0', 1: '1', 2: '2', 3: '3', failure: 'Failure' };
+
+/* ════════════════════════ Seite ════════════════════════ */
+
+export function Base() {
+  const reduced = useReducedMotion();
+  const prefs = useBasePrefs();
+
+  const entries = useLiveQuery(() => db.entries.toArray(), []);
+  const sessions = useLiveQuery(() => db.sessions.toArray(), []);
+  const progressHistory = useLiveQuery(() => db.progressHistory.toArray(), []);
+  const bodyWeights = useLiveQuery(() => db.bodyweights.toArray(), []);
+
+  // Render-Purity: Datum einmal pro Mount fixieren (wie im ProgressionChart).
+  const [jetzt] = useState(() => Date.now());
+
+  const stats = useMemo(() => {
+    if (entries === undefined || sessions === undefined || progressHistory === undefined || bodyWeights === undefined) return undefined;
+    return computeBaseStats({ entries, sessions, progressHistory, bodyWeights, jetzt });
+  }, [entries, sessions, progressHistory, bodyWeights, jetzt]);
+
+  const prs = useMemo(() => (progressHistory ? computePrs(progressHistory) : []), [progressHistory]);
+  const volumeSeries = useMemo(
+    () => (progressHistory && entries ? computeVolumeSeries(progressHistory, entries) : []),
+    [progressHistory, entries],
+  );
+
+  return (
+    <main className="base page-container">
+      <header className="progress-page-header">
+        <div>
+          <span className="eyebrow accent-copy">Deine Basis</span>
+          <h1>Base.</h1>
+          <p>Bilanz, Darstellung, Timer-Präferenzen und Backup — alles an einem Ort.</p>
+        </div>
+        <div className="progress-header-icon"><Layers size={22} /></div>
+      </header>
+
+      {/* ── Erweiterte Statistik ─────────────────────────────────────── */}
+      <section aria-labelledby="base-stats-heading">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">Alles, was zählt</span>
+            <h2 id="base-stats-heading">Bilanz</h2>
+          </div>
+        </div>
+        {stats === undefined ? (
+          <div className="machine-list" aria-label="Laden"><div className="skeleton-row" /><div className="skeleton-row" /></div>
+        ) : (
+          <motion.div
+            className="progress-overview-grid"
+            initial={reduced ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={reduced ? { duration: 0 } : { duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <StatCard icon={<Flame size={14} />} value={fmtInt.format(stats.currentStreak)} label={`Tage Streak · Best ${fmtInt.format(stats.bestStreak)}`} />
+            <StatCard icon={<BarChart3 size={14} />} value={fmtKg.format(stats.totalVolume)} label="Volumen gesamt (kg)" />
+            <StatCard icon={<History size={14} />} value={fmtInt.format(stats.trainingDays)} label="Trainingstage" />
+            <StatCard icon={<CalendarDays size={14} />} value={fmtInt.format(stats.sessionCount)} label="Sessions" />
+            <StatCard icon={<Dumbbell size={14} />} value={fmtInt.format(stats.totalSets)} label="Arbeits-Sätze" />
+            <StatCard icon={<Trophy size={14} />} value={fmtInt.format(stats.exerciseCount)} label="Übungen getrackt" />
+          </motion.div>
+        )}
+      </section>
+
+      {/* ── Volumen über die Zeit ────────────────────────────────────── */}
+      {stats !== undefined && volumeSeries.length >= 2 && (
+        <section aria-labelledby="base-volume-heading" style={{ marginTop: '30px' }}>
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">Arbeitsvolumen</span>
+              <h2 id="base-volume-heading">Volumen über Zeit</h2>
+            </div>
+          </div>
+          <VolumeChart series={volumeSeries} reduced={reduced} />
+        </section>
+      )}
+
+      {/* ── PRs über alle Übungen ────────────────────────────────────── */}
+      {prs.length > 0 && (
+        <section aria-labelledby="base-pr-heading" style={{ marginTop: '30px' }}>
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">Bestleistungen</span>
+              <h2 id="base-pr-heading">PRs</h2>
+            </div>
+            <span className="count-pill">{prs.length}</span>
+          </div>
+          <motion.div
+            className="glass-panel"
+            style={{ display: 'grid', gap: '2px', padding: '8px', borderRadius: 'var(--radius-card)' }}
+            initial={reduced ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={reduced ? { duration: 0 } : { duration: 0.35, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {prs.map((row) => (
+              <div
+                key={row.exerciseId}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+                  padding: '11px 10px', borderRadius: '14px',
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <span style={{
+                    display: 'block', fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700,
+                    color: 'var(--text-main)', letterSpacing: 'var(--tracking-display)',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>
+                    {row.exerciseName}
+                  </span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                    {new Date(row.datum).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })}
+                  </span>
+                </div>
+                <span style={{
+                  flexShrink: 0, fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: 800,
+                  color: 'var(--accent-text)', fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {fmtKg.format(row.bestGewicht)} <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 700 }}>kg</span>
+                </span>
+              </div>
+            ))}
+          </motion.div>
+        </section>
+      )}
+
+      {/* ── Darstellung / Theme ──────────────────────────────────────── */}
+      <section aria-labelledby="base-theme-heading" style={{ marginTop: '34px' }}>
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">Darstellung</span>
+            <h2 id="base-theme-heading">Farbwelt</h2>
+          </div>
+        </div>
+        <div className="glass-panel" style={{ display: 'grid', gap: '12px', padding: '18px 16px', borderRadius: 'var(--radius-card)', justifyItems: 'center' }}>
+          <ThemeSwitcher />
+          <p style={{ margin: 0, color: 'var(--text-tertiary)', fontSize: '11px', textAlign: 'center' }}>
+            Vier Themes, alle dunkel — garmin, bordeaux, whoop, ember.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Pausen-Timer & Sätze ─────────────────────────────────────── */}
+      <section aria-labelledby="base-timer-heading" style={{ marginTop: '34px' }}>
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">Pausen-Timer &amp; Sätze</span>
+            <h2 id="base-timer-heading">Standardwerte</h2>
+          </div>
+        </div>
+        <div className="glass-panel" style={{ display: 'grid', gap: '18px', padding: '18px 16px', borderRadius: 'var(--radius-card)' }}>
+          {/* Standard-Pausenzeit */}
+          <div>
+            <span style={{ display: 'block', marginBottom: '9px', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: 700 }}>
+              Standard-Pause
+            </span>
+            <div role="group" aria-label="Standard-Pausenzeit wählen" style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
+              {REST_DURATION_OPTIONS.map((option) => {
+                const selected = prefs.restDuration === option;
+                return (
+                  <motion.button
+                    key={option}
+                    type="button"
+                    onClick={() => prefs.setRestDuration(option)}
+                    aria-pressed={selected}
+                    whileTap={reduced ? undefined : { scale: 0.95 }}
+                    style={{
+                      minWidth: '56px', minHeight: '44px', padding: '0 14px',
+                      background: selected ? 'var(--accent-dim)' : 'var(--bg-input)',
+                      boxShadow: selected ? 'var(--neo-pressed)' : 'var(--neo-pill)',
+                      border: `1px solid ${selected ? 'var(--border-accent)' : 'var(--border)'}`,
+                      borderRadius: 'var(--radius-pill)',
+                      color: selected ? 'var(--accent-text)' : 'var(--text-secondary)',
+                      fontSize: '13px', fontWeight: selected ? 700 : 500, fontVariantNumeric: 'tabular-nums',
+                      cursor: 'pointer',
+                      transition: 'box-shadow 160ms var(--ease-out), background 160ms var(--ease-out), color 160ms var(--ease-out)',
+                    }}
+                  >
+                    {option}s
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Standard-RIR */}
+          <div>
+            <span style={{ display: 'block', marginBottom: '9px', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: 700 }}>
+              RIR-Vorauswahl
+            </span>
+            <div role="group" aria-label="Standard-RIR wählen" style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
+              {RIR_DEFAULT_OPTIONS.map((option) => {
+                const selected = prefs.rirDefault === option;
+                return (
+                  <motion.button
+                    key={String(option)}
+                    type="button"
+                    onClick={() => prefs.setRirDefault(option)}
+                    aria-pressed={selected}
+                    whileTap={reduced ? undefined : { scale: 0.95 }}
+                    style={{
+                      minWidth: '44px', minHeight: '44px', padding: '0 12px',
+                      background: selected ? 'var(--accent-dim)' : 'var(--bg-input)',
+                      boxShadow: selected ? 'var(--neo-pressed)' : 'var(--neo-pill)',
+                      border: `1px solid ${selected ? 'var(--border-accent)' : 'var(--border)'}`,
+                      borderRadius: 'var(--radius-pill)',
+                      color: selected ? 'var(--accent-text)' : 'var(--text-secondary)',
+                      fontSize: '12px', fontWeight: selected ? 700 : 500,
+                      cursor: 'pointer',
+                      transition: 'box-shadow 160ms var(--ease-out), background 160ms var(--ease-out), color 160ms var(--ease-out)',
+                    }}
+                  >
+                    {RIR_LABELS[String(option)] ?? String(option)}
+                  </motion.button>
+                );
+              })}
+            </div>
+            <p style={{ margin: '8px 0 0', color: 'var(--text-tertiary)', fontSize: '11px' }}>
+              „Aus“ lässt das RIR-Feld leer — der Wert bleibt pro Satz frei wählbar.
+            </p>
+          </div>
+
+          {/* Feedback-Schalter */}
+          <ToggleRow
+            icon={<Volume2 size={16} />}
+            title="Timer-Sound"
+            description="Kurzer Ton, wenn die Pause endet."
+            value={prefs.timerSound}
+            onChange={prefs.setTimerSound}
+            reduced={reduced}
+          />
+          <ToggleRow
+            icon={<Vibrate size={16} />}
+            title="Vibration"
+            description="Doppeltes Vibrieren beim Pausenende."
+            value={prefs.timerVibration}
+            onChange={prefs.setTimerVibration}
+            reduced={reduced}
+          />
+        </div>
+      </section>
+
+      {/* ── Backup & Restore (ehem. Settings-Screen) ─────────────────── */}
+      <BackupSection />
+    </main>
+  );
+}
+
+/* ════════════════════════ Bausteine ════════════════════════ */
+
+function StatCard({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
+  return (
+    <article className="overview-card glass-panel">
+      <span className="overview-icon">{icon}</span>
+      <span className="overview-value">{value}</span>
+      <span className="overview-label">{label}</span>
+    </article>
+  );
+}
+
+function VolumeChart({ series, reduced }: { series: Array<{ tag: number; volume: number }>; reduced: boolean }) {
+  const points = series.slice(-90);
+  const width = 320;
+  const height = 88;
+  const max = Math.max(...points.map((point) => point.volume));
+  const min = Math.min(...points.map((point) => point.volume));
+  const span = Math.max(1, max - min);
+  const step = (width - 4) / (points.length - 1);
+  const coords = points.map((point, index) => ({
+    x: 2 + index * step,
+    y: 6 + (1 - (point.volume - min) / span) * (height - 16),
+  }));
+  const path = coords.map((coordinate, index) => `${index === 0 ? 'M' : 'L'}${coordinate.x.toFixed(1)},${coordinate.y.toFixed(1)}`).join(' ');
+  const area = `${path} L${coords[coords.length - 1].x.toFixed(1)},${height - 2} L${coords[0].x.toFixed(1)},${height - 2} Z`;
+
+  return (
+    <motion.div
+      className="glass-panel"
+      style={{ padding: '16px 14px 10px', borderRadius: 'var(--radius-card)' }}
+      initial={reduced ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={reduced ? { duration: 0 } : { duration: 0.35, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label="Volumen pro Trainingstag" style={{ display: 'block', width: '100%', height: 'auto' }}>
+        <defs>
+          <linearGradient id="base-volume-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--accent-primary)" stopOpacity="0.32" />
+            <stop offset="100%" stopColor="var(--accent-primary)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill="url(#base-volume-grad)" />
+        <path d={path} fill="none" stroke="var(--accent-text)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '10px', color: 'var(--text-tertiary)', fontVariantNumeric: 'tabular-nums' }}>
+        <span>{new Date(points[0].tag * 86_400_000).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })}</span>
+        <span>Ø {fmtKg.format(points.reduce((sum, point) => sum + point.volume, 0) / points.length)} kg / Tag</span>
+        <span>{new Date(points[points.length - 1].tag * 86_400_000).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })}</span>
+      </div>
+    </motion.div>
+  );
+}
+
+function ToggleRow({ icon, title, description, value, onChange, reduced }: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  value: boolean;
+  onChange: (value: boolean) => void;
+  reduced: boolean;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <span className="overview-icon" style={{ flexShrink: 0 }}>{icon}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', color: 'var(--text-main)', fontSize: '14px', fontWeight: 700 }}>{title}</span>
+        <span style={{ display: 'block', color: 'var(--text-tertiary)', fontSize: '11px' }}>{description}</span>
+      </div>
+      <motion.button
+        type="button"
+        role="switch"
+        aria-checked={value}
+        aria-label={title}
+        onClick={() => onChange(!value)}
+        whileTap={reduced ? undefined : { scale: 0.96 }}
+        style={{
+          flexShrink: 0,
+          width: '54px',
+          height: '32px',
+          padding: '3px',
+          background: value ? 'var(--accent-primary)' : 'var(--bg-input)',
+          boxShadow: value ? 'var(--neo-convex)' : 'var(--neo-pressed)',
+          border: `1px solid ${value ? 'var(--border-accent)' : 'var(--border)'}`,
+          borderRadius: 'var(--radius-pill)',
+          cursor: 'pointer',
+          display: 'flex',
+          justifyContent: value ? 'flex-end' : 'flex-start',
+          transition: 'background 180ms var(--ease-out), box-shadow 180ms var(--ease-out)',
+        }}
+      >
+        <motion.span
+          layout
+          transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 32 }}
+          style={{
+            width: '24px',
+            height: '24px',
+            borderRadius: '50%',
+            background: value ? 'var(--text-on-accent)' : 'var(--bg-surface)',
+            boxShadow: 'var(--neo-knob)',
+          }}
+        />
+      </motion.button>
+    </div>
+  );
+}
+
+/* Backup-Logik unverändert aus dem ehemaligen Settings-Screen übernommen. */
+function BackupSection() {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const handleExport = async () => {
+    setBusy(true);
+    try {
+      const data = await exportWorkoutData();
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `gym-log-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setMessage('Backup exportiert.');
+    } catch {
+      setMessage('Export konnte nicht erstellt werden.');
+    } finally { setBusy(false); }
+  };
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const confirmed = window.confirm(
+      'Beim Import werden alle Daten im Backup ersetzt: Einträge, Sessions, Fortschritt, Warm-ups, Gewicht, Einstellungen, Vorlagen, aktive Einheit und App-Darstellung.\n\n„' +
+        file.name +
+        '“ jetzt wiederherstellen?',
+    );
+    if (!confirmed) { event.target.value = ''; return; }
+    setBusy(true);
+    try {
+      const counts = await importWorkoutData(await file.text());
+      setMessage(`Backup wiederhergestellt: ${counts.entries} Einträge, ${counts.sessions} Sessions, ${counts.progressHistory} Progress-Punkte.`);
+      // localDataRestore gibt es erst mit dem v2-Backup-Format (in Arbeit) — Guard für beide Stände.
+      if ('localDataRestored' in counts && counts.localDataRestored) window.setTimeout(() => window.location.reload(), 1_000);
+    } catch {
+      setMessage('Backup ist ungültig oder konnte nicht gelesen werden. Es wurde nichts geändert.');
+    } finally { setBusy(false); event.target.value = ''; }
+  };
+
+  return (
+    <section className="backup-panel glass-panel" aria-labelledby="base-backup-heading" style={{ marginTop: '34px' }}>
+      <div className="backup-icon"><FileJson size={23} /></div>
+      <div>
+        <h2 id="base-backup-heading">Backup &amp; Restore</h2>
+        <p>Das JSON-Backup enthält Einträge, Sessions, Fortschritt, Warm-up-Konfigurationen, Körpergewicht, Einstellungen, eigene Trainingsvorlagen, eine aktive Einheit und deine App-Darstellung.</p>
+      </div>
+      <div className="backup-actions">
+        <button className="primary-button" type="button" onClick={handleExport} disabled={busy}><Download size={16} /> JSON exportieren</button>
+        <button className="secondary-button" type="button" onClick={() => inputRef.current?.click()} disabled={busy}><Upload size={16} /> Backup importieren</button>
+        <input ref={inputRef} type="file" accept="application/json,.json" onChange={handleImport} hidden />
+      </div>
+      {message && <p className="backup-message" role="status">{message}</p>}
+    </section>
+  );
+}
