@@ -83,8 +83,9 @@ export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKe
               position: 'fixed',
               inset: 0,
               background: 'var(--overlay)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
+              /* Kein backdrop-filter: Fullscreen-Blur frisst auf iOS jede Frame
+                 (Jank beim Scrollen/Scrollen des Sheets). Gleiche Abwägung wie
+                 bei .session-shell/.launcher-shell im Media-Query ≤520px. */
               zIndex: 200,
             }}
             aria-hidden="true"
@@ -121,10 +122,10 @@ export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKe
               margin: '0 auto',
               /* Container-Fokus ohne Outline — Fokus bleibt für Bedienelemente sichtbar */
               outline: 'none',
-              /* Float-Level — höchste Neo-Ebene */
+              /* Float-Level — höchste Neo-Ebene. Bewusst OHNE backdrop-filter:
+                 Die Fläche ist opak (--bg-elevated) — das Blur wäre unsichtbar,
+                 kostet aber trotzdem einen Fullscreen-Composite pro Frame. */
               background: 'var(--bg-elevated)',
-              backdropFilter: 'blur(28px)',
-              WebkitBackdropFilter: 'blur(28px)',
               boxShadow: 'var(--neo-float), inset 0 1px 1px rgba(255,255,255,0.08)',
               borderTop: '1px solid var(--border-highlight)',
               borderRadius: '26px 26px 0 0',
