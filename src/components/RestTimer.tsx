@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, SkipForward } from 'lucide-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { readTimerFeedback } from '../hooks/useBasePrefs';
 
 interface Props {
   startKey: number;
@@ -79,8 +80,9 @@ export function RestTimer({ startKey, onDone }: Props) {
         targetEndTimeRef.current = null;
         setLaeuft(false);
         setAbgelaufen(true);
-        playBeep();
-        vibrate();
+        const feedback = readTimerFeedback();
+        if (feedback.sound) playBeep();
+        if (feedback.vibration) vibrate();
         onDoneRef.current?.();
       }
     };

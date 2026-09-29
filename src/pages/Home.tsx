@@ -7,6 +7,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useMachineSummaries } from '../hooks/useEntries';
 import { MachineCard } from '../components/MachineCard';
+import { LibrarySearch } from '../components/LibrarySearch';
 import { HistorySheet } from '../components/HistorySheet';
 import { WarmupSheet } from '../components/WarmupSheet';
 import { BottomSheet } from '../components/BottomSheet';
@@ -42,6 +43,7 @@ export function Home() {
   const { activeSession, updateExercise, clearWarmup } = useWorkoutSession();
   const [historyTarget, setHistoryTarget] = useState<MachineSummary | null>(null);
   const [warmupTarget, setWarmupTarget] = useState<MachineSummary | null>(null);
+  const [searchActive, setSearchActive] = useState(false);
   const warmupMachineIds = useTodayWarmupMachineIds();
 
   const settings = useAppSettings();
@@ -154,11 +156,13 @@ export function Home() {
           </div>
           {summaries && summaries.length > 0 && <span className="count-pill">{summaries.length}</span>}
         </div>
+        {/* Inline-Volltextsuche (ehem. Suche-Tab): Ergebnisse ersetzen die Liste, solange getippt wird. */}
+        {summaries !== undefined && summaries.length > 0 && <LibrarySearch onActiveChange={setSearchActive} />}
         {summaries === undefined ? (
           <SkeletonList />
         ) : summaries.length === 0 ? (
           <EmptyState onCreate={() => navigate('/new')} />
-        ) : (
+        ) : searchActive ? null : (
           <div className="machine-list">
             {summaries.map((summary, index) => (
               <MachineCard

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Minus, Plus } from 'lucide-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { readRirDefault, rirPrefToValue } from '../hooks/useBasePrefs';
 import { RirPicker } from './RirPicker';
 import { type RirValue } from '../db/schema';
 
@@ -16,7 +17,7 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
   const reduced = useReducedMotion();
   const [gewicht, setGewicht] = useState<number>(defaultWeight ?? 20);
   const [wiederholungen, setWiederholungen] = useState(0);
-  const [rir, setRir] = useState<RirValue | undefined>(undefined);
+  const [rir, setRir] = useState<RirValue | undefined>(() => rirPrefToValue(readRirDefault()));
 
   const [prevDefault, setPrevDefault] = useState(defaultWeight);
   if (defaultWeight !== undefined && defaultWeight !== prevDefault) {

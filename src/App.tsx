@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SplashIntro } from './components/SplashIntro';
 import { BottomNav } from './components/BottomNav';
@@ -7,7 +7,7 @@ import { Home } from './pages/Home';
 import { Detail } from './pages/Detail';
 import { NewEntry } from './pages/NewEntry';
 import { EditEntry } from './pages/EditEntry';
-import { Search } from './pages/Search';
+import { Base } from './pages/Base';
 import { Warmup } from './pages/Warmup';
 import { ThemeProvider } from './theme/ThemeContext';
 import { useReducedMotion } from './hooks/useReducedMotion';
@@ -15,7 +15,6 @@ import { WorkoutSessionProvider } from './hooks/useWorkoutSession';
 import { WorkoutSessionModal } from './components/WorkoutSessionModal';
 import { WorkoutLauncher } from './components/WorkoutLauncher';
 import { Progress } from './pages/Progress';
-import { Settings } from './pages/Settings';
 
 // Seitenwechsel-Transition — Fade + leichter Y-Slide
 function AnimatedRoutes() {
@@ -40,10 +39,11 @@ function AnimatedRoutes() {
           <Route path="/machine/:machineId" element={<Detail />} />
           <Route path="/new" element={<NewEntry />} />
           <Route path="/edit/:id" element={<EditEntry />} />
-          <Route path="/search" element={<Search />} />
+          <Route path="/base" element={<Base />} />
+          <Route path="/search" element={<Navigate to="/base" replace />} />
           <Route path="/warmup" element={<Warmup />} />
           <Route path="/progress" element={<Progress />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/settings" element={<Navigate to="/base" replace />} />
         </Routes>
       </motion.div>
     </AnimatePresence>

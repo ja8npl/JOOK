@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { Activity, BarChart3, Dumbbell, Home, Plus, Search } from 'lucide-react';
+import { Activity, BarChart3, Dumbbell, Home, Layers, Plus } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useWorkoutSession } from '../hooks/useWorkoutSession';
@@ -9,7 +9,7 @@ const tabs = [
   { path: '/', icon: Home, label: 'Heute' },
   { path: '/warmup', icon: Activity, label: 'Warmup' },
   { path: '/progress', icon: BarChart3, label: 'Progress' },
-  { path: '/search', icon: Search, label: 'Suchen' },
+  { path: '/base', icon: Layers, label: 'Base' },
 ];
 
 export function BottomNav() {
@@ -38,7 +38,7 @@ export function BottomNav() {
           {activeSession ? <Dumbbell size={21} strokeWidth={2.1} /> : <Plus size={22} strokeWidth={2.2} />}
         </motion.button>
         <TabButton tab={tabs[2]} active={location.pathname === '/progress'} navigate={navigate} reduced={reduced} />
-        <TabButton tab={tabs[3]} active={location.pathname === '/search'} navigate={navigate} reduced={reduced} />
+        <TabButton tab={tabs[3]} active={location.pathname === '/base'} navigate={navigate} reduced={reduced} />
       </div>
     </nav>
   );
