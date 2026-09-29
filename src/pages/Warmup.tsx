@@ -14,7 +14,7 @@ export function Warmup() {
   const [workingWeightStr, setWorkingWeightStr] = useState('');
   const [showSet3, setShowSet3] = useState(false);
 
-  const workingWeight = parseFloat(workingWeightStr);
+  const workingWeight = parseFloat(workingWeightStr.replace(',', '.'));
   const isValid = !isNaN(workingWeight) && workingWeight > 0;
 
   const set1 = isValid ? roundToStep(workingWeight * 0.25) : 0;

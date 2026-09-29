@@ -46,43 +46,78 @@ export function RestTimer({ startKey, onDone }: Props) {
   const [restSek, setRestSek] = useState(0);
   const [lauft, setLaeuft] = useState(false);
   const [abgelaufen, setAbgelaufen] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const targetEndTimeRef = useRef<number | null>(null);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+
+  const startTimerWithDuration = (durationSec: number) => {
+    if (durationSec <= 0) return;
+    targetEndTimeRef.current = Date.now() + durationSec * 1000;
+    setRestSek(durationSec);
+    setLaeuft(true);
+    setAbgelaufen(false);
+  };
 
   useEffect(() => {
     if (startKey > 0) {
-      setRestSek(dauer);
-      setLaeuft(true);
-      setAbgelaufen(false);
+      startTimerWithDuration(dauer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startKey]);
 
   useEffect(() => {
     if (!lauft) return;
-    intervalRef.current = setInterval(() => {
-      setRestSek((s) => {
-        if (s <= 1) {
-          setLaeuft(false);
-          setAbgelaufen(true);
-          playBeep();
-          vibrate();
-          onDone?.();
-          return 0;
-        }
-        return s - 1;
-      });
-    }, 1000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    const tick = () => {
+      if (!targetEndTimeRef.current) return;
+      const now = Date.now();
+      const diffMs = targetEndTimeRef.current - now;
+      const remaining = Math.max(0, Math.ceil(diffMs / 1000));
+      setRestSek(remaining);
+
+      if (diffMs <= 0) {
+        targetEndTimeRef.current = null;
+        setLaeuft(false);
+        setAbgelaufen(true);
+        playBeep();
+        vibrate();
+        onDoneRef.current?.();
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, 250);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        tick();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [lauft]);
 
   const adjust = (delta: number) => {
     setAbgelaufen(false);
-    setRestSek((s) => Math.max(0, s + delta));
-    setLaeuft(true);
+    const now = Date.now();
+    const currentRemaining = targetEndTimeRef.current ? Math.max(0, Math.ceil((targetEndTimeRef.current - now) / 1000)) : 0;
+    const nextRemaining = Math.max(0, currentRemaining + delta);
+    if (nextRemaining > 0) {
+      targetEndTimeRef.current = now + nextRemaining * 1000;
+      setRestSek(nextRemaining);
+      setLaeuft(true);
+    } else {
+      skip();
+    }
   };
 
   const skip = () => {
+    targetEndTimeRef.current = null;
     setLaeuft(false);
     setRestSek(0);
     setAbgelaufen(false);

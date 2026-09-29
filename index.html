@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#1F2024" />
+    <meta name="color-scheme" content="dark" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -15,9 +16,8 @@
          Launch-Hintergrund übereinstimmen (iOS-Splash-PNGs, .splash-intro: #1F2024).
          Ember nutzt eine eigene Basisfarbe — der Attribut-Selektor verliert sich
          automatisch, sobald App-CSS html { background: var(--bg-base) } setzt. */
-      html { background: #1f2024; color-scheme: dark; }
-      html[data-theme='ember'] { background: #3c1518; }
-      html, body { margin: 0; }
+      html, body { background: #1f2024; color-scheme: dark; margin: 0; }
+      html[data-theme='ember'], html[data-theme='ember'] body { background: #3c1518; }
       #root { background: #1f2024; min-height: 100vh; }
       html[data-theme='ember'] #root { background: #3c1518; }
     </style>
@@ -27,6 +27,9 @@
           const stored = localStorage.getItem('gymlog.theme');
           const theme = ['garmin', 'bordeaux', 'whoop', 'ember'].includes(stored || '') ? stored : 'garmin';
           document.documentElement.dataset.theme = theme;
+          const themeColors = { garmin: '#1F2024', bordeaux: '#1A1618', whoop: '#121417', ember: '#3C1518' };
+          const meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', themeColors[theme] || '#1F2024');
         } catch {
           document.documentElement.dataset.theme = 'garmin';
         }

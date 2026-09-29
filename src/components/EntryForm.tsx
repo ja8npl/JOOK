@@ -18,6 +18,17 @@ interface Props {
   onSaved?: (id: number) => void;
 }
 
+function toLocalDateString(timestamp?: number): string {
+  const d = timestamp ? new Date(timestamp) : new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function parseLocalDate(ymd: string): number {
+  const parts = ymd.split('-').map(Number);
+  if (parts.length < 3 || parts.some(isNaN)) return Date.now();
+  return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0).getTime();
+}
+
 export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
   const navigate     = useNavigate();
   const reduced      = useReducedMotion();
@@ -27,11 +38,7 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
   const [einstellung, setEinstellung] = useState(initialEntry?.einstellung ?? '');
   const [problem, setProblem]       = useState(initialEntry?.problem ?? '');
   const [ziel, setZiel]             = useState(initialEntry?.ziel ?? '');
-  const [datum, setDatum]           = useState(
-    initialEntry?.datum
-      ? new Date(initialEntry.datum).toISOString().slice(0, 10)
-      : new Date().toISOString().slice(0, 10)
-  );
+  const [datum, setDatum]           = useState(() => toLocalDateString(initialEntry?.datum));
   const [saved, setSaved]           = useState(false);
   const [error, setError]           = useState<string | null>(null);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -101,7 +108,7 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
         einstellung: einstellung.trim(),
         problem: problem.trim() || undefined,
         ziel: ziel.trim() || undefined,
-        datum: new Date(datum).getTime(),
+        datum: parseLocalDate(datum),
         sets: sets.length > 0 ? sets : undefined,
       });
       setSaved(true);
