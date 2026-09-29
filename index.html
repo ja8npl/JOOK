@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" style="background-color: #1f2024;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -28,8 +28,11 @@
           const theme = ['garmin', 'bordeaux', 'whoop', 'ember'].includes(stored || '') ? stored : 'garmin';
           document.documentElement.dataset.theme = theme;
           const themeColors = { garmin: '#1F2024', bordeaux: '#1A1618', whoop: '#121417', ember: '#3C1518' };
+          const bgColor = themeColors[theme] || '#1F2024';
           const meta = document.querySelector('meta[name="theme-color"]');
-          if (meta) meta.setAttribute('content', themeColors[theme] || '#1F2024');
+          if (meta) meta.setAttribute('content', bgColor);
+          document.documentElement.style.backgroundColor = bgColor;
+          // body might not be parsed yet if script is in head, but we can try or wait
         } catch {
           document.documentElement.dataset.theme = 'garmin';
         }
@@ -51,7 +54,7 @@
     <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,800,900&f[]=general-sans@500,600,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" />
     <title>Gym Log</title>
   </head>
-  <body>
+  <body style="background-color: #1f2024; margin: 0;">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
