@@ -31,3 +31,8 @@ _local/
 *.msix
 *.exe
 *.msi
+
+# Umgebungsdateien: Werte liegen zentral in Infisical, nicht auf der Platte
+.env
+.env.*
+!.env.example
