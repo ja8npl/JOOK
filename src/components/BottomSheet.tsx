@@ -13,6 +13,8 @@ interface Props {
   children: React.ReactNode;
   /** Hebt das Sheet über die iOS-Tastatur (Visual-Viewport-Offset). */
   avoidKeyboard?: boolean;
+  /** Dauer des Backdrop-Fades in Sekunden. Warnungs-Sheets drehen schneller (0.18). */
+  backdropDuration?: number;
 }
 
 /** Abstand, den die geöffnete Tastatur vom Viewport nimmt (0 ohne Tastatur). */
@@ -37,7 +39,7 @@ function useKeyboardInset(active: boolean): number {
   return inset;
 }
 
-export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKeyboard = false }: Props) {
+export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKeyboard = false, backdropDuration = 0.22 }: Props) {
   const reduced  = useReducedMotion();
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
@@ -77,7 +79,7 @@ export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKe
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: reduced ? 0 : 0.22 }}
+            transition={{ duration: reduced ? 0 : backdropDuration }}
             onClick={onClose}
             style={{
               position: 'fixed',

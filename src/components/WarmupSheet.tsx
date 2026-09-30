@@ -65,6 +65,8 @@ function WarmupForm({ exerciseName, currentConfig, onConfirm, onReset, onClose, 
     try {
       await onConfirm(parsed, withThird);
       onClose();
+    } catch {
+      setError('Warm-up konnte nicht gespeichert werden. Bitte versuche es erneut.');
     } finally {
       setSaving(false);
     }
@@ -76,6 +78,8 @@ function WarmupForm({ exerciseName, currentConfig, onConfirm, onReset, onClose, 
     try {
       await onReset?.();
       onClose();
+    } catch {
+      setError('Warm-up konnte nicht zurückgesetzt werden. Bitte versuche es erneut.');
     } finally {
       setSaving(false);
     }

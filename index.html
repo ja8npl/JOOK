@@ -13,13 +13,9 @@
     <style>
       /* Kritisches Inline-CSS: verhindert den weißen Blitz vor dem ersten Paint,
          solange App-CSS (und damit --bg-base) noch nicht geladen ist. Muss mit dem
-         Launch-Hintergrund übereinstimmen (iOS-Splash-PNGs, .splash-intro: #1F2024).
-         Ember nutzt eine eigene Basisfarbe — der Attribut-Selektor verliert sich
-         automatisch, sobald App-CSS html { background: var(--bg-base) } setzt. */
+         Launch-Hintergrund übereinstimmen (iOS-Splash-PNGs, .splash-intro: #1F2024). */
       html, body { background: #1f2024; color-scheme: dark; margin: 0; }
-      html[data-theme='ember'], html[data-theme='ember'] body { background: #3c1518; }
       #root { background: #1f2024; min-height: 100vh; }
-      html[data-theme='ember'] #root { background: #3c1518; }
     </style>
     <script>
       (() => {
@@ -27,7 +23,7 @@
           const stored = localStorage.getItem('gymlog.theme');
           const theme = ['garmin', 'bordeaux', 'whoop', 'ember'].includes(stored || '') ? stored : 'garmin';
           document.documentElement.dataset.theme = theme;
-          const themeColors = { garmin: '#1F2024', bordeaux: '#1A1618', whoop: '#121417', ember: '#3C1518' };
+          const themeColors = { garmin: '#1F2024', bordeaux: '#1A1618', whoop: '#121417', ember: '#2B2828' };
           const bgColor = themeColors[theme] || '#1F2024';
           const meta = document.querySelector('meta[name="theme-color"]');
           if (meta) meta.setAttribute('content', bgColor);

@@ -1,12 +1,13 @@
 import { useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  BarChart3, CalendarDays, Download, Dumbbell, FileJson, Flame, History,
-  Layers, Trophy, Upload, Volume2, Vibrate,
+  BarChart3, CalendarDays, ChevronRight, Download, Dumbbell, FileJson, Flame, History,
+  Layers, Palette, Trophy, Upload, Volume2, Vibrate,
 } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
+import { BottomSheet } from '../components/BottomSheet';
 import {
   RIR_DEFAULT_OPTIONS, REST_DURATION_OPTIONS, useBasePrefs,
 } from '../hooks/useBasePrefs';
@@ -26,6 +27,7 @@ const RIR_LABELS: Record<string, string> = { none: 'Aus', 0: '0', 1: '1', 2: '2'
 export function Base() {
   const reduced = useReducedMotion();
   const prefs = useBasePrefs();
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const entries = useLiveQuery(() => db.entries.toArray(), []);
   const sessions = useLiveQuery(() => db.sessions.toArray(), []);
@@ -146,22 +148,6 @@ export function Base() {
         </section>
       )}
 
-      {/* ── Darstellung / Theme ──────────────────────────────────────── */}
-      <section aria-labelledby="base-theme-heading" style={{ marginTop: '34px' }}>
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">Darstellung</span>
-            <h2 id="base-theme-heading">Farbwelt</h2>
-          </div>
-        </div>
-        <div className="glass-panel" style={{ display: 'grid', gap: '12px', padding: '18px 16px', borderRadius: 'var(--radius-card)', justifyItems: 'center' }}>
-          <ThemeSwitcher />
-          <p style={{ margin: 0, color: 'var(--text-tertiary)', fontSize: '11px', textAlign: 'center' }}>
-            Vier Themes, alle dunkel — garmin, bordeaux, whoop, ember.
-          </p>
-        </div>
-      </section>
-
       {/* ── Pausen-Timer & Sätze ─────────────────────────────────────── */}
       <section aria-labelledby="base-timer-heading" style={{ marginTop: '34px' }}>
         <div className="section-heading">
@@ -262,8 +248,45 @@ export function Base() {
         </div>
       </section>
 
-      {/* ── Backup & Restore (ehem. Settings-Screen) ─────────────────── */}
-      <BackupSection />
+      {/* ── Weitere Einstellungen ───────────────────────────────────── */}
+      <section aria-labelledby="base-more-heading" style={{ marginTop: '34px' }}>
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">Darstellung &amp; Daten</span>
+            <h2 id="base-more-heading">Weitere Einstellungen</h2>
+          </div>
+        </div>
+        <motion.button
+          type="button"
+          onClick={() => setMoreOpen(true)}
+          whileTap={reduced ? undefined : { scale: 0.98 }}
+          className="glass-panel"
+          aria-haspopup="dialog"
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: '14px',
+            padding: '15px 16px', borderRadius: 'var(--radius-card)', textAlign: 'left',
+            cursor: 'pointer',
+          }}
+        >
+          <span className="backup-icon" style={{ width: '44px', height: '44px', flexShrink: 0 }}>
+            <Palette size={21} />
+          </span>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{
+              display: 'block', fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700,
+              color: 'var(--text-main)', letterSpacing: 'var(--tracking-display)',
+            }}>
+              Darstellung &amp; Backup
+            </span>
+            <span style={{ display: 'block', marginTop: '2px', color: 'var(--text-tertiary)', fontSize: '11px' }}>
+              Farbwelt, JSON-Export und Restore
+            </span>
+          </span>
+          <ChevronRight size={18} style={{ flexShrink: 0, color: 'var(--text-tertiary)' }} aria-hidden="true" />
+        </motion.button>
+      </section>
+
+      <MoreSettingsSheet isOpen={moreOpen} onClose={() => setMoreOpen(false)} />
     </main>
   );
 }
@@ -375,8 +398,45 @@ function ToggleRow({ icon, title, description, value, onChange, reduced }: {
   );
 }
 
-/* Backup-Logik unverändert aus dem ehemaligen Settings-Screen übernommen. */
-function BackupSection() {
+/* ════════════════════════ Sheet: Darstellung & Backup ════════════════════════ */
+
+function MoreSettingsSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  return (
+    <BottomSheet isOpen={isOpen} onClose={onClose} eyebrow="Einstellungen" title="Darstellung & Backup">
+      <div style={{ display: 'grid', gap: '22px' }}>
+        {/* Farbwelt */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <span className="overview-icon" style={{ flexShrink: 0 }}><Palette size={16} /></span>
+            <div>
+              <span style={{ display: 'block', color: 'var(--text-main)', fontSize: '14px', fontWeight: 700 }}>Farbwelt</span>
+              <span style={{ display: 'block', color: 'var(--text-tertiary)', fontSize: '11px' }}>Vier Themes, alle dunkel.</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '2px 0' }}>
+            <ThemeSwitcher />
+          </div>
+        </div>
+
+        {/* Backup & Restore */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <span className="overview-icon" style={{ flexShrink: 0 }}><FileJson size={16} /></span>
+            <div>
+              <span style={{ display: 'block', color: 'var(--text-main)', fontSize: '14px', fontWeight: 700 }}>Backup &amp; Restore</span>
+              <span style={{ display: 'block', color: 'var(--text-tertiary)', fontSize: '11px' }}>Trainingsverlauf als JSON sichern oder zurückspielen.</span>
+            </div>
+          </div>
+          <BackupSection embedded />
+        </div>
+      </div>
+    </BottomSheet>
+  );
+}
+
+/* ════════════════════════ Bausteine ════════════════════════ */
+
+function BackupSection({ embedded = false }: { embedded?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -416,6 +476,19 @@ function BackupSection() {
       setMessage('Backup ist ungültig oder konnte nicht gelesen werden. Es wurde nichts geändert.');
     } finally { setBusy(false); event.target.value = ''; }
   };
+
+  if (embedded) {
+    return (
+      <div style={{ display: 'grid', gap: '9px' }}>
+        <div className="backup-actions" style={{ margin: 0 }}>
+          <button className="primary-button" type="button" onClick={handleExport} disabled={busy}><Download size={16} /> JSON exportieren</button>
+          <button className="secondary-button" type="button" onClick={() => inputRef.current?.click()} disabled={busy}><Upload size={16} /> Backup importieren</button>
+          <input ref={inputRef} type="file" accept="application/json,.json" onChange={handleImport} hidden />
+        </div>
+        {message && <p className="backup-message" role="status">{message}</p>}
+      </div>
+    );
+  }
 
   return (
     <section className="backup-panel glass-panel" aria-labelledby="base-backup-heading" style={{ marginTop: '34px' }}>

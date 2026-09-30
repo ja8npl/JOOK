@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useDragControls } from 'framer-motion';
 import { Check, ChevronDown, Clock3, Dumbbell, Flame, History, Plus, Save, Trash2, X } from 'lucide-react';
 import { useWorkoutSession } from '../hooks/useWorkoutSession';
 import { useOverlayFocus } from '../hooks/useOverlayFocus';
-import { updateSessionSet } from '../hooks/workoutSessionUtils';
+import { DISCARD_MOTIVATION_THRESHOLD, sessionSetCounts, updateSessionSet } from '../hooks/workoutSessionUtils';
 import { searchStaticExercises, type StaticExercise } from '../hooks/useExercises';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { ProgressBadge } from './ProgressBadge';
@@ -42,9 +42,16 @@ export function WorkoutSessionModal() {
   const [warmupTargetId, setWarmupTargetId] = useState<string | null>(null);
   const [historyTargetKey, setHistoryTargetKey] = useState<string | null>(null);
   const [historyTargetName, setHistoryTargetName] = useState('');
-  /* Verwerfen erst nach Bestätigung — Escape/X löscht nicht unabsichtlich ein laufendes Training. */
+  /* Verwerfen erst nach Bestätigung — Escape/X löscht nicht unabsichtlich ein laufendes Training.
+     Fortschritt wird beim Öffnen eingefroren, damit das Sheet nicht „springt“, während es offen ist. */
   const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
-  const requestDiscard = () => setDiscardConfirmOpen(true);
+  const [discardProgress, setDiscardProgress] = useState<{ completed: number; planned: number } | null>(null);
+  const requestDiscard = () => {
+    if (!activeSession) return;
+    const counts = sessionSetCounts(activeSession.exercises);
+    setDiscardProgress(counts.planned > 0 && counts.completed / counts.planned >= DISCARD_MOTIVATION_THRESHOLD ? counts : null);
+    setDiscardConfirmOpen(true);
+  };
   const sessionSheetRef = useOverlayFocus(Boolean(activeSession) && !discardConfirmOpen, requestDiscard);
   const dragControls = useDragControls();
 
@@ -197,7 +204,8 @@ export function WorkoutSessionModal() {
       exerciseName={historyTargetName}
     />
 
-    {/* Verwerfen bestätigen — ein laufendes Training geht sonst unwiderruflich verloren */}
+    {/* Verwerfen bestätigen — ein laufendes Training geht sonst unwiderruflich verloren.
+        ≥ DISCARD_MOTIVATION_THRESHOLD erledigter Arbeitssätze: motivierende Variante mit Ring. */}
     <ConfirmSheet
       isOpen={discardConfirmOpen}
       onClose={() => setDiscardConfirmOpen(false)}
@@ -205,6 +213,7 @@ export function WorkoutSessionModal() {
       title="Training verwerfen?"
       message="Alle Sätze dieser Einheit gehen verloren. Die Aktion kann nicht rückgängig gemacht werden."
       confirmLabel="Verwerfen"
+      progress={discardProgress}
     />
     </>,
     document.body,

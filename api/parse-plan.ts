@@ -55,6 +55,11 @@ const MAX_IMAGE_BASE64_LENGTH = 3_600_000;
 const TOTAL_BUDGET_MS = 56_000;
 const MAX_TEMPLATES = 8;
 const MAX_EXERCISES_PER_TEMPLATE = 30;
+const RATE_LIMIT_WINDOW_MS = 10 * 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 6;
+// Best-effort Schutz pro warmer Function-Instanz; für verteilte Limits ist ein
+// persistenter Store nötig. Vercel stellt die Client-IP in x-real-ip bereit.
+const requestBuckets = new Map<string, { count: number; resetAt: number }>();
 
 type ErrorCode = 'invalid_request' | 'too_large' | 'nothing_found' | 'rate_limit' | 'model_unreachable';
 
@@ -87,6 +92,33 @@ function jsonResponse(status: number, body: unknown): Response {
 
 function errorResponse(code: ErrorCode, status: number, message: string): Response {
   return jsonResponse(status, { error: { code, message } });
+}
+
+function consumeRateLimit(request: Request): { limited: boolean; retryAfterSeconds: number } {
+  const ip = request.headers.get('x-real-ip')
+    ?? request.headers.get('x-forwarded-for')?.split(',').at(-1)?.trim()
+    ?? 'unknown';
+  const now = Date.now();
+  if (requestBuckets.size > 5_000) {
+    for (const [key, bucket] of requestBuckets) {
+      if (bucket.resetAt <= now) requestBuckets.delete(key);
+    }
+    while (requestBuckets.size > 5_000) {
+      const oldestKey = requestBuckets.keys().next().value as string | undefined;
+      if (!oldestKey) break;
+      requestBuckets.delete(oldestKey);
+    }
+  }
+  const current = requestBuckets.get(ip);
+  if (!current || current.resetAt <= now) {
+    requestBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { limited: false, retryAfterSeconds: 0 };
+  }
+  if (current.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { limited: true, retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000)) };
+  }
+  current.count += 1;
+  return { limited: false, retryAfterSeconds: 0 };
 }
 
 /** JSON-Block aus Modell-Antwort extrahieren (fence-tolerant, sucht erstes/letztes Klammer-Paar). */
@@ -278,12 +310,16 @@ export async function POST(request: Request): Promise<Response> {
     return errorResponse('invalid_request', 405, 'Nur POST-Anfragen werden unterstützt.');
   }
 
-  let body: ParsePlanRequest;
+  let rawBody: unknown;
   try {
-    body = (await request.json()) as ParsePlanRequest;
+    rawBody = await request.json();
   } catch {
     return errorResponse('invalid_request', 400, 'Die Anfrage enthält kein gültiges JSON.');
   }
+  if (!rawBody || typeof rawBody !== 'object' || Array.isArray(rawBody)) {
+    return errorResponse('invalid_request', 400, 'Die Anfrage muss ein JSON-Objekt enthalten.');
+  }
+  const body = rawBody as ParsePlanRequest;
 
   const text = typeof body.text === 'string' ? body.text.trim() : '';
   const imageBase64 = typeof body.imageBase64 === 'string' ? body.imageBase64.trim() : '';
@@ -292,6 +328,13 @@ export async function POST(request: Request): Promise<Response> {
   }
   if (text.length > MAX_TEXT_LENGTH || imageBase64.length > MAX_IMAGE_BASE64_LENGTH) {
     return errorResponse('too_large', 413, 'Der Text oder das Bild ist zu groß. Bitte kürzen bzw. ein kleineres Foto wählen.');
+  }
+  const rateLimit = consumeRateLimit(request);
+  if (rateLimit.limited) {
+    return new Response(JSON.stringify({ error: { code: 'rate_limit', message: 'Zu viele Import-Anfragen. Bitte später erneut versuchen.' } }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Retry-After': String(rateLimit.retryAfterSeconds) },
+    });
   }
 
   const startedAt = Date.now();

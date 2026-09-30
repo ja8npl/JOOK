@@ -1,17 +1,16 @@
 import { motion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight, Check, ChevronDown, ChevronUp, Dumbbell, Flame, History,
-  Scale, Settings, TrendingDown, TrendingUp,
+  Scale, TrendingDown, TrendingUp,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useMachineSummaries } from '../hooks/useEntries';
 import { MachineCard } from '../components/MachineCard';
 import { LibrarySearch } from '../components/LibrarySearch';
 import { HistorySheet } from '../components/HistorySheet';
 import { WarmupSheet } from '../components/WarmupSheet';
 import { BottomSheet } from '../components/BottomSheet';
-import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import {
   applyWarmupToSessionExercise, matchesMachineId, parseKgInput, setWarmupConfig,
@@ -106,10 +105,6 @@ export function Home() {
             <span className="eyebrow">{WEEKDAYS[new Date().getDay()]}</span>
             <h1 className="brand-title">Gym Log</h1>
           </div>
-        </div>
-        <div className="home-header-actions">
-          <button className="header-icon-button" type="button" onClick={() => navigate('/settings')} aria-label="Einstellungen öffnen"><Settings size={17} /></button>
-          <ThemeSwitcher />
         </div>
       </header>
 

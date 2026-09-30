@@ -44,7 +44,7 @@ const META_COLORS: Record<ThemeName, string> = {
   garmin: '#0A0A0B',
   bordeaux: '#0D0D0F',
   whoop: '#1F2024',
-  ember: '#3C1518',
+  ember: '#2B2828',
 };
 
 /** Wendet das Theme auf <html data-theme> und die theme-color-Meta an. */

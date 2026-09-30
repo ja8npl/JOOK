@@ -70,6 +70,9 @@
   --danger-border: color-mix(in srgb, var(--danger) 35%, transparent);
 }
 
+/* Alle Themes folgen exakt dem Garmin-Rezept (Referenz): neutral-dunkle Surfaces mit
+   minimalem Farbstich, gleiche Helligkeits-/Sättigungsstruktur, gleiche Neo-Schatten.
+   Der EINZIGE Unterschied zwischen den Themes ist der Farnton des Akzents. */
 [data-theme='garmin'] {
   --accent-primary: #c8ff00;
   --accent-secondary: #83a7ff;
@@ -77,21 +80,19 @@
   --bg-surface: #30333d;
   --bg-elevated: #3f4350;
   --bg-input: #262830;
-  --font-display: 'General Sans', 'Satoshi', sans-serif;
+  --font-display: 'Cabinet Grotesk', 'Satoshi', sans-serif;
   --font-body: 'Satoshi', sans-serif;
-  --neo-raised: 0 2px 8px rgba(4,5,7,.15), 0 16px 36px rgba(4,5,7,.28), 0 0 0 1px rgba(255,255,255,.06), inset 0 1px 0 rgba(255,255,255,.11);
 }
 
 [data-theme='bordeaux'] {
   --accent-primary: #8c232b;
   --accent-secondary: #d58936;
   --accent-text: #d58936;
-  --bg-surface: #312e38;
-  --bg-elevated: #3f3a47;
-  --bg-input: #272430;
+  --bg-surface: #30333d;
+  --bg-elevated: #3f4350;
+  --bg-input: #262830;
   --font-display: 'Cabinet Grotesk', 'Satoshi', sans-serif;
   --font-body: 'Satoshi', sans-serif;
-  --neo-raised: 0 2px 8px rgba(3,4,6,.15), 0 16px 38px rgba(3,4,6,.28), 0 0 0 1px rgba(255,245,234,.06), inset 0 1px 0 rgba(255,245,234,.1);
 }
 
 [data-theme='whoop'] {
@@ -101,52 +102,42 @@
   --bg-surface: #30333d;
   --bg-elevated: #3f4350;
   --bg-input: #262830;
-  --font-display: 'Satoshi', sans-serif;
+  --font-display: 'Cabinet Grotesk', 'Satoshi', sans-serif;
   --font-body: 'Satoshi', sans-serif;
 }
 
-/* Theme 'ember' — Glut & Kupfer: warmes Maroon/Brick mit Kupfer-Accent und Stroh-Highlights */
+/* Theme 'ember' — Glut & Kupfer: identischer Aufbau wie garmin (neutral-dunkel, Plush
+   Layering), Akzente in Kupfer/Amber statt Lime. Kein roter Grundton — der
+   Neumorphismus braucht eine wenig gesättigte Fläche, sonst verschwinden die Kanten. */
 [data-theme='ember'] {
-  --bg-base: #3c1518;
-  --bg-surface: #581812;
-  --bg-surface-hover: #632016;
-  --bg-elevated: #69140e;
-  --bg-input: #451513;
-  --bg-glass: rgba(88, 24, 18, .78);
-  --nav-bg: color-mix(in srgb, var(--bg-surface) 88%, transparent);
-  --ring-track: rgba(242, 243, 174, .07);
-  --border-subtle: rgba(242,243,174,.10);
+  --bg-surface: #34302e;
+  --bg-surface-hover: #3e3937;
+  --bg-elevated: #433e3b;
+  --bg-input: #2a2827;
+  --bg-glass: rgba(52, 48, 46, .76);
+  --ring-track: rgba(242, 243, 174, .05);
+  --border-subtle: rgba(255,255,255,.11);
   --border: var(--border-subtle);
-  --border-highlight: rgba(242,243,174,.19);
-  --text-main: #f2f3ae;
+  --border-highlight: rgba(255,255,255,.21);
+  --text-main: #faf9f6;
   --text-primary: var(--text-main);
-  --text-muted: color-mix(in srgb, #f2f3ae 74%, #3c1518);
+  --text-muted: #b8b6b1;
   --text-secondary: var(--text-muted);
-  --text-tertiary: color-mix(in srgb, #f2f3ae 60%, #3c1518);
+  --text-tertiary: #a3a19c;
   --accent-primary: #d58936;
   --accent: var(--accent-primary);
-  --accent-secondary: #a44200;
-  --accent-text: #f2f3ae;
-  --accent-dim: color-mix(in srgb, var(--accent-primary) 14%, transparent);
-  --accent-glow: color-mix(in srgb, var(--accent-primary) 32%, transparent);
-  --text-on-accent: #3c1518;
-  --danger: #ff7a5c;
-  --danger-dim: color-mix(in srgb, var(--danger) 12%, transparent);
-  --danger-border: color-mix(in srgb, var(--danger) 35%, transparent);
+  --accent-secondary: #f2d16b;
+  --accent-text: #e8a55a;
+  --accent-dim: color-mix(in srgb, var(--accent-primary) 13%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  --text-on-accent: #241509;
+  --danger: #f2654a;
   --warning: #d58936;
-  --info: #f2f3ae;
-  --overlay: rgba(26, 8, 10, .74);
+  --info: #f2d16b;
+  --overlay: rgba(12, 10, 9, .6);
   --radius-card: 22px;
-  --font-display: 'General Sans', 'Satoshi', sans-serif;
+  --font-display: 'Cabinet Grotesk', 'Satoshi', sans-serif;
   --font-body: 'Satoshi', sans-serif;
-  --tracking-display: -.03em;
-  --neo-raised: 0 2px 8px rgba(22,5,7,.17), 0 16px 36px rgba(22,5,7,.28), 0 0 0 1px rgba(242,243,174,.07), inset 0 1px 0 rgba(242,243,174,.11);
-  --neo-pressed: inset 0 2px 8px rgba(18,4,6,.26), inset 0 -1px 0 rgba(242,243,174,.05);
-  --neo-convex: 0 2px 6px rgba(22,5,7,.18), 0 14px 32px rgba(22,5,7,.28), inset 0 2px 3px rgba(255,236,200,.32), inset 0 -3px 7px rgba(18,4,6,.2);
-  --neo-float: 0 6px 18px rgba(18,4,6,.22), 0 30px 66px rgba(18,4,6,.46), 0 0 0 1px rgba(242,243,174,.13), inset 0 1px 0 rgba(242,243,174,.15);
-  --neo-knob: 0 2px 8px rgba(18,4,6,.28), 0 0 0 1px rgba(242,243,174,.07), inset 0 1px 0 rgba(242,243,174,.22);
-  --neo-pill: 0 2px 10px rgba(22,5,7,.2), 0 0 0 1px rgba(242,243,174,.07), inset 0 1px 0 rgba(242,243,174,.13);
-  --shadow-accent: 0 0 0 1px var(--border-accent), 0 0 26px var(--accent-glow);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; scrollbar-width: none; }
