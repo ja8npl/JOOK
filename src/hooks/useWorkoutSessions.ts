@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { type Exercise, type PerformanceSnapshot, type ProgressHistory, type SessionExercise, type SessionSet, type WorkoutSession } from '../db/schema';
-import { BACKUP_FORMAT_VERSION, type BackupData, parseBackup } from '../lib/backup';
+import { BACKUP_FORMAT_VERSION, LOCAL_DATA_KEYS, type BackupData, type LocalDataKey, parseBackup } from '../lib/backup';
 
 export interface ExerciseAnalytics {
   exercise: Exercise;
@@ -144,37 +144,60 @@ export async function exportWorkoutData(): Promise<string> {
     db.bodyweights.toArray(),
     db.settings.toArray(),
   ]);
+  const localData = Object.fromEntries(LOCAL_DATA_KEYS.map((key) => [key, readLocalData(key)])) as Record<LocalDataKey, string | null>;
   return JSON.stringify(
-    { version: BACKUP_FORMAT_VERSION, exportedAt: new Date().toISOString(), entries, sessions, progressHistory, warmupConfigs, bodyweights, settings } satisfies BackupData,
+    { version: BACKUP_FORMAT_VERSION, exportedAt: new Date().toISOString(), entries, sessions, progressHistory, warmupConfigs, bodyweights, settings, localData } satisfies BackupData,
     null,
     2,
   );
 }
 
 /**
- * Backup importieren: validiert + normalisiert (v1 und v2), ersetzt dann in
+ * Backup importieren: validiert + normalisiert (v1, v2 und v3), ersetzt dann in
  * einer Transaktion ALLE lokalen Daten. Vorhandene Daten gehen dabei verloren —
  * der Aufrufer sollte vorher bestätigen lassen (Settings-UI fragt nach).
  */
-export async function importWorkoutData(json: string): Promise<{ entries: number; sessions: number; progressHistory: number }> {
+export async function importWorkoutData(json: string): Promise<{ entries: number; sessions: number; progressHistory: number; localDataRestored: boolean }> {
   const data = parseBackup(json);
-  await db.transaction('rw', [db.entries, db.sessions, db.progressHistory, db.warmupConfigs, db.bodyweights, db.settings], async () => {
-    await Promise.all([
-      db.entries.clear(),
-      db.sessions.clear(),
-      db.progressHistory.clear(),
-      db.warmupConfigs.clear(),
-      db.bodyweights.clear(),
-      db.settings.clear(),
-    ]);
-    await Promise.all([
-      db.entries.bulkAdd(data.entries),
-      db.sessions.bulkAdd(data.sessions),
-      db.progressHistory.bulkAdd(data.progressHistory),
-      db.warmupConfigs.bulkAdd(data.warmupConfigs),
-      db.bodyweights.bulkAdd(data.bodyweights, { allKeys: true }),
-      db.settings.bulkAdd(data.settings),
-    ]);
-  });
-  return { entries: data.entries.length, sessions: data.sessions.length, progressHistory: data.progressHistory.length };
+  const previousLocalData = data.localData === undefined ? undefined : Object.fromEntries(LOCAL_DATA_KEYS.map((key) => [key, readLocalData(key)])) as Record<LocalDataKey, string | null>;
+  try {
+    if (data.localData !== undefined) writeLocalData(data.localData);
+    await db.transaction('rw', [db.entries, db.sessions, db.progressHistory, db.warmupConfigs, db.bodyweights, db.settings], async () => {
+      await Promise.all([
+        db.entries.clear(),
+        db.sessions.clear(),
+        db.progressHistory.clear(),
+        db.warmupConfigs.clear(),
+        db.bodyweights.clear(),
+        db.settings.clear(),
+      ]);
+      await Promise.all([
+        db.entries.bulkAdd(data.entries),
+        db.sessions.bulkAdd(data.sessions),
+        db.progressHistory.bulkAdd(data.progressHistory),
+        db.warmupConfigs.bulkAdd(data.warmupConfigs),
+        db.bodyweights.bulkAdd(data.bodyweights, { allKeys: true }),
+        db.settings.bulkAdd(data.settings),
+      ]);
+    });
+  } catch (error) {
+    if (previousLocalData) {
+      try { writeLocalData(previousLocalData); } catch { /* DB-Fehler bleibt maßgeblich. */ }
+    }
+    throw error;
+  }
+  return { entries: data.entries.length, sessions: data.sessions.length, progressHistory: data.progressHistory.length, localDataRestored: data.localData !== undefined };
+}
+
+function readLocalData(key: LocalDataKey): string | null {
+  return localStorage.getItem(key);
+}
+
+function writeLocalData(data: Partial<Record<LocalDataKey, string | null>>): void {
+  for (const key of LOCAL_DATA_KEYS) {
+    if (!(key in data)) continue;
+    const value = data[key];
+    if (value === null || value === undefined) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
+  }
 }

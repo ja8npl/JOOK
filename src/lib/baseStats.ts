@@ -111,6 +111,14 @@ export function computeVolumeFromEntries(entries: GymEntry[]): number {
   return volume;
 }
 
+/** Anzahl der geloggten Arbeits-Sätze aus manuellen Einträgen. */
+export function computeSetCountFromEntries(entries: GymEntry[]): number {
+  return entries.reduce((total, entry) => {
+    const sets = Array.isArray(entry.sets) ? entry.sets.filter((set) => set && !set.warmup) : [];
+    return total + sets.length;
+  }, 0);
+}
+
 /** Aggregiert alle Quellen zu einem Statistik-Objekt. */
 export function computeBaseStats(input: {
   entries: GymEntry[];
@@ -133,7 +141,7 @@ export function computeBaseStats(input: {
 
   return {
     totalVolume: computeVolumeFromHistory(progressHistory) + computeVolumeFromEntries(entries),
-    totalSets: progressHistory.reduce((sum, point) => sum + point.setCount, 0),
+    totalSets: progressHistory.reduce((sum, point) => sum + point.setCount, 0) + computeSetCountFromEntries(entries),
     sessionCount: completed.length,
     entryCount: entries.length,
     exerciseCount: new Set(progressHistory.map((point) => point.exerciseId)).size,

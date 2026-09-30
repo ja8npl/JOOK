@@ -66,7 +66,7 @@ const validV2Backup = {
 describe('normalizeBackup', () => {
   it('akzeptiert ein vollständiges v2-Backup unverändert in der Struktur', () => {
     const result = normalizeBackup(validV2Backup);
-    expect(result.version).toBe(2);
+    expect(result.version).toBe(3);
     expect(result.entries).toHaveLength(1);
     expect(result.entries[0]).toMatchObject({ machineId: 'chest-press', name: 'Chest Press', einstellung: 'Sitzhöhe 3, Pin 4' });
     expect(result.sessions[0].exercises[0].sets).toHaveLength(3);
@@ -78,7 +78,7 @@ describe('normalizeBackup', () => {
     expect(result.settings[0]).toMatchObject({ key: 'app', modus: 'bulk', einheit: 'kg' });
   });
 
-  it('migriert ein v1-Backup (nur entries/sessions/progressHistory) auf v2', () => {
+  it('migriert ein v1-Backup (nur entries/sessions/progressHistory) auf v3', () => {
     const v1 = {
       version: 1,
       exportedAt: '2026-01-01T10:00:00.000Z',
@@ -87,11 +87,40 @@ describe('normalizeBackup', () => {
       progressHistory: [],
     };
     const result = normalizeBackup(v1);
-    expect(result.version).toBe(2);
+    expect(result.version).toBe(3);
     expect(result.entries[0]).toMatchObject({ machineId: 'lat-zug' });
     expect(result.warmupConfigs).toEqual([]);
     expect(result.bodyweights).toEqual([]);
     expect(result.settings).toEqual([]);
+  });
+
+  it('validiert lokale App-Daten und übernimmt Timer-Präferenzen aus v3', () => {
+    const result = normalizeBackup({
+      ...validV2Backup,
+      version: 3,
+      localData: {
+        'gymlog.workout-templates': '[]',
+        'gymlog.active-session': JSON.stringify({ name: 'Push', startedAt: 1759130400000, exercises: [] }),
+        'gymlog.theme': 'ember',
+        'gymlog.restDuration': '180',
+        'gymlog.rirDefault': 'failure',
+        'gymlog.timerSound': '0',
+        'gymlog.timerVibration': '1',
+      },
+    });
+    expect(result.version).toBe(3);
+    expect(result.localData).toMatchObject({
+      'gymlog.theme': 'ember',
+      'gymlog.restDuration': '180',
+      'gymlog.rirDefault': 'failure',
+      'gymlog.timerSound': '0',
+      'gymlog.timerVibration': '1',
+    });
+  });
+
+  it('weist ungültige lokale Präferenzen und beschädigte Vorlagen zurück', () => {
+    expect(() => normalizeBackup({ ...validV2Backup, localData: { 'gymlog.theme': 'light' } })).toThrow('unbekanntes Theme');
+    expect(() => normalizeBackup({ ...validV2Backup, localData: { 'gymlog.workout-templates': '{' } })).toThrow('Trainingsvorlagen sind beschädigt');
   });
 
   it('wirft bei gar keinem Objekt und bei keiner Liste', () => {

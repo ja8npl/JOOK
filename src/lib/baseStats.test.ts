@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   computeBaseStats, computePrs, computeStreaks, computeVolumeFromEntries,
-  computeVolumeFromHistory, computeVolumeSeries, dayNumber, uniqueDaysSorted,
+  computeSetCountFromEntries, computeVolumeFromHistory, computeVolumeSeries, dayNumber, uniqueDaysSorted,
 } from './baseStats';
 import { type BodyWeight, type GymEntry, type ProgressHistory, type WorkoutSession } from '../db/schema';
 
@@ -124,6 +124,7 @@ describe('Volumen-Aggregation', () => {
       ],
     });
     expect(computeVolumeFromEntries([entryWithWarmup])).toBe(600);
+    expect(computeSetCountFromEntries([entryWithWarmup])).toBe(1);
   });
 
   it('baut eine sortierte Volumen-Serie pro Tag', () => {
@@ -149,7 +150,7 @@ describe('computeBaseStats', () => {
     expect(stats.sessionCount).toBe(1);
     expect(stats.entryCount).toBe(1);
     expect(stats.exerciseCount).toBe(2);
-    expect(stats.totalSets).toBe(5);
+    expect(stats.totalSets).toBe(6);
     expect(stats.totalVolume).toBe(2400 + 1200 + 600);
     expect(stats.trainingDays).toBe(1);
     expect(stats.weightLogs).toBe(1);

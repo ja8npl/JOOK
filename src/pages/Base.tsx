@@ -411,8 +411,7 @@ function BackupSection() {
     try {
       const counts = await importWorkoutData(await file.text());
       setMessage(`Backup wiederhergestellt: ${counts.entries} Einträge, ${counts.sessions} Sessions, ${counts.progressHistory} Progress-Punkte.`);
-      // localDataRestore gibt es erst mit dem v2-Backup-Format (in Arbeit) — Guard für beide Stände.
-      if ('localDataRestored' in counts && counts.localDataRestored) window.setTimeout(() => window.location.reload(), 1_000);
+      if (counts.localDataRestored) window.setTimeout(() => window.location.reload(), 1_000);
     } catch {
       setMessage('Backup ist ungültig oder konnte nicht gelesen werden. Es wurde nichts geändert.');
     } finally { setBusy(false); event.target.value = ''; }
@@ -423,7 +422,7 @@ function BackupSection() {
       <div className="backup-icon"><FileJson size={23} /></div>
       <div>
         <h2 id="base-backup-heading">Backup &amp; Restore</h2>
-        <p>Das JSON-Backup enthält Einträge, Sessions, Fortschritt, Warm-up-Konfigurationen, Körpergewicht, Einstellungen, eigene Trainingsvorlagen, eine aktive Einheit und deine App-Darstellung.</p>
+        <p>Das JSON-Backup enthält Einträge, Sessions, Fortschritt, Warm-up-Konfigurationen, Körpergewicht, Einstellungen, eigene Trainingsvorlagen, eine aktive Einheit sowie Theme und Timer-Präferenzen.</p>
       </div>
       <div className="backup-actions">
         <button className="primary-button" type="button" onClick={handleExport} disabled={busy}><Download size={16} /> JSON exportieren</button>

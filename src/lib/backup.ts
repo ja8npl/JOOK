@@ -1,8 +1,8 @@
 /**
- * Backup-Format v2: Vollständiger Export aller Dexie-Tabellen.
+ * Backup-Format v3: Dexie-Tabellen und relevante lokale App-Daten.
  *
- * v1-Backups (nur entries/sessions/progressHistory) bleiben lesbar und
- * werden beim Import auf das v2-Format migriert (fehlende Tabellen = leer).
+ * v1/v2-Backups bleiben lesbar; fehlende Tabellen bleiben leer und fehlende
+ * lokale App-Daten werden beim Import nicht angetastet.
  * Der Import ist eine reine Funktion (testbar); die DB-Zugriffe liegen in
  * src/hooks/useWorkoutSessions.ts.
  */
@@ -10,10 +10,23 @@
 import { TRAINING_MODES, type AppSettings, type BodyWeight, type GymEntry, type ProgressHistory, type RirValue, type SessionSet, type TrainingMode, type WarmupConfig, type WorkoutSession } from '../db/schema';
 
 /** Versionsnummer des aktuellen Backup-Formats. */
-export const BACKUP_FORMAT_VERSION = 2;
+export const BACKUP_FORMAT_VERSION = 3;
+
+export const LOCAL_DATA_KEYS = [
+  'gymlog.workout-templates',
+  'gymlog.active-session',
+  'gymlog.theme',
+  'gymlog.restDuration',
+  'gymlog.rirDefault',
+  'gymlog.timerSound',
+  'gymlog.timerVibration',
+] as const;
+
+export type LocalDataKey = (typeof LOCAL_DATA_KEYS)[number];
+export type BackupLocalData = Partial<Record<LocalDataKey, string | null>>;
 
 export interface BackupData {
-  version: 2;
+  version: 3;
   exportedAt: string;
   entries: GymEntry[];
   sessions: WorkoutSession[];
@@ -21,6 +34,7 @@ export interface BackupData {
   warmupConfigs: WarmupConfig[];
   bodyweights: BodyWeight[];
   settings: AppSettings[];
+  localData?: BackupLocalData;
 }
 
 const VALID_RIR = new Set<number | string>([0, 1, 2, 3, 4, 'failure']);
@@ -66,6 +80,7 @@ export function normalizeBackup(raw: unknown): BackupData {
     throw new Error('Ungültiges Backup.');
   }
   const data = raw as Record<string, unknown>;
+  const localData = normalizeLocalData(data.localData);
 
   const entries = requireArray(data.entries, 'entries').map((item) => {
     const record = item as Record<string, unknown>;
@@ -190,7 +205,7 @@ export function normalizeBackup(raw: unknown): BackupData {
   });
 
   return {
-    version: 2,
+    version: 3,
     exportedAt: typeof data.exportedAt === 'string' ? data.exportedAt : new Date().toISOString(),
     entries,
     sessions,
@@ -198,7 +213,91 @@ export function normalizeBackup(raw: unknown): BackupData {
     warmupConfigs,
     bodyweights,
     settings,
+    localData,
   };
+}
+
+function normalizeLocalData(raw: unknown): BackupLocalData | undefined {
+  if (raw === undefined) return undefined;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new Error('Ungültiges Backup: "localData" ist kein Objekt.');
+  }
+  const record = raw as Record<string, unknown>;
+  const result: BackupLocalData = {};
+  for (const key of LOCAL_DATA_KEYS) {
+    const value = record[key];
+    if (value !== undefined && value !== null && typeof value !== 'string') {
+      throw new Error(`Ungültiges Backup: "${key}" ist kein Textwert.`);
+    }
+    if (value === null || typeof value === 'string') result[key] = value;
+  }
+
+  const templatesRaw = result['gymlog.workout-templates'];
+  if (typeof templatesRaw === 'string') {
+    let templates: unknown;
+    try { templates = JSON.parse(templatesRaw); } catch { throw new Error('Ungültiges Backup: Trainingsvorlagen sind beschädigt.'); }
+    if (!Array.isArray(templates) || templates.some((item) => !isValidTemplate(item))) {
+      throw new Error('Ungültiges Backup: Trainingsvorlagen sind beschädigt.');
+    }
+  }
+  const sessionRaw = result['gymlog.active-session'];
+  if (typeof sessionRaw === 'string') {
+    let session: unknown;
+    try { session = JSON.parse(sessionRaw); } catch { throw new Error('Ungültiges Backup: aktive Trainingseinheit ist beschädigt.'); }
+    if (!isValidActiveSession(session)) throw new Error('Ungültiges Backup: aktive Trainingseinheit ist beschädigt.');
+  }
+  const theme = result['gymlog.theme'];
+  if (typeof theme === 'string' && !['garmin', 'bordeaux', 'whoop', 'ember'].includes(theme)) {
+    throw new Error('Ungültiges Backup: unbekanntes Theme.');
+  }
+  const restDuration = result['gymlog.restDuration'];
+  if (typeof restDuration === 'string' && !['60', '90', '120', '180'].includes(restDuration)) {
+    throw new Error('Ungültiges Backup: ungültige Pausendauer.');
+  }
+  const rirDefault = result['gymlog.rirDefault'];
+  if (typeof rirDefault === 'string' && !['none', '0', '1', '2', '3', 'failure'].includes(rirDefault)) {
+    throw new Error('Ungültiges Backup: ungültige RIR-Vorauswahl.');
+  }
+  for (const key of ['gymlog.timerSound', 'gymlog.timerVibration'] as const) {
+    const value = result[key];
+    if (typeof value === 'string' && value !== '0' && value !== '1') {
+      throw new Error(`Ungültiges Backup: "${key}" ist kein gültiger Schalterwert.`);
+    }
+  }
+  return result;
+}
+
+function isValidTemplate(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const template = value as Record<string, unknown>;
+  return typeof template.id === 'string'
+    && typeof template.name === 'string'
+    && typeof template.createdAt === 'number'
+    && Array.isArray(template.exercises)
+    && template.exercises.every((exercise) => {
+      if (!exercise || typeof exercise !== 'object' || Array.isArray(exercise)) return false;
+      const item = exercise as Record<string, unknown>;
+      return typeof item.id === 'string' && typeof item.name === 'string';
+    });
+}
+
+function isValidActiveSession(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const session = value as Record<string, unknown>;
+  if (typeof session.name !== 'string' || typeof session.startedAt !== 'number' || !Array.isArray(session.exercises)) return false;
+  return session.exercises.every((exercise) => {
+    if (!exercise || typeof exercise !== 'object' || Array.isArray(exercise)) return false;
+    const item = exercise as Record<string, unknown>;
+    if (!item.exercise || typeof item.exercise !== 'object' || !Array.isArray(item.sets)) return false;
+    const identity = item.exercise as Record<string, unknown>;
+    return typeof identity.id === 'string' && typeof identity.name === 'string' && item.sets.every((set) => {
+      if (!set || typeof set !== 'object' || Array.isArray(set)) return false;
+      const row = set as Record<string, unknown>;
+      return typeof row.id === 'string' && typeof row.setNumber === 'number'
+        && typeof row.gewicht === 'number' && typeof row.wiederholungen === 'number'
+        && typeof row.completed === 'boolean';
+    });
+  });
 }
 
 function requireArray(value: unknown, field: string): unknown[] {
@@ -210,7 +309,7 @@ function requireArray(value: unknown, field: string): unknown[] {
   return value;
 }
 
-/** JSON-String parsen + normalisieren (v1 und v2). */
+/** JSON-String parsen + normalisieren (v1, v2 und v3). */
 export function parseBackup(json: string): BackupData {
   let parsed: unknown;
   try {
