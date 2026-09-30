@@ -95,8 +95,9 @@ function errorResponse(code: ErrorCode, status: number, message: string): Respon
 }
 
 function consumeRateLimit(request: Request): { limited: boolean; retryAfterSeconds: number } {
+  const forwardedFor = request.headers.get('x-forwarded-for')?.split(',');
   const ip = request.headers.get('x-real-ip')
-    ?? request.headers.get('x-forwarded-for')?.split(',').at(-1)?.trim()
+    ?? forwardedFor?.[forwardedFor.length - 1]?.trim()
     ?? 'unknown';
   const now = Date.now();
   if (requestBuckets.size > 5_000) {
@@ -238,7 +239,8 @@ function buildContent(request: ParsePlanRequest): Array<{ type: 'text'; text: st
 }
 
 async function attemptModel(model: string, request: ParsePlanRequest, timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS): Promise<AttemptResult> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const runtime = globalThis as typeof globalThis & { process?: { env?: Record<string, string | undefined> } };
+  const apiKey = runtime.process?.env?.OPENROUTER_API_KEY;
   if (!apiKey) return { ok: false, code: 'model_unreachable' };
 
   const controller = new AbortController();
@@ -347,7 +349,7 @@ export async function POST(request: Request): Promise<Response> {
     const timeout = Math.min(i === 0 ? SLOW_TEXT_TIMEOUT_MS : DEFAULT_REQUEST_TIMEOUT_MS, remaining);
     if (timeout < 5_000) break;
     const result = await attemptModel(chain[i], { text, imageBase64 }, timeout);
-    if (result.ok) return jsonResponse(200, { templates: result.templates });
+    if (result.ok === true) return jsonResponse(200, { templates: result.templates });
     failureCodes.push(result.code);
   }
 
