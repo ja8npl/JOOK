@@ -5,6 +5,7 @@ import { Check, ChevronDown, Clock3, Dumbbell, Flame, History, Plus, Save, Trash
 import { useWorkoutSession } from '../hooks/useWorkoutSession';
 import { useOverlayFocus } from '../hooks/useOverlayFocus';
 import { DISCARD_MOTIVATION_THRESHOLD, sessionSetCounts, updateSessionSet } from '../hooks/workoutSessionUtils';
+import { inputToNumber, isValidInputValue, numberToInputValue, stripLeadingZeros } from '../lib/numbers';
 import { searchStaticExercises, type StaticExercise } from '../hooks/useExercises';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { ProgressBadge } from './ProgressBadge';
@@ -224,9 +225,14 @@ function ExercisePicker({ query, setQuery, suggestions, onSelect }: { query: str
   return <motion.div className="exercise-picker glass-panel" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Übung suchen…" autoFocus aria-label="Übung suchen" /><div className="exercise-suggestions">{suggestions.map((exercise) => <button key={exercise.id} type="button" onClick={() => onSelect({ id: exercise.id, name: exercise.name, equipment: exercise.equipment ?? undefined, target: exercise.target ?? undefined })}><span>{exercise.name}</span><small>{exercise.target ?? exercise.equipment ?? 'Übung'}</small></button>)}</div></motion.div>;
 }
 
+/** Draft-Key der Zahlen-Inputs eines Satzes (Warm-up- und Arbeitssätze gleichermaßen). */
+const inputDraftKey = (field: 'gewicht' | 'wiederholungen', setId: string) => `${field}-${setId}`;
+
 function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange, onOpenWarmup, onOpenHistory }: { exerciseId: string; item: SessionExercise; progress: { current?: import('../db/schema').ProgressHistory; previous?: import('../db/schema').ProgressHistory }; reduced: boolean; onRemove: () => void; onChange: (item: SessionExercise) => void; onOpenWarmup: () => void; onOpenHistory: () => void }) {
   /** Inkrement-Key für den Häkchen-Pop: zählt jeden Abhak-Vorgang, damit das Keyframe auch bei erneutem Abhaken derselben Zeile neu feuert. */
   const [checkPopKey, setCheckPopKey] = useState(0);
+  /** Tipp-Zwischenstände der Zahlen-Inputs („0.“, „12,“, „0“) — pro Feld+Satz-ID, damit 0 nur als Placeholder wirkt. */
+  const [inputDrafts, setInputDrafts] = useState<Record<string, string>>({});
   const cardRef = useRef<HTMLElement | null>(null);
   // Frisch hinzugefügte Übung sanft in den Viewport bringen, damit der Eintritts-Übergang auch sichtbar ist.
   useEffect(() => {
@@ -240,7 +246,70 @@ function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange,
   /** Steigerungs-Signal: erster Satz des letzten Eintrags dieser Übung (per Name-Key). */
   const firstSetOfPrevious = useLastFirstSetForMachine(warmupExerciseKey(item.exercise));
   const isWarmupOnly = warmupSets.length > 0 && workSets.length === 0;
-  const renderSet = (set: import('../db/schema').SessionSet, isWarmup: boolean) => <div className={`session-set-row${set.completed ? ' is-complete' : ''}${isWarmup ? ' is-warmup' : ''}`} key={set.id}><span className="set-number">{set.setNumber}</span><input type="number" inputMode="decimal" min="0" step="2.5" value={set.gewicht} onChange={(event) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { gewicht: Number(event.target.value) || 0 }) : candidate) })} aria-label={`Satz ${set.setNumber} Gewicht`} /><input type="number" inputMode="numeric" min="0" step="1" value={set.wiederholungen} onChange={(event) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { wiederholungen: Number(event.target.value) || 0 }) : candidate) })} aria-label={`Satz ${set.setNumber} Wiederholungen`} /><RirPicker value={set.rir} setLabel={`Satz ${set.setNumber}`} onChange={(rir) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { rir }) : candidate) })} /><button className="set-check" type="button" aria-label={`Satz ${set.setNumber} ${set.completed ? 'offen' : 'abhaken'}`} aria-pressed={set.completed} onClick={() => { setCheckPopKey((key) => key + 1); onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { completed: !candidate.completed, timestamp: Date.now() }) : candidate) }); }}><Check size={16} key={set.completed ? `done-${checkPopKey}` : 'open'} /></button></div>;
+  const renderSet = (set: import('../db/schema').SessionSet, isWarmup: boolean) => (
+    <div className={`session-set-row${set.completed ? ' is-complete' : ''}${isWarmup ? ' is-warmup' : ''}`} key={set.id}>
+      <span className="set-number">{set.setNumber}</span>
+      {/* Gewicht: Draft-String statt value={number} — 0 nur als Placeholder, erster Tastendruck ersetzt direkt (kein „060“). */}
+      <input
+        type="text"
+        inputMode="decimal"
+        value={inputDrafts[inputDraftKey('gewicht', set.id)] ?? numberToInputValue(set.gewicht)}
+        placeholder="0"
+        onChange={(event) => {
+          const raw = stripLeadingZeros(event.target.value);
+          if (!isValidInputValue(raw)) {
+            // Paste von Text: DOM direkt zurücksetzen — ohne State-Änderung rendert React nicht neu.
+            event.target.value = inputDrafts[inputDraftKey('gewicht', set.id)] ?? numberToInputValue(set.gewicht);
+            return;
+          }
+          setInputDrafts((current) => ({ ...current, [inputDraftKey('gewicht', set.id)]: raw }));
+          onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { gewicht: inputToNumber(raw) }) : candidate) });
+        }}
+        onFocus={(event) => event.target.select()}
+        onBlur={() => {
+          const key = inputDraftKey('gewicht', set.id);
+          const raw = inputDrafts[key] ?? numberToInputValue(set.gewicht);
+          setInputDrafts((current) => {
+            if (!(key in current)) return current;
+            const nextDrafts = { ...current };
+            delete nextDrafts[key];
+            return nextDrafts;
+          });
+          const next = inputToNumber(raw);
+          if (set.gewicht !== next) onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { gewicht: next }) : candidate) });
+        }}
+        aria-label={`Satz ${set.setNumber} Gewicht`}
+      />
+      {/* Wiederholungen: Ganzzahl, führende Nullen sofort strippen. */}
+      <input
+        type="text"
+        inputMode="numeric"
+        value={inputDrafts[inputDraftKey('wiederholungen', set.id)] ?? numberToInputValue(set.wiederholungen)}
+        placeholder="0"
+        onChange={(event) => {
+          const raw = stripLeadingZeros(event.target.value.replace(/\D/g, ''));
+          setInputDrafts((current) => ({ ...current, [inputDraftKey('wiederholungen', set.id)]: raw }));
+          onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { wiederholungen: inputToNumber(raw) }) : candidate) });
+        }}
+        onFocus={(event) => event.target.select()}
+        onBlur={() => {
+          const key = inputDraftKey('wiederholungen', set.id);
+          const raw = inputDrafts[key] ?? numberToInputValue(set.wiederholungen);
+          setInputDrafts((current) => {
+            if (!(key in current)) return current;
+            const nextDrafts = { ...current };
+            delete nextDrafts[key];
+            return nextDrafts;
+          });
+          const next = inputToNumber(raw);
+          if (set.wiederholungen !== next) onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { wiederholungen: next }) : candidate) });
+        }}
+        aria-label={`Satz ${set.setNumber} Wiederholungen`}
+      />
+      <RirPicker value={set.rir} setLabel={`Satz ${set.setNumber}`} onChange={(rir) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { rir }) : candidate) })} />
+      <button className="set-check" type="button" aria-label={`Satz ${set.setNumber} ${set.completed ? 'offen' : 'abhaken'}`} aria-pressed={set.completed} onClick={() => { setCheckPopKey((key) => key + 1); onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { completed: !candidate.completed, timestamp: Date.now() }) : candidate) }); }}><Check size={16} key={set.completed ? `done-${checkPopKey}` : 'open'} /></button>
+    </div>
+  );
   return <motion.article ref={cardRef} className="workout-exercise-card glass-panel" initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -8 }} transition={reduced ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }}>
     <div className="exercise-card-header"><div><span className="eyebrow">{item.exercise.target ?? 'Exercise'}</span><h2>{item.exercise.name}</h2></div>
       <div className="exercise-card-actions">

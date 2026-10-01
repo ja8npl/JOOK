@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Check, Minus, Plus } from 'lucide-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { readRirDefault, rirPrefToValue } from '../hooks/useBasePrefs';
+import { inputToNumber, isValidInputValue, numberToInputValue, stripLeadingZeros } from '../lib/numbers';
 import { RirPicker } from './RirPicker';
 import { type RirValue } from '../db/schema';
 
@@ -16,6 +17,8 @@ const GEWICHT_STEP = 2.5;
 export function SetCounter({ defaultWeight, onComplete }: Props) {
   const reduced = useReducedMotion();
   const [gewicht, setGewicht] = useState<number>(defaultWeight ?? 20);
+  /** Tipp-Zwischenstand des Gewichts-Inputs (null = Anzeige folgt dem number-State) — „0“/leer zeigt nur den Placeholder. */
+  const [gewichtStr, setGewichtStr] = useState<string | null>(null);
   const [wiederholungen, setWiederholungen] = useState(0);
   const [rir, setRir] = useState<RirValue | undefined>(() => rirPrefToValue(readRirDefault()));
 
@@ -26,6 +29,7 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
   }
 
   const bumpGewicht = (delta: number) => {
+    setGewichtStr(null);
     setGewicht((g) => Math.max(0, Math.round((g + delta) * 10) / 10));
   };
 
@@ -34,6 +38,7 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
     onComplete(gewicht, wiederholungen, rir);
     setWiederholungen(0);
     setRir(undefined);
+    setGewichtStr(null);
   };
 
   const canComplete = wiederholungen > 0;
@@ -50,14 +55,24 @@ export function SetCounter({ defaultWeight, onComplete }: Props) {
 
           <input
             id="gewicht-input"
-            type="number"
+            type="text"
             inputMode="decimal"
-            step={GEWICHT_STEP}
-            min={0}
-            value={gewicht}
+            value={gewichtStr ?? numberToInputValue(gewicht)}
+            placeholder="0"
             onChange={(e) => {
-              const v = Number(e.target.value);
-              setGewicht(isFinite(v) && v >= 0 ? v : 0);
+              const raw = stripLeadingZeros(e.target.value);
+              if (!isValidInputValue(raw)) {
+                // Paste von Text: DOM direkt zurücksetzen — ohne State-Änderung rendert React nicht neu.
+                e.target.value = gewichtStr ?? numberToInputValue(gewicht);
+                return;
+              }
+              setGewichtStr(raw);
+              setGewicht(inputToNumber(raw));
+            }}
+            onFocus={(e) => e.target.select()}
+            onBlur={(e) => {
+              setGewichtStr(null);
+              setGewicht(inputToNumber(e.target.value));
             }}
             aria-label="Gewicht in Kilogramm"
             style={{
