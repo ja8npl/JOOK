@@ -23,8 +23,8 @@
           const stored = localStorage.getItem('gymlog.theme');
           const theme = ['garmin', 'bordeaux', 'whoop', 'ember'].includes(stored || '') ? stored : 'garmin';
           document.documentElement.dataset.theme = theme;
-          const themeColors = { garmin: '#1F2024', bordeaux: '#1A1618', whoop: '#121417', ember: '#2B2828' };
-          const bgColor = themeColors[theme] || '#1F2024';
+          // Alle Themes teilen --bg-base: #1f2024 (nur der Akzent unterscheidet sich).
+          const bgColor = '#1F2024';
           const meta = document.querySelector('meta[name="theme-color"]');
           if (meta) meta.setAttribute('content', bgColor);
           document.documentElement.style.backgroundColor = bgColor;

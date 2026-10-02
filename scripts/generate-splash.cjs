@@ -37,8 +37,6 @@ const GLYPH_PATHS = [
 ];
 
 // ── Mini-SVG-Path-Parser: M m L l H h V v A a Z z → Polylinien ──
-const NUM_RE = /[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g;
-
 function tokenize(d) {
   const tokens = [];
   const re = /([MmLlHhVvAaZz])|([-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?)/g;
@@ -56,7 +54,6 @@ function flattenPath(d, segments) {
   let cmd = '';
   let cx = 0, cy = 0;      // aktueller Punkt
   let sx = 0, sy = 0;      // Startpunkt des Subpaths
-  let px = 0, py = 0;      // vorheriger Punkt für relative Konvertierung
 
   const nextNum = () => tokens[i++];
 
@@ -108,7 +105,7 @@ function flattenPath(d, segments) {
         const x = nextNum(), y = nextNum();
         cx = cmd === 'M' ? x : cx + x;
         cy = cmd === 'M' ? y : cy + y;
-        sx = cx; sy = cy; px = cx; py = cy;
+        sx = cx; sy = cy;
         cmd = cmd === 'M' ? 'L' : 'l';
         break;
       }
@@ -120,7 +117,6 @@ function flattenPath(d, segments) {
           line(cx, cy, ax, ay);
           cx = ax; cy = ay;
         } while (i < tokens.length && typeof tokens[i] === 'number');
-        px = cx; py = cy;
         break;
       }
       case 'H': case 'h': {
@@ -130,7 +126,6 @@ function flattenPath(d, segments) {
           line(cx, cy, ax, cy);
           cx = ax;
         } while (i < tokens.length && typeof tokens[i] === 'number');
-        px = cx; py = cy;
         break;
       }
       case 'V': case 'v': {
@@ -140,7 +135,6 @@ function flattenPath(d, segments) {
           line(cx, cy, cx, ay);
           cy = ay;
         } while (i < tokens.length && typeof tokens[i] === 'number');
-        px = cx; py = cy;
         break;
       }
       case 'A': case 'a': {
@@ -153,7 +147,6 @@ function flattenPath(d, segments) {
           arc(cx, cy, rx, ry, rot, laf, sf, ax, ay);
           cx = ax; cy = ay;
         } while (i < tokens.length && typeof tokens[i] === 'number');
-        px = cx; py = cy;
         break;
       }
       case 'Z': case 'z': {

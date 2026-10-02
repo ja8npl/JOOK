@@ -131,7 +131,7 @@ export function RestTimer({ startKey, onDone }: Props) {
   };
 
   const aktiv    = lauft || restSek > 0;
-  const progress = dauer > 0 ? restSek / dauer : 0;
+  const progress = dauer > 0 ? Math.min(1, restSek / dauer) : 0;
   const min = Math.floor(restSek / 60);
   const sek = restSek % 60;
 

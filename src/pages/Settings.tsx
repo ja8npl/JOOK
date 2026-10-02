@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Download, FileJson, Settings as SettingsIcon, Upload } from 'lucide-react';
 import { exportWorkoutData, importWorkoutData } from '../hooks/useWorkoutSessions';
+import { backupFilename, downloadJson } from '../lib/download';
 
 export function Settings() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -11,13 +12,7 @@ export function Settings() {
     setBusy(true);
     try {
       const data = await exportWorkoutData();
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `gym-log-backup-${new Date().toISOString().slice(0, 10)}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
+      downloadJson(backupFilename(), data);
       setMessage('Backup exportiert.');
     } catch {
       setMessage('Export konnte nicht erstellt werden.');
@@ -28,13 +23,16 @@ export function Settings() {
     const file = event.target.files?.[0];
     if (!file) return;
     const confirmed = window.confirm(
-      'Beim Import werden alle im Backup enthaltenen Daten ersetzt: Einträge, Sessions, Fortschritt, Warm-ups, Gewicht, Einstellungen und – bei v3-Backups – Vorlagen, aktive Einheit und App-Präferenzen.\n\n„' +
+      'Beim Import werden alle im Backup enthaltenen Daten ersetzt: Einträge, Sessions, Fortschritt, Warm-ups, Gewicht, Einstellungen und – bei v3-Backups – Vorlagen, aktive Einheit und App-Präferenzen.\n\n' +
+        'Vorher wird automatisch eine Sicherung des aktuellen Stands gespeichert.\n\n„' +
         file.name +
         '“ jetzt wiederherstellen?',
     );
     if (!confirmed) { event.target.value = ''; return; }
     setBusy(true);
     try {
+      // Notfall-Kopie des aktuellen Stands, bevor der Import alles ersetzt.
+      try { downloadJson(backupFilename('gym-log-sicherung-vor-import'), await exportWorkoutData()); } catch { /* Sicherung ist optional */ }
       const counts = await importWorkoutData(await file.text());
       setMessage(`Backup wiederhergestellt: ${counts.entries} Einträge, ${counts.sessions} Sessions, ${counts.progressHistory} Progress-Punkte.`);
       if (counts.localDataRestored) window.setTimeout(() => window.location.reload(), 1_000);

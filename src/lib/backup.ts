@@ -39,6 +39,14 @@ export interface BackupData {
 
 const VALID_RIR = new Set<number | string>([0, 1, 2, 3, 4, 'failure']);
 
+/** Lokales Tages-Datum YYYY-MM-DD — bewusst kein toISOString() (UTC-Versatz). */
+function localDateTag(now: Date = new Date()): string {
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 /** Prüft/normalisiert einen WorkoutSet-artigen Datensatz (mit oder ohne rir/warmup). */
 function normalizeSet(set: unknown): { gewicht: number; wiederholungen: number; timestamp: number; warmup?: boolean; rir?: RirValue } | null {
   if (!set || typeof set !== 'object') return null;
@@ -186,7 +194,7 @@ export function normalizeBackup(raw: unknown): BackupData {
     const bodyweight: BodyWeight = {
       id: typeof record.id === 'number' && Number.isFinite(record.id) ? record.id : Date.now(),
       gewicht,
-      tag: typeof record.tag === 'string' && record.tag ? record.tag : new Date().toISOString().slice(0, 10),
+      tag: typeof record.tag === 'string' && record.tag ? record.tag : localDateTag(),
     };
     return bodyweight;
   });

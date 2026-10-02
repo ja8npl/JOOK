@@ -39,17 +39,16 @@ export function storeTheme(theme: ThemeName): void {
   }
 }
 
-/** Status-Bar-Farbe pro Theme (bg-base). */
-const META_COLORS: Record<ThemeName, string> = {
-  garmin: '#0A0A0B',
-  bordeaux: '#0D0D0F',
-  whoop: '#1F2024',
-  ember: '#2B2828',
-};
+/**
+ * Status-Bar-Farbe (theme-color). Alle Themes teilen `--bg-base: #1f2024`
+ * — der einzige Unterschied ist der Akzent — deshalb ist der Wert bewusst
+ * konstant und deckt sich mit dem Inline-Wert in index.html.
+ */
+const THEME_COLOR = '#1F2024';
 
 /** Wendet das Theme auf <html data-theme> und die theme-color-Meta an. */
 export function applyTheme(theme: ThemeName): void {
   document.documentElement.dataset.theme = theme;
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-  if (meta) meta.content = META_COLORS[theme];
+  if (meta) meta.content = THEME_COLOR;
 }

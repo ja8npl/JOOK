@@ -2,24 +2,20 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dumbbell, Info, Target, Zap } from 'lucide-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
-
-const WEIGHT_STEP = 2.5;
-
-function roundToStep(value: number): number {
-  return Math.round(value / WEIGHT_STEP) * WEIGHT_STEP;
-}
+import { parseKgInput, roundWarmupWeight, WARMUP_WEIGHT_STEP_KG } from '../hooks/warmup';
 
 export function Warmup() {
   const reduced = useReducedMotion();
   const [workingWeightStr, setWorkingWeightStr] = useState('');
   const [showSet3, setShowSet3] = useState(false);
 
-  const workingWeight = parseFloat(workingWeightStr.replace(',', '.'));
-  const isValid = !isNaN(workingWeight) && workingWeight > 0;
+  // Kanonische Warm-up-Logik aus hooks/warmup.ts — keine zweite Rundungs-Implementierung.
+  const workingWeight = parseKgInput(workingWeightStr);
+  const isValid = workingWeight !== null;
 
-  const set1 = isValid ? roundToStep(workingWeight * 0.25) : 0;
-  const set2 = isValid ? roundToStep(workingWeight * 0.50) : 0;
-  const set3 = isValid ? roundToStep(workingWeight * 0.75) : 0;
+  const set1 = workingWeight !== null ? roundWarmupWeight(workingWeight * 0.25) : 0;
+  const set2 = workingWeight !== null ? roundWarmupWeight(workingWeight * 0.50) : 0;
+  const set3 = workingWeight !== null ? roundWarmupWeight(workingWeight * 0.75) : 0;
 
   return (
     <div className="page-container">
@@ -101,7 +97,7 @@ export function Warmup() {
           </h2>
           <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <Info size={14} />
-            Gerundet auf {WEIGHT_STEP} kg
+            Gerundet auf {WARMUP_WEIGHT_STEP_KG} kg
           </div>
         </div>
 
