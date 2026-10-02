@@ -38,3 +38,27 @@ export function appendSessionSet(exercise: SessionExercise): SessionExercise {
     sets: [...exercise.sets, createSessionSet(exercise.sets.length + 1, exercise.previous, exercise.exercise.wiederholungen)],
   };
 }
+
+/** Entfernt einen Satz (per ID) und nummeriert neu: Warm-ups zuerst, Arbeitssätze dahinter. */
+export function withoutSessionSet(exercise: SessionExercise, setId: string): SessionExercise {
+  const remaining = exercise.sets.filter((candidate) => candidate.id !== setId);
+  const warmups = remaining.filter((candidate) => candidate.warmup);
+  const work = remaining.filter((candidate) => !candidate.warmup);
+  return {
+    ...exercise,
+    sets: [
+      ...warmups,
+      ...work.map((candidate, index) => ({ ...candidate, setNumber: warmups.length + index + 1 })),
+    ],
+  };
+}
+
+/** Verschiebt eine Übung an einen Einfügeindex im Raum "ohne gezogene Übung". */
+export function reorderSessionExercises(exercises: SessionExercise[], fromId: string, insertIndex: number): SessionExercise[] {
+  const fromIndex = exercises.findIndex((candidate) => candidate.exercise.id === fromId);
+  if (fromIndex === -1) return exercises;
+  const next = [...exercises];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(Math.max(0, Math.min(insertIndex, next.length)), 0, moved);
+  return next;
+}

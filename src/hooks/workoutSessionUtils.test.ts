@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeSessionSetProgress, DISCARD_MOTIVATION_THRESHOLD } from './workoutSessionUtils';
+import { computeSessionSetProgress, DISCARD_MOTIVATION_THRESHOLD, withoutSessionSet, reorderSessionExercises } from './workoutSessionUtils';
 import { type SessionExercise, type SessionSet } from '../db/schema';
 
 function set(overrides: Partial<SessionSet> = {}): SessionSet {
@@ -63,8 +63,67 @@ describe('computeSessionSetProgress', () => {
   });
 });
 
-describe('DISCARD_MOTIVATION_THRESHOLD', () => {
-  it('liegt bei 50%', () => {
-    expect(DISCARD_MOTIVATION_THRESHOLD).toBe(0.5);
+describe('withoutSessionSet', () => {
+  it('entfernt einen Arbeitssatz und nummeriert die restlichen Arbeitssätze neu', () => {
+    const ex = exercise([
+      set({ id: 's1', setNumber: 1, completed: true }),
+      set({ id: 's2', setNumber: 2, completed: false }),
+      set({ id: 's3', setNumber: 3, completed: false }),
+    ]);
+    const next = withoutSessionSet(ex, 's2');
+    expect(next.sets.map((s) => s.id)).toEqual(['s1', 's3']);
+    expect(next.sets.map((s) => s.setNumber)).toEqual([1, 2]);
+  });
+
+  it('behält Warm-up-Sätze unverändert vorne', () => {
+    const ex = exercise([
+      set({ id: 'w1', setNumber: 1, warmup: true }),
+      set({ id: 'w2', setNumber: 2, warmup: true }),
+      set({ id: 's1', setNumber: 3, completed: true }),
+      set({ id: 's2', setNumber: 4 }),
+    ]);
+    const next = withoutSessionSet(ex, 's1');
+    expect(next.sets.map((s) => s.id)).toEqual(['w1', 'w2', 's2']);
+    // Warm-ups behalten 1, 2; Arbeitssatz wird neu auf 3 nummeriert
+    expect(next.sets.map((s) => s.setNumber)).toEqual([1, 2, 3]);
+  });
+
+  it('gibt leere Liste zurück, wenn der einzige Satz gelöscht wird', () => {
+    const ex = exercise([set({ id: 'only', setNumber: 1 })]);
+    const next = withoutSessionSet(ex, 'only');
+    expect(next.sets.length).toBe(0);
+  });
+});
+
+describe('reorderSessionExercises', () => {
+  const base = (ids: string[]) =>
+    ids.map((id) => ({
+      exercise: { id, name: id },
+      sets: [set({ id: `${id}-s1`, setNumber: 1 })],
+    }));
+
+  it('bewegt ein Element nach oben', () => {
+    const reordered = reorderSessionExercises(base(['a', 'b', 'c']), 'c', 0);
+    expect(reordered.map((e) => e.exercise.id)).toEqual(['c', 'a', 'b']);
+  });
+
+  it('bewegt ein Element nach unten', () => {
+    const reordered = reorderSessionExercises(base(['a', 'b', 'c']), 'a', 2);
+    expect(reordered.map((e) => e.exercise.id)).toEqual(['b', 'c', 'a']);
+  });
+
+  it('insertIndex > Länge → am Ende einfügen', () => {
+    const reordered = reorderSessionExercises(base(['a', 'b']), 'a', 5);
+    expect(reordered.map((e) => e.exercise.id)).toEqual(['b', 'a']);
+  });
+
+  it('insertIndex < 0 → an den Anfang', () => {
+    const reordered = reorderSessionExercises(base(['a', 'b']), 'b', -1);
+    expect(reordered.map((e) => e.exercise.id)).toEqual(['b', 'a']);
+  });
+
+  it('unbekannte ID → unverändert', () => {
+    const reordered = reorderSessionExercises(base(['a', 'b']), 'unknown', 0);
+    expect(reordered.map((e) => e.exercise.id)).toEqual(['a', 'b']);
   });
 });

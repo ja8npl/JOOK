@@ -48,6 +48,14 @@ export function useWorkoutTemplates() {
     });
   }, []);
 
+  const updateTemplate = useCallback((id: string, name: string, exercises: Exercise[]) => {
+    setTemplates((current) => {
+      const next = current.map((template) => template.id === id ? { ...template, name: name.trim() || template.name, exercises } : template);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   /** Eigene Vorlagen (localStorage) — eingebaute Pläne werden separat angehängt. */
-  return { templates, saveTemplate, deleteTemplate };
+  return { templates, saveTemplate, deleteTemplate, updateTemplate };
 }

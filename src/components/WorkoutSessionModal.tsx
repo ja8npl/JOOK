@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useDragControls } from 'framer-motion';
-import { Check, ChevronDown, Clock3, Dumbbell, Flame, History, Plus, Save, Trash2, X } from 'lucide-react';
+import { Check, ChevronDown, Clock3, Dumbbell, Flame, GripVertical, History, Plus, Save, Trash2, X } from 'lucide-react';
 import { useWorkoutSession } from '../hooks/useWorkoutSession';
 import { useOverlayFocus } from '../hooks/useOverlayFocus';
-import { DISCARD_MOTIVATION_THRESHOLD, sessionSetCounts, updateSessionSet } from '../hooks/workoutSessionUtils';
+import { DISCARD_MOTIVATION_THRESHOLD, sessionSetCounts, updateSessionSet, withoutSessionSet } from '../hooks/workoutSessionUtils';
 import { inputToNumber, isValidInputValue, numberToInputValue, stripLeadingZeros } from '../lib/numbers';
 import { searchStaticExercises, type StaticExercise } from '../hooks/useExercises';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -21,7 +21,7 @@ import { db } from '../db/db';
 import { type Exercise, type SessionExercise } from '../db/schema';
 
 export function WorkoutSessionModal() {
-  const { activeSession, updateSession, addExercise, removeExercise, updateExercise, clearWarmup, finishSession, discardSession } = useWorkoutSession();
+  const { activeSession, updateSession, addExercise, removeExercise, updateExercise, reorderExercise, clearWarmup, finishSession, discardSession } = useWorkoutSession();
   const reduced = useReducedMotion();
   const progress = useProgressHistory();
   const [seconds, setSeconds] = useState(0);
@@ -121,6 +121,61 @@ export function WorkoutSessionModal() {
     clearWarmup(warmupTarget.exercise.id);
   };
 
+  /* --- Übungen umsortieren per Pointer-Events (gleiche Physik wie im Plan-Import) --- */
+  const [draggingExerciseId, setDraggingExerciseId] = useState<string | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const dragExerciseRef = useRef<string | null>(null);
+  const dropIndexRef = useRef<number | null>(null);
+  const exerciseListRef = useRef<HTMLDivElement | null>(null);
+
+  const startExerciseDrag = (exerciseId: string) => (event: React.PointerEvent) => {
+    event.preventDefault();
+    dragExerciseRef.current = exerciseId;
+    dropIndexRef.current = null;
+    setDraggingExerciseId(exerciseId);
+    setDropIndex(null);
+  };
+
+  const handleExerciseListPointerMove = (event: React.PointerEvent) => {
+    const dragId = dragExerciseRef.current;
+    if (!dragId) return;
+    const container = exerciseListRef.current;
+    if (!container) return;
+    const cards = Array.from(container.querySelectorAll<HTMLElement>('[data-exercise-key]'));
+    const keys = cards.map((card) => card.dataset.exerciseKey);
+    const fromIndex = keys.indexOf(dragId);
+    if (fromIndex === -1) return;
+
+    let targetIndex = cards.length - 1;
+    for (let index = 0; index < cards.length; index += 1) {
+      const rect = cards[index].getBoundingClientRect();
+      if (event.clientY < rect.top + rect.height / 2) {
+        targetIndex = index;
+        break;
+      }
+    }
+    if (targetIndex === fromIndex) {
+      dropIndexRef.current = null;
+      setDropIndex(null);
+      return;
+    }
+    // Einfügeindex im Raum "ohne gezogene Karte"
+    const insertIndex = fromIndex < targetIndex ? targetIndex - 1 : targetIndex;
+    dropIndexRef.current = insertIndex;
+    setDropIndex(insertIndex);
+  };
+
+  const endExerciseDrag = () => {
+    const dragId = dragExerciseRef.current;
+    const insertIndex = dropIndexRef.current;
+    dragExerciseRef.current = null;
+    dropIndexRef.current = null;
+    setDraggingExerciseId(null);
+    setDropIndex(null);
+    if (!dragId || insertIndex === null) return;
+    reorderExercise(dragId, insertIndex);
+  };
+
   const session = activeSession;
   const renderSession = (
     <motion.div className="session-shell" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -141,12 +196,26 @@ export function WorkoutSessionModal() {
             {session.exercises.length === 0 ? (
               <div className="session-empty glass-panel"><Dumbbell size={25} /><h2>Dein Training wartet.</h2><p>Füge deine erste Übung hinzu und logge jeden Satz live.</p></div>
             ) : (
-              <div className="session-exercises">
-                {session.exercises.map((item) => (
-                  <ExerciseCard key={item.exercise.id} exerciseId={item.exercise.id} item={item} progress={previousFor(item.exercise.id)} reduced={reduced} onRemove={() => removeExercise(item.exercise.id)} onChange={(next) => updateExercise(item.exercise.id, () => next)}
-                    onOpenWarmup={() => setWarmupTargetId(item.exercise.id)}
-                    onOpenHistory={() => { setHistoryTargetKey(warmupExerciseKey(item.exercise)); setHistoryTargetName(item.exercise.name); }}
-                  />
+              <div
+                className="session-exercises"
+                ref={exerciseListRef}
+                onPointerMove={handleExerciseListPointerMove}
+                onPointerUp={endExerciseDrag}
+                onPointerCancel={endExerciseDrag}
+                onPointerLeave={endExerciseDrag}
+              >
+                {session.exercises.map((item, index) => (
+                  <div
+                    key={item.exercise.id}
+                    data-exercise-key={item.exercise.id}
+                    className={`session-exercise-slot${draggingExerciseId === item.exercise.id ? ' is-dragging' : ''}${dropIndex === index ? ' is-drop-target' : ''}`}
+                  >
+                    <ExerciseCard exerciseId={item.exercise.id} item={item} progress={previousFor(item.exercise.id)} reduced={reduced} onRemove={() => removeExercise(item.exercise.id)} onChange={(next) => updateExercise(item.exercise.id, () => next)}
+                      onOpenWarmup={() => setWarmupTargetId(item.exercise.id)}
+                      onOpenHistory={() => { setHistoryTargetKey(warmupExerciseKey(item.exercise)); setHistoryTargetName(item.exercise.name); }}
+                      onDragStart={startExerciseDrag(item.exercise.id)}
+                    />
+                  </div>
                 ))}
               </div>
             )}
@@ -228,7 +297,7 @@ function ExercisePicker({ query, setQuery, suggestions, onSelect }: { query: str
 /** Draft-Key der Zahlen-Inputs eines Satzes (Warm-up- und Arbeitssätze gleichermaßen). */
 const inputDraftKey = (field: 'gewicht' | 'wiederholungen', setId: string) => `${field}-${setId}`;
 
-function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange, onOpenWarmup, onOpenHistory }: { exerciseId: string; item: SessionExercise; progress: { current?: import('../db/schema').ProgressHistory; previous?: import('../db/schema').ProgressHistory }; reduced: boolean; onRemove: () => void; onChange: (item: SessionExercise) => void; onOpenWarmup: () => void; onOpenHistory: () => void }) {
+function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange, onOpenWarmup, onOpenHistory, onDragStart }: { exerciseId: string; item: SessionExercise; progress: { current?: import('../db/schema').ProgressHistory; previous?: import('../db/schema').ProgressHistory }; reduced: boolean; onRemove: () => void; onChange: (item: SessionExercise) => void; onOpenWarmup: () => void; onOpenHistory: () => void; onDragStart: (event: React.PointerEvent) => void }) {
   /** Inkrement-Key für den Häkchen-Pop: zählt jeden Abhak-Vorgang, damit das Keyframe auch bei erneutem Abhaken derselben Zeile neu feuert. */
   const [checkPopKey, setCheckPopKey] = useState(0);
   /** Tipp-Zwischenstände der Zahlen-Inputs („0.“, „12,“, „0“) — pro Feld+Satz-ID, damit 0 nur als Placeholder wirkt. */
@@ -307,11 +376,14 @@ function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange,
         aria-label={`Satz ${set.setNumber} Wiederholungen`}
       />
       <RirPicker value={set.rir} setLabel={`Satz ${set.setNumber}`} onChange={(rir) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { rir }) : candidate) })} />
+      <button className="session-set-remove" type="button" aria-label={`Satz ${set.setNumber} löschen`} onClick={() => onChange(withoutSessionSet(item, set.id))}><X size={14} /></button>
       <button className="set-check" type="button" aria-label={`Satz ${set.setNumber} ${set.completed ? 'offen' : 'abhaken'}`} aria-pressed={set.completed} onClick={() => { setCheckPopKey((key) => key + 1); onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { completed: !candidate.completed, timestamp: Date.now() }) : candidate) }); }}><Check size={16} key={set.completed ? `done-${checkPopKey}` : 'open'} /></button>
     </div>
   );
   return <motion.article ref={cardRef} className="workout-exercise-card glass-panel" initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -8 }} transition={reduced ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }}>
-    <div className="exercise-card-header"><div><span className="eyebrow">{item.exercise.target ?? 'Exercise'}</span><h2>{item.exercise.name}</h2></div>
+    <div className="exercise-card-header">
+      <button className="session-drag-handle" type="button" aria-label={`${item.exercise.name} verschieben`} onPointerDown={onDragStart}><GripVertical size={15} /></button>
+      <div><span className="eyebrow">{item.exercise.target ?? 'Exercise'}</span><h2>{item.exercise.name}</h2></div>
       <div className="exercise-card-actions">
         <button className={`icon-button subtle exercise-action-warmup${warmupConfig || warmupSets.length > 0 ? ' is-active' : ''}`} type="button" aria-label={`Warm-up für ${item.exercise.name} ${warmupConfig ? 'ändern' : 'einrichten'}`} onClick={onOpenWarmup}><Flame size={16} /></button>
         <button className="icon-button subtle" type="button" aria-label={`Verlauf von ${item.exercise.name} anzeigen`} onClick={onOpenHistory}><History size={16} /></button>
@@ -341,7 +413,7 @@ function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange,
           ))}
         </div>
       )}
-      <div className="set-table-head"><span>Satz</span><span>Gewicht</span><span>Reps</span><span>RIR</span><span>Done</span></div>
+      <div className="set-table-head"><span>Satz</span><span>Gewicht</span><span>Reps</span><span>RIR</span><span>Done</span><span aria-hidden="true" /></div>
       {workSets.map((set) => renderSet(set, false))}
     </div>
     <button className="add-set-button" type="button" onClick={() => onChange({ ...item, sets: [...item.sets, { id: crypto.randomUUID(), setNumber: item.sets.length + 1, gewicht: item.previous?.maxGewicht ?? 20, wiederholungen: item.previous?.bestReps ?? 8, completed: false }] })}><Plus size={14} /> Satz ergänzen <span>{completed}/{item.sets.length}</span></button>

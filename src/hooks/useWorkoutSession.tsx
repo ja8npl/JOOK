@@ -6,6 +6,7 @@ import {
   saveWorkoutSession,
   sessionExerciseWithDefaults,
 } from './useWorkoutSessions';
+import { reorderSessionExercises } from './workoutSessionUtils';
 import { autoWarmupForNewExercise, withoutWarmupSets } from './warmup';
 
 export interface ActiveWorkoutSession {
@@ -24,6 +25,8 @@ interface WorkoutSessionContextValue {
   addExercise: (exercise: Exercise) => Promise<void>;
   removeExercise: (exerciseId: string) => void;
   updateExercise: (exerciseId: string, updater: (exercise: SessionExercise) => SessionExercise) => void;
+  /** Verschiebt eine Übung innerhalb der Session (Drag-Reorder). */
+  reorderExercise: (fromId: string, insertIndex: number) => void;
   /** Entfernt alle Warm-up-Sätze der Übung. */
   clearWarmup: (exerciseId: string) => void;
   finishSession: () => Promise<number | null>;
@@ -110,6 +113,12 @@ export function WorkoutSessionProvider({ children }: { children: ReactNode }) {
     } : current);
   }, []);
 
+  const reorderExercise = useCallback((fromId: string, insertIndex: number) => {
+    setActiveSession((current) => current
+      ? { ...current, exercises: reorderSessionExercises(current.exercises, fromId, insertIndex) }
+      : current);
+  }, []);
+
   /** Entfernt alle Warm-up-Sätze der Übung (z. B. beim manuellen Zurücksetzen). */
   const clearWarmup = useCallback((exerciseId: string) => {
     updateExercise(exerciseId, withoutWarmupSets);
@@ -143,10 +152,11 @@ export function WorkoutSessionProvider({ children }: { children: ReactNode }) {
     addExercise,
     removeExercise,
     updateExercise,
+    reorderExercise,
     clearWarmup,
     finishSession,
     discardSession,
-  }), [activeSession, startMenuOpen, openStartMenu, closeStartMenu, startSession, updateSession, addExercise, removeExercise, updateExercise, clearWarmup, finishSession, discardSession]);
+  }), [activeSession, startMenuOpen, openStartMenu, closeStartMenu, startSession, updateSession, addExercise, removeExercise, updateExercise, reorderExercise, clearWarmup, finishSession, discardSession]);
 
   return <WorkoutSessionContext.Provider value={value}>{children}</WorkoutSessionContext.Provider>;
 }
