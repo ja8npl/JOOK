@@ -7,6 +7,9 @@ import { parseKgInput, roundWarmupWeight, WARMUP_WEIGHT_STEP_KG } from '../hooks
 export function Warmup() {
   const reduced = useReducedMotion();
   const [workingWeightStr, setWorkingWeightStr] = useState('');
+  /** Manuelle Overrides pro Satznummer (1–3) — Rohtext aus dem Input. Ändert sich das
+   *  Arbeitsgewicht, sind die berechneten Werte neu gemeint und die Overrides fliegen. */
+  const [weightOverrides, setWeightOverrides] = useState<Record<number, string>>({});
   const [showSet3, setShowSet3] = useState(false);
 
   // Kanonische Warm-up-Logik aus hooks/warmup.ts — keine zweite Rundungs-Implementierung.
@@ -54,7 +57,7 @@ export function Warmup() {
             type="text"
             inputMode="decimal"
             value={workingWeightStr}
-            onChange={(e) => setWorkingWeightStr(e.target.value)}
+            onChange={(e) => { setWorkingWeightStr(e.target.value); setWeightOverrides({}); }}
             placeholder="z.B. 100"
             style={{
               fontFamily: "var(--font-display)",
@@ -97,7 +100,7 @@ export function Warmup() {
           </h2>
           <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <Info size={14} />
-            Gerundet auf {WARMUP_WEIGHT_STEP_KG} kg
+            Gewichte antippbar · gerundet auf {WARMUP_WEIGHT_STEP_KG} kg
           </div>
         </div>
 
@@ -110,19 +113,21 @@ export function Warmup() {
               transition={{ type: 'spring', stiffness: 300, damping: 26 }}
               style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
             >
-              <SetCard 
-                setNum={1} 
-                percentage="25%" 
-                weight={set1} 
+              <SetCard
+                setNum={1}
+                percentage="25%"
+                weightStr={weightOverrides[1] ?? String(set1)}
+                onWeightChange={(raw) => setWeightOverrides((current) => ({ ...current, 1: raw }))}
                 reps="10-20"
-                icon={<Target size={16} color="var(--accent-text)" />} 
+                icon={<Target size={16} color="var(--accent-text)" />}
               />
-              <SetCard 
-                setNum={2} 
-                percentage="50%" 
-                weight={set2} 
+              <SetCard
+                setNum={2}
+                percentage="50%"
+                weightStr={weightOverrides[2] ?? String(set2)}
+                onWeightChange={(raw) => setWeightOverrides((current) => ({ ...current, 2: raw }))}
                 reps="3-10"
-                icon={<Zap size={16} color="var(--accent-text)" />} 
+                icon={<Zap size={16} color="var(--accent-text)" />}
               />
               
               {/* Optional Set 3 Toggle */}
@@ -181,12 +186,13 @@ export function Warmup() {
                     transition={{ type: 'spring', stiffness: 300, damping: 26 }}
                     style={{ overflow: 'hidden' }}
                   >
-                    <SetCard 
-                      setNum={3} 
-                      percentage="75%" 
-                      weight={set3} 
+                    <SetCard
+                      setNum={3}
+                      percentage="75%"
+                      weightStr={weightOverrides[3] ?? String(set3)}
+                      onWeightChange={(raw) => setWeightOverrides((current) => ({ ...current, 3: raw }))}
                       reps="2-3"
-                      icon={<Dumbbell size={16} color="var(--accent-text)" />} 
+                      icon={<Dumbbell size={16} color="var(--accent-text)" />}
                       isHighlight
                     />
                   </motion.div>
@@ -221,10 +227,12 @@ export function Warmup() {
   );
 }
 
-function SetCard({ setNum, percentage, weight, reps, icon, isHighlight = false }: {
+function SetCard({ setNum, percentage, weightStr, onWeightChange, reps, icon, isHighlight = false }: {
   setNum: number;
   percentage: string;
-  weight: number;
+  /** Rohtext des Gewichts — berechnet oder manuell überschrieben. */
+  weightStr: string;
+  onWeightChange: (raw: string) => void;
   reps: string;
   icon: React.ReactNode;
   isHighlight?: boolean;
@@ -268,16 +276,30 @@ function SetCard({ setNum, percentage, weight, reps, icon, isHighlight = false }
           <span style={{ fontSize: '12px', color: 'var(--accent-text)' }}>{percentage}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-          <span style={{
-            fontFamily: "var(--font-display)",
-            fontSize: '28px',
-            fontWeight: 700,
-            fontVariantNumeric: 'tabular-nums',
-            color: 'var(--text-primary)',
-            lineHeight: 1,
-          }}>
-            {weight}
-          </span>
+          <input
+            value={weightStr}
+            onChange={(event) => onWeightChange(event.target.value)}
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            aria-label={`Aufwärmsatz ${setNum}: Gewicht in Kilogramm anpassen`}
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: '28px',
+              fontWeight: 700,
+              fontVariantNumeric: 'tabular-nums',
+              color: 'var(--text-primary)',
+              lineHeight: 1,
+              /* Sieht aus wie der bisherige Display-Wert — caretColor zeigt die Editierbarkeit */
+              background: 'transparent',
+              border: 0,
+              boxShadow: 'none',
+              padding: 0,
+              width: `${Math.max(2, weightStr.length)}ch`,
+              minWidth: '2ch',
+              caretColor: 'var(--accent-text)',
+            }}
+          />
           <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 500 }}>kg</span>
         </div>
       </div>
