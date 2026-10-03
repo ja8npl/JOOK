@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firstSetSummary, PROGRESSION_STEP_KG, rirLabel, suggestNextSet } from './progression';
+import { firstSetSummary, formatRepRange, PROGRESSION_STEP_KG, resolveRepTarget, rirLabel, suggestNextSet } from './progression';
 
 describe('suggestNextSet', () => {
   it('gibt null ohne vorherigen Eintrag zurück', () => {
@@ -87,5 +87,61 @@ describe('firstSetSummary', () => {
   it('hängt RIR an, wenn erfasst', () => {
     expect(firstSetSummary(80, 8, 2)).toBe('80 kg × 8 @ RIR 2');
     expect(firstSetSummary(82.5, 10, 'failure')).toBe('82,5 kg × 10 @ RIR Failure');
+  });
+});
+
+describe('suggestNextSet mit Rep-Ziel-Bereich', () => {
+  it('push-reps nennt die Ziel-Range konkret', () => {
+    const suggestion = suggestNextSet({ gewicht: 80, reps: 7, zielBereich: { min: 6, max: 8 }, rir: 1 });
+    expect(suggestion?.kind).toBe('push-reps');
+    expect(suggestion?.aktion).toBe('6–8 Reps versuchen');
+  });
+
+  it('hält Gewicht, wenn Reps unter der Range liegen', () => {
+    const suggestion = suggestNextSet({ gewicht: 80, reps: 4, zielBereich: { min: 6, max: 8 }, rir: 1 });
+    expect(suggestion?.kind).toBe('hold');
+    expect(suggestion?.aktion).toBe('Ziel: 6–8 Reps');
+  });
+
+  it('steigert, wenn die Range deutlich übertroffen wird (> max + 1)', () => {
+    expect(suggestNextSet({ gewicht: 80, reps: 10, zielBereich: { min: 6, max: 8 } })?.kind).toBe('increase');
+  });
+
+  it('innerhalb der Range oben bleibt push-reps (max + 1 ist noch kein Steigerungsgrund)', () => {
+    expect(suggestNextSet({ gewicht: 80, reps: 9, zielBereich: { min: 6, max: 8 } })?.kind).toBe('push-reps');
+  });
+
+  it('RIR >= 3 steigert auch bei verfehlter Range (RIR bleibt Primärsignal)', () => {
+    expect(suggestNextSet({ gewicht: 80, reps: 4, rir: 3, zielBereich: { min: 6, max: 8 } })?.kind).toBe('increase');
+  });
+
+  it('ohne Bereich bleibt die bisherige Einzelziel-Logik unverändert', () => {
+    expect(suggestNextSet({ gewicht: 80, reps: 10, zielReps: 10 })?.aktion).toBe('1–2 Reps mehr versuchen');
+  });
+});
+
+describe('resolveRepTarget', () => {
+  it('Override schlägt globales Ziel', () => {
+    expect(resolveRepTarget({ min: 8, max: 12 }, { min: 6, max: 8 })).toEqual({ min: 8, max: 12 });
+  });
+
+  it('ohne Override gilt das globale Ziel', () => {
+    expect(resolveRepTarget(undefined, { min: 10, max: 12 })).toEqual({ min: 10, max: 12 });
+  });
+
+  it('ohne alles fällt es auf den Standard zurück (6–8)', () => {
+    expect(resolveRepTarget(undefined, undefined)).toEqual({ min: 6, max: 8 });
+  });
+
+  it('kaputte Werte (min > max, 0) werden ignoriert und fallen weiter durch', () => {
+    expect(resolveRepTarget({ min: 12, max: 8 }, { min: 6, max: 8 })).toEqual({ min: 6, max: 8 });
+    expect(resolveRepTarget({ min: 0, max: 8 }, undefined)).toEqual({ min: 6, max: 8 });
+  });
+});
+
+describe('formatRepRange', () => {
+  it('formatiert mit En-Dash', () => {
+    expect(formatRepRange({ min: 6, max: 8 })).toBe('6–8');
+    expect(formatRepRange({ min: 12, max: 15 })).toBe('12–15');
   });
 });

@@ -162,13 +162,23 @@ export interface AppSettingsView {
   modus: TrainingMode;
   modusSeit: number;
   einheit: 'kg' | 'lb';
+  /** Globales Rep-Ziel (optional — undefined = noch nie gesetzt, UI nutzt den Standard). */
+  repZielMin?: number;
+  repZielMax?: number;
   updatedAt: number;
 }
 
-/** Modus wechseln: setzt „Seit n Tagen" zurück. */
+/** Modus wechseln: setzt „Seit n Tagen" zurück. Bestehende Felder (inkl. Rep-Ziel) bleiben erhalten. */
 export async function setTrainingMode(modus: TrainingMode): Promise<void> {
   const row = await db.settings.get('app');
-  await db.settings.put({ key: 'app', modus, modusSeit: Date.now(), einheit: row?.einheit ?? 'kg', updatedAt: Date.now() });
+  await db.settings.put({
+    key: 'app',
+    modus,
+    modusSeit: Date.now(),
+    einheit: row?.einheit ?? 'kg',
+    ...(row?.repZielMin !== undefined && row?.repZielMax !== undefined ? { repZielMin: row.repZielMin, repZielMax: row.repZielMax } : {}),
+    updatedAt: Date.now(),
+  });
 }
 
 /** „Seit n Tagen" aus modusSeit; 0 = noch nicht geladen. */

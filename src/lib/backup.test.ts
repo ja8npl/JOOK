@@ -186,3 +186,26 @@ describe('parseBackup', () => {
     expect(() => parseBackup('{ kaputt')).toThrow('kein gültiges JSON');
   });
 });
+
+describe('Rep-Ziel im Backup', () => {
+  it('übernimmt repTargets (kaputte Zeilen werden übersprungen) und das globale repZiel', () => {
+    const result = normalizeBackup({
+      ...validV2Backup,
+      repTargets: [
+        { machineId: 'seitheben-kabel', min: 8, max: 12, updatedAt: 5 },
+        { machineId: '', min: 8, max: 12, updatedAt: 5 },
+        { machineId: 'kaputt', min: 12, max: 8, updatedAt: 5 },
+        { machineId: 'auch-kaputt', min: 0, max: 8, updatedAt: 5 },
+      ],
+      settings: [{ key: 'app', modus: 'bulk', modusSeit: 1, einheit: 'kg', repZielMin: 10, repZielMax: 12, updatedAt: 1 }],
+    });
+    expect(result.repTargets).toEqual([{ machineId: 'seitheben-kabel', min: 8, max: 12, updatedAt: 5 }]);
+    expect(result.settings[0]).toMatchObject({ repZielMin: 10, repZielMax: 12 });
+  });
+
+  it('alte Backups ohne Rep-Ziel-Felder → leere Liste, Settings ohne repZiel', () => {
+    const result = normalizeBackup(validV2Backup);
+    expect(result.repTargets).toEqual([]);
+    expect(result.settings[0].repZielMin).toBeUndefined();
+  });
+});

@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { type AppSettings, type BodyWeight, type GymEntry, type ProgressHistory, type WarmupConfig, type WorkoutSession } from './schema';
+import { type AppSettings, type BodyWeight, type GymEntry, type ProgressHistory, type RepTarget, type WarmupConfig, type WorkoutSession } from './schema';
 
 export class GymLogDB extends Dexie {
   entries!: Table<GymEntry, number>;
@@ -8,6 +8,7 @@ export class GymLogDB extends Dexie {
   warmupConfigs!: Table<WarmupConfig, string>;
   bodyweights!: Table<BodyWeight, number>;
   settings!: Table<AppSettings, string>;
+  repTargets!: Table<RepTarget, string>;
 
   constructor() {
     super('GymLogDB');
@@ -49,6 +50,17 @@ export class GymLogDB extends Dexie {
       warmupConfigs: 'key, machineId, tag',
       bodyweights: '++id, tag',
       settings: 'key',
+    });
+    // v7: Rep-Ziel-Override pro Übung — NEUER Store, rein additiv: bestehende
+    // Tabellen bleiben unangetastet, nichts geht verloren.
+    this.version(7).stores({
+      entries: '++id, machineId, datum',
+      sessions: '++id, startedAt, endedAt, status',
+      progressHistory: '++id, sessionId, exerciseId, datum',
+      warmupConfigs: 'key, machineId, tag',
+      bodyweights: '++id, tag',
+      settings: 'key',
+      repTargets: 'machineId',
     });
   }
 }

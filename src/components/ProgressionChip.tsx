@@ -1,14 +1,14 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
-import { firstSetSummary, suggestNextSet } from '../lib/progression';
+import { firstSetSummary, suggestNextSet, type RepTargetRange } from '../lib/progression';
 import { type RirValue } from '../db/schema';
 
 interface Props {
   /** Letzte Leistung (erster Satz des letzten Eintrags) — undefined = kein Chip. */
   last: { gewicht: number; reps: number; rir?: RirValue } | undefined;
-  /** Ziel-Reps der Übung (importierte Pläne), falls vorhanden. */
-  zielReps?: number;
+  /** Rep-Ziel als Bereich (eigener Override, Plan-Ziel oder globales Ziel). */
+  zielBereich?: RepTargetRange;
   /** true, sobald der erste Arbeitssatz abgehakt ist — Chip wird still und blass. */
   settled: boolean;
 }
@@ -19,10 +19,10 @@ interface Props {
  * anzuzeigen; ohne vorherigen Eintrag erscheint gar kein Chip. Der Glow pulsiert
  * sanft im Theme-Akzent, bis der erste Satz abgehakt ist (dann still + blass).
  */
-export function ProgressionChip({ last, zielReps, settled }: Props) {
+export function ProgressionChip({ last, zielBereich, settled }: Props) {
   const reduced = useReducedMotion();
   // suggestNextSet ist eine reine Funktion — kein Hook, kein State nötig.
-  const suggestion = last ? suggestNextSet({ gewicht: last.gewicht, reps: last.reps, rir: last.rir, zielReps }) : null;
+  const suggestion = last ? suggestNextSet({ gewicht: last.gewicht, reps: last.reps, rir: last.rir, zielBereich }) : null;
 
   return (
     <AnimatePresence initial={false}>

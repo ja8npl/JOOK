@@ -136,17 +136,18 @@ export function useExerciseAnalytics(): ExerciseAnalytics[] | undefined {
 }
 
 export async function exportWorkoutData(): Promise<string> {
-  const [entries, sessions, progressHistory, warmupConfigs, bodyweights, settings] = await Promise.all([
+  const [entries, sessions, progressHistory, warmupConfigs, bodyweights, settings, repTargets] = await Promise.all([
     db.entries.toArray(),
     db.sessions.toArray(),
     db.progressHistory.toArray(),
     db.warmupConfigs.toArray(),
     db.bodyweights.toArray(),
     db.settings.toArray(),
+    db.repTargets.toArray(),
   ]);
   const localData = Object.fromEntries(LOCAL_DATA_KEYS.map((key) => [key, readLocalData(key)])) as Record<LocalDataKey, string | null>;
   return JSON.stringify(
-    { version: BACKUP_FORMAT_VERSION, exportedAt: new Date().toISOString(), entries, sessions, progressHistory, warmupConfigs, bodyweights, settings, localData } satisfies BackupData,
+    { version: BACKUP_FORMAT_VERSION, exportedAt: new Date().toISOString(), entries, sessions, progressHistory, warmupConfigs, bodyweights, settings, repTargets, localData } satisfies BackupData,
     null,
     2,
   );
@@ -162,7 +163,7 @@ export async function importWorkoutData(json: string): Promise<{ entries: number
   const previousLocalData = data.localData === undefined ? undefined : Object.fromEntries(LOCAL_DATA_KEYS.map((key) => [key, readLocalData(key)])) as Record<LocalDataKey, string | null>;
   try {
     if (data.localData !== undefined) writeLocalData(data.localData);
-    await db.transaction('rw', [db.entries, db.sessions, db.progressHistory, db.warmupConfigs, db.bodyweights, db.settings], async () => {
+    await db.transaction('rw', [db.entries, db.sessions, db.progressHistory, db.warmupConfigs, db.bodyweights, db.settings, db.repTargets], async () => {
       await Promise.all([
         db.entries.clear(),
         db.sessions.clear(),
@@ -170,6 +171,7 @@ export async function importWorkoutData(json: string): Promise<{ entries: number
         db.warmupConfigs.clear(),
         db.bodyweights.clear(),
         db.settings.clear(),
+        db.repTargets.clear(),
       ]);
       await Promise.all([
         db.entries.bulkAdd(data.entries),
@@ -178,6 +180,7 @@ export async function importWorkoutData(json: string): Promise<{ entries: number
         db.warmupConfigs.bulkAdd(data.warmupConfigs),
         db.bodyweights.bulkAdd(data.bodyweights, { allKeys: true }),
         db.settings.bulkAdd(data.settings),
+        db.repTargets.bulkAdd(data.repTargets),
       ]);
     });
   } catch (error) {

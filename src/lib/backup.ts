@@ -7,7 +7,7 @@
  * src/hooks/useWorkoutSessions.ts.
  */
 
-import { TRAINING_MODES, type AppSettings, type BodyWeight, type GymEntry, type ProgressHistory, type RirValue, type SessionSet, type TrainingMode, type WarmupConfig, type WorkoutSession } from '../db/schema';
+import { TRAINING_MODES, type AppSettings, type BodyWeight, type GymEntry, type ProgressHistory, type RepTarget, type RirValue, type SessionSet, type TrainingMode, type WarmupConfig, type WorkoutSession } from '../db/schema';
 
 /** Versionsnummer des aktuellen Backup-Formats. */
 export const BACKUP_FORMAT_VERSION = 3;
@@ -34,6 +34,8 @@ export interface BackupData {
   warmupConfigs: WarmupConfig[];
   bodyweights: BodyWeight[];
   settings: AppSettings[];
+  /** Rep-Ziel-Overrides pro Übung (Format v3, additiv — alte Backups ohne Feld bleiben lesbar). */
+  repTargets: RepTarget[];
   localData?: BackupLocalData;
 }
 
@@ -209,8 +211,30 @@ export function normalizeBackup(raw: unknown): BackupData {
       einheit: record.einheit === 'lb' ? 'lb' : 'kg',
       updatedAt: typeof record.updatedAt === 'number' && Number.isFinite(record.updatedAt) ? record.updatedAt : Date.now(),
     };
+    // Globales Rep-Ziel bleibt erhalten, wenn das Backup es enthält (additiv seit v3-Rep-Feature).
+    if (typeof record.repZielMin === 'number' && Number.isFinite(record.repZielMin) && typeof record.repZielMax === 'number' && Number.isFinite(record.repZielMax)) {
+      setting.repZielMin = Math.round(record.repZielMin);
+      setting.repZielMax = Math.round(record.repZielMax);
+    }
     return setting;
   });
+
+  // Rep-Target-Overrides: Zeilen ohne gültige machineId oder mit kaputtem Bereich
+  // werden übersprungen — ein kaputter Eintrag blockiert nicht den ganzen Restore.
+  const repTargets = requireArray(data.repTargets ?? [], 'repTargets').map((item) => {
+    const record = item as Record<string, unknown>;
+    const machineId = typeof record.machineId === 'string' ? record.machineId : '';
+    const min = typeof record.min === 'number' && Number.isFinite(record.min) ? Math.round(record.min) : NaN;
+    const max = typeof record.max === 'number' && Number.isFinite(record.max) ? Math.round(record.max) : NaN;
+    if (!machineId || Number.isNaN(min) || Number.isNaN(max) || min < 1 || max < min) return null;
+    const target: RepTarget = {
+      machineId,
+      min,
+      max,
+      updatedAt: typeof record.updatedAt === 'number' && Number.isFinite(record.updatedAt) ? record.updatedAt : Date.now(),
+    };
+    return target;
+  }).filter((item): item is RepTarget => item !== null);
 
   return {
     version: 3,
@@ -221,6 +245,7 @@ export function normalizeBackup(raw: unknown): BackupData {
     warmupConfigs,
     bodyweights,
     settings,
+    repTargets,
     localData,
   };
 }

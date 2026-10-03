@@ -109,6 +109,26 @@ export interface AppSettings {
   modusSeit: number;
   /** Einheiten: 'kg' | 'lb' (derzeit nur kg im UI). */
   einheit: 'kg' | 'lb';
+  /** Globales Rep-Ziel (Bereich) — gilt für alle Übungen ohne eigenen Zielwert (Dexie v7). */
+  repZielMin?: number;
+  repZielMax?: number;
+  updatedAt: number;
+}
+
+/** Rep-Ziel-Bereich, wie er überall im UI und in der Steigerungs-Logik verwendet wird. */
+export interface RepTargetRange {
+  min: number;
+  max: number;
+}
+
+/** Standard-Rep-Ziel, solange nichts anderes gesetzt ist. */
+export const DEFAULT_REP_TARGET: RepTargetRange = { min: 6, max: 8 };
+
+/** Rep-Ziel-Override pro Übung (Dexie v7, key = machineId). */
+export interface RepTarget {
+  machineId: string;
+  min: number;
+  max: number;
   updatedAt: number;
 }
 

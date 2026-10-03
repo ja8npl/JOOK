@@ -6,13 +6,14 @@ interface Props {
 
 interface State {
   hasError: boolean;
+  message?: string;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false };
 
-  static getDerivedStateFromError(): State {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, message: String(error?.message ?? error) };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
@@ -48,9 +49,14 @@ export class ErrorBoundary extends Component<Props, State> {
           }}>
             Etwas ist schiefgelaufen
           </h1>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '12px' }}>
             Die Ansicht konnte nicht geladen werden. Bitte lade die App neu.
           </p>
+          {this.state.message && (
+            <p style={{ marginBottom: '16px', padding: '10px', fontSize: '11px', fontFamily: 'monospace', color: 'var(--danger)', background: 'var(--bg-input)', borderRadius: '10px', wordBreak: 'break-word' }}>
+              {this.state.message}
+            </p>
+          )}
           <button
             type="button"
             onClick={this.handleReload}

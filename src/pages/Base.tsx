@@ -2,17 +2,22 @@ import { useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   BarChart3, CalendarDays, ChevronRight, Download, Dumbbell, FileJson, Flame, History,
-  Layers, Palette, Trophy, Upload, Volume2, Vibrate,
+  Layers, Palette, Target, Trophy, Upload, Volume2, Vibrate,
 } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
+import { DEFAULT_REP_TARGET } from '../db/schema';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import { BottomSheet } from '../components/BottomSheet';
+import { RepTargetSliderGroup } from '../components/RepTargetSheet';
+import { setGlobalRepTarget } from '../hooks/useRepTargets';
+import { formatRepRange, type RepTargetRange } from '../lib/progression';
 import {
   RIR_DEFAULT_OPTIONS, REST_DURATION_OPTIONS, useBasePrefs,
 } from '../hooks/useBasePrefs';
 import { computeBaseStats, computePrs, computeVolumeSeries } from '../lib/baseStats';
 import { exportWorkoutData, importWorkoutData } from '../hooks/useWorkoutSessions';
+import { useAppSettings } from '../hooks/useTrainingStats';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { backupFilename, downloadJson } from '../lib/download';
 
@@ -405,6 +410,18 @@ function MoreSettingsSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} eyebrow="Einstellungen" title="Darstellung & Backup">
       <div style={{ display: 'grid', gap: '22px' }}>
+        {/* Rep-Ziel — globaler Standard */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <span className="overview-icon" style={{ flexShrink: 0 }}><Target size={16} /></span>
+            <div>
+              <span style={{ display: 'block', color: 'var(--text-main)', fontSize: '14px', fontWeight: 700 }}>Rep-Ziel</span>
+              <span style={{ display: 'block', color: 'var(--text-tertiary)', fontSize: '11px' }}>Standard für alle Übungen — pro Übung im Training überschreibbar.</span>
+            </div>
+          </div>
+          <RepTargetSettingsBlock />
+        </div>
+
         {/* Farbwelt */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
@@ -432,6 +449,38 @@ function MoreSettingsSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         </div>
       </div>
     </BottomSheet>
+  );
+}
+
+/** Globaler Rep-Ziel-Regler: lokaler Entwurf, gespeichert wird erst auf Knopfdruck. */
+function RepTargetSettingsBlock() {
+  const settings = useAppSettings();
+  const [draft, setDraft] = useState<RepTargetRange | null>(null);
+  const [savedFlash, setSavedFlash] = useState(false);
+  const value = draft ?? (settings.repZielMin && settings.repZielMax ? { min: settings.repZielMin, max: settings.repZielMax } : DEFAULT_REP_TARGET);
+
+  const save = () => {
+    if (!draft) return;
+    void setGlobalRepTarget(draft).then(() => {
+      setDraft(null);
+      setSavedFlash(true);
+      window.setTimeout(() => setSavedFlash(false), 1600);
+    });
+  };
+
+  return (
+    <div>
+      <RepTargetSliderGroup value={value} onChange={setDraft} />
+      {draft ? (
+        <button className="warmup-confirm" type="button" style={{ marginTop: '10px', width: '100%' }} onClick={save}>
+          <Target size={16} /> {formatRepRange(draft)} Reps als Standard speichern
+        </button>
+      ) : (
+        <p role="status" style={{ marginTop: '10px', color: savedFlash ? 'var(--accent-text)' : 'var(--text-tertiary)', fontSize: '11px' }}>
+          {savedFlash ? 'Gespeichert.' : 'Regler ziehen und speichern — der Chip im Training nutzt dieses Ziel.'}
+        </p>
+      )}
+    </div>
   );
 }
 
