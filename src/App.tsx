@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { HashRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { SplashIntro } from './components/SplashIntro';
 import { BottomNav } from './components/BottomNav';
 import { Home } from './pages/Home';
@@ -16,37 +16,37 @@ import { WorkoutSessionModal } from './components/WorkoutSessionModal';
 import { WorkoutLauncher } from './components/WorkoutLauncher';
 import { Progress } from './pages/Progress';
 
-// Seitenwechsel-Transition — Fade + leichter Y-Slide
+// Seitenwechsel — iOS-Tab-Manier: kein Exit, keine Wartezeit. Der alte Screen
+// verschwindet sofort, der neue federt mit kurzer Feder ein (Opazität als
+// schneller Tween darunter). Bewusst OHNE AnimatePresence/mode="wait": Die
+// Exit-Phase hat sich bei jedem Tab-Tap als spürbare Latenz angefühlt.
 function AnimatedRoutes() {
   const location = useLocation();
   const reduced = useReducedMotion();
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        initial={reduced ? false : { opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={reduced ? undefined : { opacity: 0, y: -8 }}
-        transition={reduced
-          ? { duration: 0 }
-          : { duration: 0.18, ease: 'easeOut' }
-        }
-        style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}
-      >
-        <Routes location={location}>
-          <Route path="/" element={<Home />} />
-          <Route path="/machine/:machineId" element={<Detail />} />
-          <Route path="/new" element={<NewEntry />} />
-          <Route path="/edit/:id" element={<EditEntry />} />
-          <Route path="/base" element={<Base />} />
-          <Route path="/search" element={<Navigate to="/base" replace />} />
-          <Route path="/warmup" element={<Warmup />} />
-          <Route path="/progress" element={<Progress />} />
-          <Route path="/settings" element={<Navigate to="/base" replace />} />
-        </Routes>
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      key={location.pathname}
+      initial={reduced ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={reduced
+        ? { duration: 0 }
+        : { duration: 0.24, ease: [0.22, 1, 0.36, 1], opacity: { duration: 0.14, ease: 'easeOut' } }
+      }
+      style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}
+    >
+      <Routes location={location}>
+        <Route path="/" element={<Home />} />
+        <Route path="/machine/:machineId" element={<Detail />} />
+        <Route path="/new" element={<NewEntry />} />
+        <Route path="/edit/:id" element={<EditEntry />} />
+        <Route path="/base" element={<Base />} />
+        <Route path="/search" element={<Navigate to="/base" replace />} />
+        <Route path="/warmup" element={<Warmup />} />
+        <Route path="/progress" element={<Progress />} />
+        <Route path="/settings" element={<Navigate to="/base" replace />} />
+      </Routes>
+    </motion.div>
   );
 }
 
@@ -68,7 +68,7 @@ export default function App() {
             width: '100%',
             height: '100dvh',
             minHeight: '100dvh',
-            background: 'var(--bg-app, #1f2024)',
+            background: 'var(--bg-app, #0b0b0d)',
             position: 'fixed',
             inset: 0,
             overflow: 'hidden',

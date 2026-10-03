@@ -36,3 +36,7 @@ _local/
 .env
 .env.*
 !.env.example
+# Agent-Skill-Pakete: lokale Tooling-Kopien (npx skills), kein App-Code
+.agents/
+.claude/
+agent/

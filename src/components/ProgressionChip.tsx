@@ -30,10 +30,10 @@ export function ProgressionChip({ last, zielReps, settled }: Props) {
         <motion.div
           key={`${suggestion.kind}-${suggestion.gewicht}`}
           className={`progression-chip${settled ? ' is-settled' : ' is-pulsing'}`}
-          initial={reduced ? false : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={reduced ? false : { opacity: 0, y: 8, scale: 0.94 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={reduced ? { opacity: 0 } : { opacity: 0, y: -6 }}
-          transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 28 }}
+          transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 22 }}
           role="status"
         >
           <span className="progression-chip-eyebrow"><TrendingUp size={12} /> Steigerung</span>

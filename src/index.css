@@ -1,38 +1,37 @@
 :root {
-  --bg-base: #1f2024;
-  /* ── Plush Layering (iOS 26/27-Icon-Look): Licht strikt von oben, keine diagonale
-     Dual-Beleuchtung. Tiefe durch weiche, großflächige Fallschatten + Lichtkante oben
-     + feine Außen-Outlines; Flächen-Stufen sind heller als der Base (milchig gestapelt). ── */
-  --bg-surface: #30333d;
-  --bg-surface-hover: #3a3e4a;
-  --bg-elevated: #3f4350;
-  --bg-input: #262830;
+  /* ── V2 „Night Graphite": Near-Black statt Mid-Grau (Whoop-Tiefe), Plush Layering
+     behalten — Licht strikt von oben, Tiefe durch weiche Fallschatten + Lichtkante
+     oben + feine Hairlines; Flächen-Stufen bleiben milchig über dem Base gestapelt. ── */
+  --bg-base: #0b0b0d;
+  --bg-surface: #1c1e23;
+  --bg-surface-hover: #222429;
+  --bg-elevated: #262830;
+  --bg-input: #0e0f12;
   --bg-app: var(--bg-base);
   --bg-card: var(--bg-surface);
-  --bg-glass: rgba(44, 46, 54, .76);
-  --nav-bg: color-mix(in srgb, var(--bg-surface) 84%, transparent);
-  --ring-track: rgba(247, 248, 250, .05);
-  --border-subtle: rgba(255,255,255,.11);
+  --bg-glass: rgba(25, 26, 30, .78);
+  --ring-track: rgba(247, 248, 250, .06);
+  --border-subtle: rgba(255,255,255,.08);
   --border: var(--border-subtle);
-  --border-highlight: rgba(255,255,255,.21);
+  --border-highlight: rgba(255,255,255,.16);
   /* Wärmere Texttöne: weiches Warm-Weiß statt kühlem Blau-Grau — freundlicher Lesefluss */
   --text-main: #faf9f6;
   --text-primary: var(--text-main);
   --text-muted: #b8b6b1;
   --text-secondary: var(--text-muted);
-  --text-tertiary: #a3a19c;
+  --text-tertiary: #93918c;
   --accent-primary: #5cb88e;
   --accent: var(--accent-primary);
   --accent-secondary: #f4c754;
   --accent-text: var(--accent-primary);
   --accent-dim: color-mix(in srgb, var(--accent-primary) 13%, transparent);
-  --accent-glow: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent-primary) 24%, transparent);
   --text-on-accent: #111518;
   --danger: #f2654a;
   --warning: #f4c754;
   --info: #8ca8ff;
-  --overlay: rgba(8, 9, 12, .6);
-  --bg-chip-inset: rgba(0,0,0,.12);
+  --overlay: rgba(5, 6, 9, .66);
+  --bg-chip-inset: rgba(0,0,0,.22);
   --radius-sm: 14px;
   --radius-md: 22px;
   --radius-lg: 28px;
@@ -44,95 +43,111 @@
   --tab-bar-height: 78px;
   --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
-  --tracking-display: -.035em;
+  --tracking-display: -.03em;
   --ease-out: cubic-bezier(.22, 1, .36, 1);
   --ease-press: cubic-bezier(.4, 0, .2, 1);
   --duration-press: 180ms;
   /* Explizite Properties statt `all`: `all` zwingt WebKit bei jedem Tap zu einem
      vollständigen Style-Recalc — auf dem iPhone spürbar als Press-Jank. */
   --transition-press: transform var(--duration-press) var(--ease-press), background-color var(--duration-press) var(--ease-press), border-color var(--duration-press) var(--ease-press), color var(--duration-press) var(--ease-press), box-shadow var(--duration-press) var(--ease-press);
-  --neo-raised: 0 2px 8px rgba(8,9,12,.13), 0 16px 40px rgba(8,9,12,.24), 0 0 0 1px rgba(255,255,255,.06), inset 0 1px 0 rgba(255,255,255,.1), inset 0 -1px 0 rgba(255,255,255,.03);
-  --neo-pressed: inset 0 2px 8px rgba(6,7,10,.22), inset 0 -1px 0 rgba(255,255,255,.05);
-  --neo-convex: 0 2px 6px rgba(8,9,12,.16), 0 14px 32px rgba(8,9,12,.24), inset 0 2px 3px rgba(255,255,255,.3), inset 0 -3px 7px rgba(6,7,10,.18);
-  --neo-float: 0 6px 18px rgba(6,7,10,.2), 0 30px 70px rgba(6,7,10,.42), 0 0 0 1px rgba(255,255,255,.11), inset 0 1px 0 rgba(255,255,255,.14);
-  --neo-knob: 0 2px 8px rgba(6,7,10,.26), 0 0 0 1px rgba(255,255,255,.06), inset 0 1px 0 rgba(255,255,255,.22);
-  --neo-pill: 0 2px 10px rgba(8,9,12,.18), 0 0 0 1px rgba(255,255,255,.06), inset 0 1px 0 rgba(255,255,255,.12);
+  /* V2.1-Neumorphismus: Auf Near-Base können Schatten kaum dunkler werden — die
+     Tiefe muss von den LICHTKANTEN kommen. Inset-Glanz deutlich verstärkt, Drops
+     etwas kräftiger, damit die Plush-Form wieder lesbar ist. */
+  --neo-raised: 0 1px 2px rgba(0,0,0,.32), 0 12px 32px rgba(0,0,0,.38), 0 0 0 1px rgba(255,255,255,.05), inset 0 1px 0 rgba(255,255,255,.1), inset 0 -1px 0 rgba(255,255,255,.03);
+  --neo-pressed: inset 0 2px 8px rgba(0,0,0,.44), inset 0 -1px 0 rgba(255,255,255,.08);
+  --neo-convex: 0 2px 6px rgba(0,0,0,.34), 0 14px 34px rgba(0,0,0,.38), inset 0 2px 3px rgba(255,255,255,.34), inset 0 -3px 7px rgba(0,0,0,.26);
+  --neo-float: 0 6px 20px rgba(0,0,0,.44), 0 36px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1), inset 0 1px 0 rgba(255,255,255,.15);
+  --neo-knob: 0 2px 8px rgba(0,0,0,.36), 0 0 0 1px rgba(255,255,255,.06), inset 0 1px 0 rgba(255,255,255,.28);
+  --neo-pill: 0 2px 10px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.06), inset 0 1px 0 rgba(255,255,255,.15);
   --neumorph-convex: var(--neo-convex);
   --neumorph-inset: var(--neo-pressed);
   --neumorph-pressed: var(--neo-pressed);
   --shadow-card: var(--neo-raised);
   --shadow-float: var(--neo-float);
-  --shadow-accent: 0 0 0 1px var(--border-accent, var(--border-highlight)), 0 0 24px var(--accent-glow);
+  --shadow-accent: 0 0 0 1px var(--border-accent, var(--border-highlight)), 0 8px 22px var(--accent-glow);
   --border-accent: color-mix(in srgb, var(--accent-primary) 34%, transparent);
   --danger-dim: color-mix(in srgb, var(--danger) 12%, transparent);
   --danger-border: color-mix(in srgb, var(--danger) 35%, transparent);
 }
 
-/* Alle Themes folgen exakt dem Garmin-Rezept (Referenz): neutral-dunkle Surfaces mit
-   minimalem Farbstich, gleiche Helligkeits-/Sättigungsstruktur, gleiche Neo-Schatten.
-   Der EINZIGE Unterschied zwischen den Themes ist der Farnton des Akzents. */
+/* ── V2 „Night Graphite": Jedes Theme trägt eine vollständige, leicht zum Akzent
+   geneigte Near-Black-Ramp (gleiche Helligkeits-/Sättigungsstruktur, gleiche
+   Neo-Schatten aus :root). Unterschied zwischen den Themes: Farbstich der neutrals
+   + Akzentfarbe. Hairlines statt Outlines, Akzent nur für Zustand. ── */
 [data-theme='garmin'] {
+  --bg-base: #0e0f13;
+  --bg-surface: #1e222a;
+  --bg-surface-hover: #252a32;
+  --bg-elevated: #292e38;
+  --bg-input: #111318;
+  --bg-glass: rgba(30, 34, 42, .8);
   --accent-primary: #c8ff00;
   --accent-secondary: #83a7ff;
   --accent-text: #c8ff00;
-  --bg-surface: #30333d;
-  --bg-elevated: #3f4350;
-  --bg-input: #262830;
   --font-display: 'Cabinet Grotesk', 'Satoshi', sans-serif;
   --font-body: 'Satoshi', sans-serif;
 }
 
 [data-theme='bordeaux'] {
+  --bg-base: #110d10;
+  --bg-surface: #221c22;
+  --bg-surface-hover: #292329;
+  --bg-elevated: #2e272e;
+  --bg-input: #141015;
+  --bg-glass: rgba(34, 28, 34, .8);
   --accent-primary: #8c232b;
   --accent-secondary: #d58936;
   --accent-text: #d58936;
-  --bg-surface: #30333d;
-  --bg-elevated: #3f4350;
-  --bg-input: #262830;
+  /* Kontrast-Fix V2: dunkles Bordeaux als Button-Fill braucht helles Label. */
+  --text-on-accent: #f7f2ea;
   --font-display: 'Cabinet Grotesk', 'Satoshi', sans-serif;
   --font-body: 'Satoshi', sans-serif;
 }
 
 [data-theme='whoop'] {
+  --bg-base: #0b0b0d;
+  --bg-surface: #1c1e23;
+  --bg-surface-hover: #222429;
+  --bg-elevated: #262830;
+  --bg-input: #0e0f12;
+  --bg-glass: rgba(28, 30, 35, .8);
   --accent-primary: #5cb88e;
   --accent-secondary: #f4c754;
   --accent-text: #70d6a4;
-  --bg-surface: #30333d;
-  --bg-elevated: #3f4350;
-  --bg-input: #262830;
   --font-display: 'Cabinet Grotesk', 'Satoshi', sans-serif;
   --font-body: 'Satoshi', sans-serif;
 }
 
-/* Theme 'ember' — Glut & Kupfer: identischer Aufbau wie garmin (neutral-dunkel, Plush
-   Layering), Akzente in Kupfer/Amber statt Lime. Kein roter Grundton — der
-   Neumorphismus braucht eine wenig gesättigte Fläche, sonst verschwinden die Kanten. */
+/* Theme 'ember' — Glut & Kupfer: identischer Aufbau wie die anderen (Near-Black mit
+   warmem Stich), Akzente in Kupfer/Amber. Kein roter Grundton — der Neumorphismus
+   braucht eine wenig gesättigte Fläche, sonst verschwinden die Kanten. */
 [data-theme='ember'] {
-  --bg-surface: #34302e;
-  --bg-surface-hover: #3e3937;
-  --bg-elevated: #433e3b;
-  --bg-input: #2a2827;
-  --bg-glass: rgba(52, 48, 46, .76);
-  --ring-track: rgba(242, 243, 174, .05);
-  --border-subtle: rgba(255,255,255,.11);
+  --bg-base: #12100e;
+  --bg-surface: #242019;
+  --bg-surface-hover: #2a2620;
+  --bg-elevated: #302b26;
+  --bg-input: #151311;
+  --bg-glass: rgba(36, 32, 25, .8);
+  --ring-track: rgba(242, 243, 174, .06);
+  --border-subtle: rgba(255,255,255,.08);
   --border: var(--border-subtle);
-  --border-highlight: rgba(255,255,255,.21);
+  --border-highlight: rgba(255,255,255,.16);
   --text-main: #faf9f6;
   --text-primary: var(--text-main);
   --text-muted: #b8b6b1;
   --text-secondary: var(--text-muted);
-  --text-tertiary: #a3a19c;
+  --text-tertiary: #93918c;
   --accent-primary: #d58936;
   --accent: var(--accent-primary);
   --accent-secondary: #f2d16b;
   --accent-text: #e8a55a;
   --accent-dim: color-mix(in srgb, var(--accent-primary) 13%, transparent);
-  --accent-glow: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent-primary) 24%, transparent);
   --text-on-accent: #241509;
   --danger: #f2654a;
   --warning: #d58936;
   --info: #f2d16b;
-  --overlay: rgba(12, 10, 9, .6);
+  --overlay: rgba(8, 6, 5, .66);
   --radius-card: 22px;
   --font-display: 'Cabinet Grotesk', 'Satoshi', sans-serif;
   --font-body: 'Satoshi', sans-serif;
@@ -150,13 +165,15 @@ button, input, textarea { font: inherit; }
 button { color: inherit; cursor: pointer; border: 0; }
 button:active { transform: scale(.985); }
 :focus-visible { outline: 2px solid var(--accent-text); outline-offset: 3px; }
+/* Destruktive Hold-Buttons: Fokusring in Danger-Farbe — der Lime-Accent-Ring kollidiert optisch mit dem Danger-Fill. */
+.hold-danger:focus-visible { outline-color: var(--danger); }
 ::selection { background: var(--accent-dim); color: var(--text-main); }
 
 .page-container { position: relative; width: min(100%, 720px); height: 100%; max-height: 100%; flex: 1; margin: 0 auto; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: none; padding: calc(24px + var(--safe-top)) 20px calc(var(--tab-bar-height) + 38px); }
 .page-container::-webkit-scrollbar { width: 0; height: 0; display: none; }
-.eyebrow { display: block; color: var(--text-tertiary); font-size: 10px; font-weight: 700; letter-spacing: .12em; line-height: 1.2; text-transform: uppercase; }
+.eyebrow { display: block; color: var(--text-tertiary); font-size: 10px; font-weight: 700; letter-spacing: .11em; line-height: 1.2; text-transform: uppercase; }
 .accent-copy { color: var(--accent-text); }
-.glass-panel { background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025) 45%, rgba(0,0,0,.04)), var(--bg-surface); border: 1px solid var(--border-subtle); box-shadow: var(--neo-raised); }
+.glass-panel { background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 45%, rgba(0,0,0,.05)), var(--bg-surface); border: 1px solid var(--border-subtle); box-shadow: var(--neo-raised); }
 
 .home-header { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
 .home-header-actions { display: flex; align-items: center; gap: 8px; }
@@ -225,8 +242,8 @@ button:active { transform: scale(.985); }
 .analyse-rail::-webkit-scrollbar { width: 0; height: 0; }
 .analyse-card { scroll-snap-align: start; display: grid; align-content: start; gap: 9px; padding: 16px; border-radius: var(--radius-card); }
 .analyse-card-top { display: flex; align-items: center; justify-content: space-between; }
-.analyse-card-icon { display: grid; place-items: center; width: 30px; height: 30px; color: var(--accent-text); background: var(--accent-dim); border-radius: 50%; box-shadow: var(--neo-pressed); }
-.analyse-card.is-muted .analyse-card-icon { color: var(--text-muted); background: var(--bg-input); }
+.analyse-card-icon { display: grid; place-items: center; width: 30px; height: 30px; color: var(--accent-text); }
+.analyse-card.is-muted .analyse-card-icon { color: var(--text-tertiary); }
 .analyse-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .analyse-row-name { overflow: hidden; color: var(--text-secondary); font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .analyse-row-delta { display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; color: var(--accent-text); font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -241,14 +258,14 @@ button:active { transform: scale(.985); }
 .weight-sheet-input { width: 100%; min-width: 0; text-align: center; color: var(--text-main); background: transparent; border: 0; box-shadow: none; font-family: var(--font-display); font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: var(--tracking-display); }
 .weight-sheet-input::placeholder { color: var(--text-tertiary); font-size: 22px; font-weight: 500; }
 .weight-sheet-unit { color: var(--text-tertiary); font-size: 15px; font-weight: 700; }
-.weight-sheet-save { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 50px; color: var(--text-on-accent); background: var(--accent-primary); border-radius: var(--radius-pill); box-shadow: var(--neo-convex), 0 0 24px var(--accent-glow); font-size: 14px; font-weight: 800; }
+.weight-sheet-save { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 50px; color: var(--text-on-accent); background: var(--accent-primary); border-radius: var(--radius-pill); box-shadow: var(--neo-convex), 0 8px 22px color-mix(in srgb, var(--accent-primary) 26%, transparent); font-size: 14px; font-weight: 800; }
 .weight-sheet-save:disabled { opacity: .7; }
 .section-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 15px; }
 .section-heading h2 { margin-top: 6px; color: var(--text-main); font-family: var(--font-display); font-size: 27px; letter-spacing: var(--tracking-display); }
 .count-pill { display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 9px; color: var(--accent-text); background: var(--accent-dim); border: 1px solid color-mix(in srgb, var(--accent-primary) 25%, transparent); border-radius: var(--radius-pill); font-size: 12px; font-weight: 800; }
 .machine-list { display: flex; flex-direction: column; gap: 10px; }
 /* Übungskarte: Name volle Breite, Meta als Mikro-Zeile, Actions rechts in Weller-Gruppe */
-.machine-card-well { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px; background: var(--accent-dim); border: 1px solid var(--border-accent); border-radius: 14px; box-shadow: var(--neo-pressed); }
+.machine-card-well { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 14px; box-shadow: var(--neo-pressed); }
 .machine-card-name { overflow: hidden; color: var(--text-primary); font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: var(--tracking-display); line-height: 1.25; white-space: nowrap; text-overflow: ellipsis; }
 .machine-card-sub { overflow: hidden; margin-top: 2px; color: var(--text-tertiary); font-size: 12px; line-height: 1.35; white-space: nowrap; text-overflow: ellipsis; }
 .machine-card-meta { margin-top: 3px; color: var(--text-tertiary); font-size: 11px; font-variant-numeric: tabular-nums; }
@@ -260,15 +277,23 @@ button:active { transform: scale(.985); }
 .empty-icon { display: grid; place-items: center; width: 48px; height: 48px; color: var(--accent-text); background: var(--accent-dim); border-radius: 16px; box-shadow: var(--neo-pressed); }
 .empty-state h3 { color: var(--text-main); font-family: var(--font-display); font-size: 21px; letter-spacing: var(--tracking-display); }
 .empty-state p { max-width: 290px; margin-top: 5px; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
-.primary-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: fit-content; min-height: 46px; padding: 0 17px; color: var(--text-on-accent); background: var(--accent-primary); border-radius: var(--radius-pill); box-shadow: var(--neo-convex), 0 0 24px var(--accent-glow); font-size: 13px; font-weight: 800; }
+.primary-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: fit-content; min-height: 46px; padding: 0 17px; color: var(--text-on-accent); background: var(--accent-primary); border-radius: var(--radius-pill); box-shadow: var(--neo-convex), 0 8px 22px color-mix(in srgb, var(--accent-primary) 26%, transparent); font-size: 13px; font-weight: 800; }
 
 .bottom-nav { position: fixed; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) * .5 + 6px); left: 12px; z-index: 20; padding: 0; pointer-events: none; transition: opacity 220ms var(--ease-out), visibility 220ms; }
 .bottom-nav.is-hidden { opacity: 0; visibility: hidden; }
-.nav-inner { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; width: min(100%, 560px); min-height: 64px; margin: 0 auto; padding: 5px 6px; pointer-events: auto; background: var(--nav-bg); border: 1px solid var(--border-highlight); border-radius: 25px; box-shadow: var(--neo-float); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); will-change: transform; transform: translateZ(0); }
+.nav-inner { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; width: min(100%, 560px); min-height: 64px; margin: 0 auto; padding: 5px 6px; pointer-events: auto; /* Vollständig opak: halbtransparent ließ auf Near-Black V2 Inhalt als Geist durch die Bar bluten (Blur war auf iOS ohnehin deaktiviert). Material kommt von Kante + Schatten + Inset-Licht. */ background: var(--bg-surface); border: 1px solid var(--border-highlight); border-radius: 25px; box-shadow: var(--neo-float), inset 0 1px 0 rgba(255,255,255,.07); will-change: transform; transform: translateZ(0); }
 .nav-tab { position: relative; display: grid; place-items: center; gap: 2px; min-width: 0; min-height: 52px; padding: 5px 2px; color: var(--text-tertiary); background: transparent; border-radius: 16px; font-size: 10px; transition: var(--transition-press); }
-.nav-tab.is-active { color: var(--accent-text); background: var(--bg-chip-inset); box-shadow: var(--neo-pressed), 0 0 0 1px var(--border-highlight); }
+.nav-tab > svg, .nav-tab > span { position: relative; z-index: 1; }
+.nav-tab.is-active { color: var(--accent-text); }
+/* Aktive-Markierung: gleitende Pill per Framer layoutId (BottomNav.tsx) —
+   reine CSS-Chip-Optik nur als Reduced-Motion-Fallback. */
+.nav-active-pill { position: absolute; inset: 4px 5px; z-index: 0; background: var(--bg-chip-inset); border-radius: 13px; box-shadow: var(--neo-pressed), 0 0 0 1px var(--border-highlight); }
+@media (prefers-reduced-motion: reduce) {
+  .nav-tab.is-active { background: var(--bg-chip-inset); box-shadow: var(--neo-pressed), 0 0 0 1px var(--border-highlight); }
+  .nav-active-pill { display: none; }
+}
 .nav-dot { position: absolute; bottom: 2px; width: 4px; height: 4px; background: var(--accent-text); border-radius: 50%; box-shadow: 0 0 8px var(--accent-glow); }
-.create-button { display: grid; place-items: center; justify-self: center; width: 48px; height: 48px; color: var(--text-on-accent); background: linear-gradient(180deg, color-mix(in srgb, var(--accent-primary) 86%, #fff), var(--accent-primary)); border: 3px solid var(--bg-surface); border-radius: 50%; box-shadow: var(--neo-convex), 0 0 22px var(--accent-glow); }
+.create-button { display: grid; place-items: center; justify-self: center; width: 48px; height: 48px; color: var(--text-on-accent); background: linear-gradient(180deg, color-mix(in srgb, var(--accent-primary) 86%, #fff), var(--accent-primary)); border: 3px solid var(--bg-base); border-radius: 50%; box-shadow: var(--neo-convex), 0 10px 24px color-mix(in srgb, var(--accent-primary) 30%, transparent); }
 
 /* Touch-Ziele (HIG ≥44px): visuelle Größe bleibt, Hit-Area wird per Pseudo-Element
    gestreckt — radius-inherit hält die Neo-Form. Einzige bewusste Ausnahme: die
@@ -302,6 +327,8 @@ button:active { transform: scale(.985); }
 /* Save-Moment: eigenes Portal über der App — pointer-events none, blockiert nichts. */
 .session-save-beat { position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; pointer-events: none; }
 .session-save-check { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: var(--accent-dim); border: 1px solid var(--border-accent); box-shadow: var(--neo-convex), 0 0 34px var(--accent-glow); }
+/* Schallwelle des Save-Moments: einmalig expandierender Ring um die Check-Kachel (Size = session-save-check). */
+.session-save-ripple { position: absolute; width: 84px; height: 84px; border-radius: 50%; border: 1.5px solid var(--accent-primary); }
 .session-save-check svg { color: var(--accent-text); }
 .session-save-label { margin-top: 14px; color: var(--text-main); font-family: var(--font-display); font-size: 17px; font-weight: 800; letter-spacing: var(--tracking-display); }
 @keyframes save-glow-pulse { 0% { box-shadow: var(--neo-convex), 0 0 0 var(--accent-glow); } 45% { box-shadow: var(--neo-convex), 0 0 46px 6px var(--accent-glow); } 100% { box-shadow: var(--neo-convex), 0 0 0 var(--accent-glow); } }
@@ -370,7 +397,7 @@ button:active { transform: scale(.985); }
 .warmup-switch-knob { position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; background: var(--bg-elevated); border-radius: 50%; box-shadow: var(--neo-knob); transition: transform 180ms var(--ease-out); }
 .warmup-switch.is-on .warmup-switch-knob { background: var(--accent-primary); transform: translateX(20px); }
 .warmup-reset { display: grid; place-items: center; width: 52px; min-height: 50px; color: var(--danger); background: var(--danger-dim); border: 1px solid var(--danger-border); border-radius: var(--radius-pill); box-shadow: var(--neo-pressed); }
-.warmup-confirm { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; color: var(--text-on-accent); background: var(--accent-primary); border-radius: var(--radius-pill); box-shadow: var(--neo-convex), 0 0 24px var(--accent-glow); font-size: 14px; font-weight: 800; opacity: 1; }
+.warmup-confirm { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; color: var(--text-on-accent); background: var(--accent-primary); border-radius: var(--radius-pill); box-shadow: var(--neo-convex), 0 8px 22px color-mix(in srgb, var(--accent-primary) 26%, transparent); font-size: 14px; font-weight: 800; opacity: 1; }
 .warmup-confirm:disabled { opacity: .7; }
 /* Übungskarte — Squircle-Well + randlose Ghost-Actions */
 .machine-card { border-radius: var(--radius-card); }
@@ -387,12 +414,17 @@ button:active { transform: scale(.985); }
 .history-empty .eyebrow { color: var(--text-tertiary); }
 .history-empty h3 { color: var(--text-main); font-family: var(--font-display); font-size: 20px; letter-spacing: var(--tracking-display); }
 .history-empty p { max-width: 280px; color: var(--text-muted); font-size: 12.5px; line-height: 1.55; }
-.history-empty-cta { display: inline-flex; align-items: center; gap: 7px; margin-top: 9px; min-height: 44px; padding: 0 16px; color: var(--text-on-accent); background: var(--accent-primary); border-radius: var(--radius-pill); box-shadow: var(--neo-convex), 0 0 20px var(--accent-glow); font-size: 12.5px; font-weight: 800; }
+.history-empty-cta { display: inline-flex; align-items: center; gap: 7px; margin-top: 9px; min-height: 44px; padding: 0 16px; color: var(--text-on-accent); background: var(--accent-primary); border-radius: var(--radius-pill); box-shadow: var(--neo-convex), 0 8px 20px color-mix(in srgb, var(--accent-primary) 24%, transparent); font-size: 12.5px; font-weight: 800; }
 .set-check { display: grid; place-items: center; width: 36px; height: 36px; color: var(--text-tertiary); background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; box-shadow: var(--neo-knob); transition: background 140ms var(--ease-out), color 140ms var(--ease-out), box-shadow 140ms var(--ease-out); }
 .session-set-row.is-complete .set-check, .warmup-set-row.is-complete .set-check { color: var(--text-on-accent); background: var(--accent-primary); }
-/* Häkchen-Pop beim Abhaken: Keyframe am Icon (nicht am Button), damit die 44px-Hit-Area nie wackelt. */
-@keyframes check-pop { from { transform: scale(.85); } to { transform: scale(1); } }
-.session-set-row.is-complete .set-check svg, .warmup-set-row.is-complete .set-check svg { animation: check-pop 160ms var(--ease-out) 1; }
+/* Häkchen-Pop beim Abhaken: Overshoot-Spring am Icon (nicht am Button, damit die
+   44px-Hit-Area nie wackelt) + Stroke-Draw des Häkchens — die häufigste Interaktion
+   der App verdient das beste Feedback (Motion-Personality: Energetic). Keyframes
+   am Element statt Framer: replayt automatisch bei jedem erneuten Abhaken. */
+@keyframes check-pop { 0% { transform: scale(.55); opacity: 0; } 55% { transform: scale(1.14); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes check-draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+.session-set-row.is-complete .set-check svg, .warmup-set-row.is-complete .set-check svg { animation: check-pop 300ms var(--ease-out) 1; }
+.session-set-row.is-complete .set-check svg path, .warmup-set-row.is-complete .set-check svg path { stroke-dasharray: 24; animation: check-draw 240ms 70ms var(--ease-out) 1 both; }
 .add-set-button, .add-exercise-button, .secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; color: var(--text-muted); background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); box-shadow: var(--neumorph-inset); font-size: 12px; font-weight: 700; }
 .add-set-button { width: 100%; margin-top: 10px; }
 .add-set-button span { margin-left: 2px; color: var(--accent-text); font-variant-numeric: tabular-nums; }
@@ -542,11 +574,11 @@ button:active { transform: scale(.985); }
 .backup-message { color: var(--accent-text) !important; font-weight: 700; }
 @keyframes pulse-live { 50% { opacity: .38; transform: scale(.7); } }
 
-.ambient { position: fixed; z-index: 0; width: 180px; height: 180px; pointer-events: none; border-radius: 50%; filter: blur(70px); opacity: .16; }
+.ambient { position: fixed; z-index: 0; width: 180px; height: 180px; pointer-events: none; border-radius: 50%; filter: blur(84px); opacity: .1; }
 .ambient-one { top: 16%; left: -130px; background: var(--accent-primary); }
 .ambient-two { top: 44%; right: -140px; background: var(--accent-secondary); }
 
-input, textarea { width: 100%; color: var(--text-main); background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-input); box-shadow: var(--neo-pressed); padding: 14px 16px; }
+input, textarea { width: 100%; color: var(--text-main); background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-input); box-shadow: var(--neo-pressed); padding: 14px 16px; font-size: 16px; }
 input:focus, textarea:focus { outline: 0; border-color: color-mix(in srgb, var(--accent-primary) 55%, transparent); box-shadow: var(--neo-pressed), 0 0 0 2px var(--accent-dim); }
 input::placeholder, textarea::placeholder { color: var(--text-tertiary); }
 /* WebKit renderiert bei type="search" einen nativen Cancel-Button — kollidiert mit unserem Neo-Clear-Button */
@@ -574,7 +606,6 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
   .hero-panel { min-height: 258px; padding: 24px 20px 20px; }
   .hero-copy h2 { font-size: clamp(34px, 10vw, 46px); }
   .hero-orbit { right: -70px; opacity: .58; transform: scale(.82) rotate(-17deg); }
-  .nav-inner { backdrop-filter: none; -webkit-backdrop-filter: none; }
   .ambient { filter: blur(42px); opacity: .08; }
   .session-shell, .launcher-shell { backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
@@ -598,7 +629,7 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 }
 
 /* ═════════ Launch-Sequenz (SplashIntro) — z-Index über allem inkl. Overlays (300+) ═════════ */
-.splash-intro { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1F2024; /* wie --bg-base der App-Icons, theme-unabhängig */ }
+.splash-intro { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0e0f13; /* wie --bg-base des garmin-Themes, theme-unabhängig */ }
 .splash-stage { position: absolute; top: 50%; left: 50%; width: 0; height: 0; /* Anker: exaktes Screen-Zentrum, wie im iOS-Splash-PNG */ }
 .splash-intro-tile { position: absolute; top: 0; left: 0; display: grid; place-items: center; /* Zentrierung über negative Margins (inline) — Framer Motion überschreibt transform */ background: #09090B; box-shadow: 0 22px 55px rgba(3,4,7,.56), 0 0 0 1px rgba(255,255,255,.08), inset 0 1px 0 rgba(255,255,255,.11); }
 .splash-intro-glyph { position: relative; z-index: 1; display: grid; place-items: center; color: #CAFE00; }

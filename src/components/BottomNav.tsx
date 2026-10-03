@@ -64,7 +64,24 @@ function TabButton({ tab, active, navigate, reduced }: {
       onClick={() => navigate(tab.path)}
       whileTap={reduced ? undefined : { scale: 0.9 }}
     >
-      <Icon size={19} strokeWidth={active ? 2.2 : 1.7} />
+      {/* Gleitende aktive-Markierung: eine Pill, die per Shared-Layout-Animation
+          zwischen den Tabs wandert statt pro Tab hart umzuspringen. */}
+      {active && !reduced && (
+        <motion.span
+          className="nav-active-pill"
+          layoutId="nav-active-pill"
+          aria-hidden="true"
+          transition={{ type: 'spring', stiffness: 480, damping: 42 }}
+        />
+      )}
+      <motion.span
+        style={{ display: 'grid', placeItems: 'center', position: 'relative', zIndex: 1 }}
+        initial={false}
+        animate={active && !reduced ? { scale: [1, 1.14, 1] } : { scale: 1 }}
+        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <Icon size={19} strokeWidth={active ? 2.2 : 1.7} />
+      </motion.span>
       <span>{tab.label}</span>
       <AnimatePresence>
         {active && <motion.i className="nav-dot" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} aria-hidden="true" />}

@@ -15,6 +15,8 @@ interface Props {
   avoidKeyboard?: boolean;
   /** Dauer des Backdrop-Fades in Sekunden. Warnungs-Sheets drehen schneller (0.18). */
   backdropDuration?: number;
+  /** Andere Backdrop-Farbe (z. B. danger-getönt beim ConfirmSheet). Default: --overlay. */
+  backdropBackground?: string;
 }
 
 /** Abstand, den die geöffnete Tastatur vom Viewport nimmt (0 ohne Tastatur). */
@@ -39,7 +41,7 @@ function useKeyboardInset(active: boolean): number {
   return inset;
 }
 
-export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKeyboard = false, backdropDuration = 0.22 }: Props) {
+export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKeyboard = false, backdropDuration = 0.22, backdropBackground }: Props) {
   const reduced  = useReducedMotion();
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
@@ -84,7 +86,7 @@ export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKe
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'var(--overlay)',
+              background: backdropBackground ?? 'var(--overlay)',
               /* Kein backdrop-filter: Fullscreen-Blur frisst auf iOS jede Frame
                  (Jank beim Scrollen/Scrollen des Sheets). Gleiche Abwägung wie
                  bei .session-shell/.launcher-shell im Media-Query ≤520px. */

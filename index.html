@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="de" style="background-color: #1f2024;">
+<html lang="de" style="background-color: #0e0f13;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#1F2024" />
+    <meta name="theme-color" content="#0e0f13" />
     <meta name="color-scheme" content="dark" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -13,9 +13,9 @@
     <style>
       /* Kritisches Inline-CSS: verhindert den weißen Blitz vor dem ersten Paint,
          solange App-CSS (und damit --bg-base) noch nicht geladen ist. Muss mit dem
-         Launch-Hintergrund übereinstimmen (iOS-Splash-PNGs, .splash-intro: #1F2024). */
-      html, body { background: #1f2024; color-scheme: dark; margin: 0; }
-      #root { background: #1f2024; min-height: 100vh; }
+         Launch-Hintergrund übereinstimmen (iOS-Splash-PNGs, .splash-intro: #0e0f13). */
+      html, body { background: #0e0f13; color-scheme: dark; margin: 0; }
+      #root { background: #0e0f13; min-height: 100vh; }
     </style>
     <script>
       (() => {
@@ -23,8 +23,10 @@
           const stored = localStorage.getItem('gymlog.theme');
           const theme = ['garmin', 'bordeaux', 'whoop', 'ember'].includes(stored || '') ? stored : 'garmin';
           document.documentElement.dataset.theme = theme;
-          // Alle Themes teilen --bg-base: #1f2024 (nur der Akzent unterscheidet sich).
-          const bgColor = '#1F2024';
+          // V2: jedes Theme hat eigene --bg-base (Near-Black mit Farbstich) —
+          // Status-Bar und Boot-Flash folgen dem Theme.
+          const bgByTheme = { garmin: '#0e0f13', bordeaux: '#110d10', whoop: '#0b0b0d', ember: '#12100e' };
+          const bgColor = bgByTheme[theme] ?? '#0e0f13';
           const meta = document.querySelector('meta[name="theme-color"]');
           if (meta) meta.setAttribute('content', bgColor);
           document.documentElement.style.backgroundColor = bgColor;
@@ -48,8 +50,8 @@
     <link rel="stylesheet" href="/fonts/fonts.css" />
     <title>Gym Log</title>
   </head>
-  <body style="background-color: #1f2024; margin: 0;">
-    <div id="root" style="background-color: #1f2024; min-height: 100vh;"></div>
+  <body style="background-color: #0e0f13; margin: 0;">
+    <div id="root" style="background-color: #0e0f13; min-height: 100vh;"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

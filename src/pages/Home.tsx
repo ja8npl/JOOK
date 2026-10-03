@@ -39,6 +39,7 @@ const MODE_SHORT: Record<TrainingMode, string> = { bulk: 'Bulk', cut: 'Cut', rec
 export function Home() {
   const summaries = useMachineSummaries();
   const navigate = useNavigate();
+  const reduced = useReducedMotion();
   const { activeSession, updateExercise, clearWarmup } = useWorkoutSession();
   const [historyTarget, setHistoryTarget] = useState<MachineSummary | null>(null);
   const [warmupTarget, setWarmupTarget] = useState<MachineSummary | null>(null);
@@ -108,7 +109,15 @@ export function Home() {
         </div>
       </header>
 
-      <section className="home-duo" aria-label="Modus und Körpergewicht">
+      {/* Entrance-Kaskade: eine Choreo über alle Sektionen (50ms Rhythmus, eine Kurve) —
+          vorher hatten nur Gauges/Greeting eigene Entrances, der Rest poppte hart. */}
+      <motion.section
+        className="home-duo"
+        aria-label="Modus und Körpergewicht"
+        initial={reduced ? false : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+      >
         <ModeCard
           modus={settings.modus}
           tage={daysInMode(settings.modusSeit)}
@@ -123,8 +132,9 @@ export function Home() {
           spark={spark}
           onAdd={() => setWeightOpen(true)}
         />
-      </section>
+      </motion.section>
 
+      {/* Gauges: eigene Tile-Stagger + Ring-Sweeps — keine zusätzliche Section-Animation (sonst doppelt). */}
       <section className="gauge-row" aria-label="Trainings-Bilanzen">
         <RingGauge label="Kraft" value={analyse?.kraft ?? 0} index={0} />
         <RingGauge label="Volumen" value={analyse?.volumen ?? 0} index={1} />
@@ -144,6 +154,11 @@ export function Home() {
       <AnalyseSection analyse={analyse} />
 
       <section className="library-section" aria-labelledby="library-heading">
+        <motion.div
+          initial={reduced ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.38, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        >
         <div className="section-heading">
           <div>
             <span className="eyebrow">Deine Bibliothek</span>
@@ -171,6 +186,7 @@ export function Home() {
             ))}
           </div>
         )}
+        </motion.div>
       </section>
 
       <HistorySheet
@@ -324,9 +340,9 @@ function RingGauge({ label, value, index }: GaugeProps) {
   return (
     <motion.div
       className="gauge-tile glass-panel"
-      initial={reduced ? false : { opacity: 0, y: 14 }}
+      initial={reduced ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.35, delay: 0.04 + index * 0.04, ease: [0.22, 1, 0.36, 1] }}
     >
       <svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label={`${label}: ${fmtPct.format(clamped)}`}>
         <defs>
@@ -335,7 +351,7 @@ function RingGauge({ label, value, index }: GaugeProps) {
             <stop offset="100%" stopColor="var(--accent-secondary)" />
           </linearGradient>
         </defs>
-        <circle cx="32" cy="32" r={radius} fill="none" stroke="var(--border-subtle)" strokeWidth="3.5" />
+        <circle cx="32" cy="32" r={radius} fill="none" stroke="var(--ring-track)" strokeWidth="3.5" />
         <motion.circle
           cx="32" cy="32" r={radius} fill="none"
           stroke={`url(#gauge-grad-${index})`}
@@ -343,7 +359,7 @@ function RingGauge({ label, value, index }: GaugeProps) {
           strokeDasharray={circumference}
           initial={reduced ? false : { strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: circumference * (1 - clamped) }}
-          transition={{ duration: reduced ? 0 : 1.1, delay: 0.2 + index * 0.1, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: reduced ? 0 : 0.9, delay: 0.12 + index * 0.05, ease: [0.22, 1, 0.36, 1] }}
           transform="rotate(-90 32 32)"
         />
         <text x="32" y="33" textAnchor="middle" dominantBaseline="central" className="gauge-ring-text">
@@ -385,9 +401,9 @@ function GreetingCard({ name, greeting, gains, kraft, volumen, modus, tage }: Gr
   return (
     <motion.section
       className={`greeting-card glass-panel${expanded ? '' : ' is-collapsed'}`}
-      initial={reduced ? false : { opacity: 0, y: 16 }}
+      initial={reduced ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.38, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
       aria-label="Trainingszusammenfassung"
     >
       <button
@@ -415,9 +431,16 @@ interface AnalyseData {
 }
 
 function AnalyseSection({ analyse }: { analyse: AnalyseData | undefined }) {
+  const reduced = useReducedMotion();
   const hasDeltas = (analyse?.gains.length ?? 0) > 0 || (analyse?.regress.length ?? 0) > 0 || (analyse?.muster.length ?? 0) > 0;
   return (
-    <section className="analyse-section" aria-labelledby="analyse-heading">
+    <motion.section
+      className="analyse-section"
+      aria-labelledby="analyse-heading"
+      initial={reduced ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.38, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div className="section-heading">
         <div>
           <span className="eyebrow">Letzte {ANALYSE_WINDOW_DAYS} Tage</span>
@@ -477,7 +500,7 @@ function AnalyseSection({ analyse }: { analyse: AnalyseData | undefined }) {
           )}
         </article>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -497,8 +520,8 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.45 }}
     >
-      <div className="empty-icon"><Dumbbell size={25} /></div>
       <div>
+        <span className="eyebrow accent-copy">Erster Eintrag</span>
         <h3>Dein Log ist bereit.</h3>
         <p>Speichere deine erste Maschine und finde beim nächsten Training sofort zurück.</p>
       </div>

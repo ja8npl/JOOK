@@ -2,9 +2,10 @@
  * Launch-Sequenz: iOS-Splash → Intro → App.
  *
  * Das Overlay repliziert das statische apple-touch-startup-image (PNGs aus
- * scripts/generate-splash.cjs) pixelgenau: gleicher Hintergrund (#1F2024),
- * gleiche Kachel (#09090B, Radius 22 % der Kantenlänge, exakt zentriert wie
- * im PNG), gleiches Dumbbell-Glyph (Lucide, Lime #CAFE00, Stroke 2/24).
+ * scripts/generate-splash.cjs) pixelgenau: gleicher Hintergrund (#0e0f13,
+ * --bg-base des garmin-Themes, V2), gleiche Kachel (#09090B, Radius 22 % der
+ * Kantenlänge, exakt zentriert wie im PNG), gleiches Dumbbell-Glyph (Lucide,
+ * Lime #CAFE00, Stroke 2/24).
  * iOS übergibt beim Kaltstart nahtlos an dieses Overlay, das die kurze
  * Choreographie spielt und in die App auflöst — kein harter Schnitt mehr.
  *

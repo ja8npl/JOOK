@@ -44,13 +44,16 @@ export function WorkoutSessionModal() {
   const [historyTargetKey, setHistoryTargetKey] = useState<string | null>(null);
   const [historyTargetName, setHistoryTargetName] = useState('');
   /* Verwerfen erst nach Bestätigung — Escape/X löscht nicht unabsichtlich ein laufendes Training.
-     Fortschritt wird beim Öffnen eingefroren, damit das Sheet nicht „springt“, während es offen ist. */
+     Fortschritt und Fakten (Zeit/Übungen/Sätze) werden beim Öffnen eingefroren, damit das
+     Sheet nicht „springt“, während es offen ist. */
   const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
   const [discardProgress, setDiscardProgress] = useState<{ completed: number; planned: number } | null>(null);
+  const [discardFacts, setDiscardFacts] = useState<{ seconds: number; exercises: number; completed: number; planned: number } | null>(null);
   const requestDiscard = () => {
     if (!activeSession) return;
     const counts = sessionSetCounts(activeSession.exercises);
     setDiscardProgress(counts.planned > 0 && counts.completed / counts.planned >= DISCARD_MOTIVATION_THRESHOLD ? counts : null);
+    setDiscardFacts({ seconds, exercises: activeSession.exercises.length, ...counts });
     setDiscardConfirmOpen(true);
   };
   const sessionSheetRef = useOverlayFocus(Boolean(activeSession) && !discardConfirmOpen, requestDiscard);
@@ -245,12 +248,27 @@ export function WorkoutSessionModal() {
       {saveState === 'success' && (
         <motion.div className="session-save-beat" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={reduced ? undefined : { opacity: 0, scale: 1.05 }} transition={{ duration: reduced ? 0 : 0.18, ease: 'easeOut' }}>
           <motion.div style={{ display: 'grid', justifyItems: 'center' }} initial={reduced ? false : { scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 24 }}>
-            <div className={`session-save-check${reduced ? '' : ' is-pulsing'}`}>
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-                <motion.path d="M10 21.5L17.5 29L30.5 13.5" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" initial={reduced ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={reduced ? { duration: 0 } : { duration: 0.3, ease: 'easeOut', delay: 0.12 }} />
-              </svg>
+            {/* Signature-Moment: Check landet (Spring) → Schallwelle expandiert →
+                „Gespeichert.“ blurt ein. Drei Layer nach motion-design: Primary =
+                Check, Secondary = Ripple, Tertiär = Wortmarke. Alles transform/
+                opacity/filter, binnen 900ms Auto-Close. */}
+            <div style={{ position: 'relative', display: 'grid', placeItems: 'center' }}>
+              {!reduced && (
+                <motion.span
+                  className="session-save-ripple"
+                  aria-hidden="true"
+                  initial={{ scale: 0.85, opacity: 0.55 }}
+                  animate={{ scale: 1.65, opacity: 0 }}
+                  transition={{ duration: 0.55, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                />
+              )}
+              <div className={`session-save-check${reduced ? '' : ' is-pulsing'}`}>
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                  <motion.path d="M10 21.5L17.5 29L30.5 13.5" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" initial={reduced ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={reduced ? { duration: 0 } : { duration: 0.3, ease: 'easeOut', delay: 0.12 }} />
+                </svg>
+              </div>
             </div>
-            <motion.p className="session-save-label" initial={reduced ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={reduced ? { duration: 0 } : { delay: 0.26, duration: 0.18, ease: 'easeOut' }}>Gespeichert.</motion.p>
+            <motion.p className="session-save-label" initial={reduced ? false : { opacity: 0, y: 8, filter: 'blur(5px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} transition={reduced ? { duration: 0 } : { delay: 0.34, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>Gespeichert.</motion.p>
           </motion.div>
         </motion.div>
       )}
@@ -283,6 +301,14 @@ export function WorkoutSessionModal() {
       title="Training verwerfen?"
       message="Alle Sätze dieser Einheit gehen verloren. Die Aktion kann nicht rückgängig gemacht werden."
       confirmLabel="Verwerfen"
+      cancelLabel="Weiter trainieren"
+      details={discardFacts ? [
+        { label: 'Zeit', value: formatTime(discardFacts.seconds) },
+        { label: 'Übungen', value: String(discardFacts.exercises) },
+        ...(discardFacts.planned > 0
+          ? [{ label: 'Sätze', value: `${discardFacts.completed}/${discardFacts.planned}` }]
+          : []),
+      ] : undefined}
       progress={discardProgress}
     />
     </>,

@@ -40,15 +40,19 @@ export function storeTheme(theme: ThemeName): void {
 }
 
 /**
- * Status-Bar-Farbe (theme-color). Alle Themes teilen `--bg-base: #1f2024`
- * — der einzige Unterschied ist der Akzent — deshalb ist der Wert bewusst
- * konstant und deckt sich mit dem Inline-Wert in index.html.
+ * Status-Bar-Farbe (theme-color) pro Theme — V2 „Night Graphite": jedes Theme hat
+ * eine eigene Near-Black --bg-base, Status-Bar und Boot-Flash (index.html) folgen ihr.
  */
-const THEME_COLOR = '#1F2024';
+const THEME_COLOR: Record<ThemeName, string> = {
+  garmin: '#0e0f13',
+  bordeaux: '#110d10',
+  whoop: '#0b0b0d',
+  ember: '#12100e',
+};
 
 /** Wendet das Theme auf <html data-theme> und die theme-color-Meta an. */
 export function applyTheme(theme: ThemeName): void {
   document.documentElement.dataset.theme = theme;
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-  if (meta) meta.content = THEME_COLOR;
+  if (meta) meta.content = THEME_COLOR[theme];
 }

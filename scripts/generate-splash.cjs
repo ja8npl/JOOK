@@ -3,7 +3,7 @@
  * Splash-Generator für iOS (apple-touch-startup-image).
  *
  * Erzeugt die Splash-PNGs pixelidentisch zur Launch-Animation in der App:
- *   - Hintergrund exakt --bg-base (#1F2024, theme-unabhängig wie die App-Icons)
+ *   - Hintergrund exakt --bg-base des garmin-Themes (#0e0f13, V2 „Night Graphite")
  *   - dunkle Kachel (#09090B) mit Radius 22 % der Kantenlänge
  *   - Dumbbell-Glyph von lucide (identisch zum App-Icon), Lime #CAFE00,
  *     Strichstärke 2/24 des Icon-Grids, runde Kappen — wie <Dumbbell /> in der App
@@ -20,7 +20,7 @@ const path = require('path');
 const zlib = require('zlib');
 
 // ── Marken-Konstanten (müssen mit src/components/SplashIntro.tsx übereinstimmen) ──
-const BG = [31, 32, 36];        // #1F2024 — --bg-base
+const BG = [14, 15, 19];        // #0e0f13 — --bg-base (garmin, V2)
 const TILE = [9, 9, 11];        // #09090B — Icon-Kachel
 const GLYPH = [202, 254, 0];    // #CAFE00 — Icon-Lime
 const TILE_RATIO = 0.293;       // Kachel-Seitenlänge / Bildschirmbreite

@@ -1,7 +1,8 @@
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle } from 'lucide-react';
 import { BottomSheet } from './BottomSheet';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { createHoldConfirm, type HoldConfirmController } from '../lib/holdConfirm';
 
 interface Props {
   isOpen: boolean;
@@ -10,19 +11,31 @@ interface Props {
   title?: string;
   message?: string;
   confirmLabel?: string;
+  /** Sekundäre Aktion — benennt, was nach dem Abbruch passiert (z. B. „Weiter trainieren“). */
+  cancelLabel?: string;
+  /** Konkrete Verlust-Fakten (Zeit, Übungen, Sätze) — zeigen die Wette, statt abstrakt zu warnen.
+   *  Nur in der Warn-Variante sichtbar; die Motivations-Variante zeigt den Ring. */
+  details?: { label: string; value: string }[];
   /** Motivierende Variante: Fortschritt (geloggte/geplante Arbeitssätze) statt reiner Warnung.
-   *  null/undefined = klassische Warn-Variante (unverändert). */
+   *  null/undefined = klassische Warn-Variante. */
   progress?: { completed: number; planned: number } | null;
 }
 
-/* ── Timing — bewusst langsam-seriös statt verspielt:
-   Backdrop 180ms (schneller als Content-Sheets: die Warnung soll sofort "da" sein,
-   ohne den Tag-Blur von 220ms).
-   Stagger 50ms pro Element (tastbarer Rhythmus, ohne als Sequenz zu nerven).
-   Icon-Puls: einmalig, 320ms Scale 1→1.06→1 — signalisiert Gefahr, ohne zu blinken.
-   Exit = Entrance gespiegelt, gleiche Dauern, kein Bounce (damping > stiffness/2).
-   Reduced Motion: duration 0, reines Crossfade der Folie. ── */
+/* ── Konzept „Halte-Moment“ statt Bestätigungsdialog:
+   Die Zerstörung will gehalten werden: Die destructive Aktion ist ein Hold-to-Confirm
+   (Drücken + 1,5 s halten). Ein Tap reicht nie — versehentliches Wischen/X kann nicht mehr
+   ein Training löschen, und der Akt fühlt sich bewusst an wie ein Garmin-„Hold to discard“.
+
+   Timing (asymmetrisch, bewusst):
+   - Backdrop 180ms, danger-getönt — die ganze Umgebung kippt in Warnstimmung, sofort.
+   - Hold-Sweep: 1500ms linear — die deliberante Phase ist langsam und konstant,
+     wie ein Timer, der scharf gestellt wird (Emil-Pattern: hold-to-delete, linear).
+   - Loslassen vorzeitig: 200ms var(--ease-out) — die Systemreaktion ist schnell.
+   - Stagger 50ms pro Element wie in allen Content-Sheets.
+   Reduced Motion: kein Sweep und kein Scale — Fill/Label wechseln instant, die
+   Halte-Geste selbst bleibt (sie ist Interaktion, keine Bewegung). ── */
 const BACKDROP_MS = 0.18;
+const HOLD_MS = 1500;
 const STAGGER_S = 0.05;
 
 /** Ein Stagger-Element: fade + kleiner y-offset, individuell verzögert. */
@@ -57,7 +70,7 @@ function ProgressRing({ completed, planned, reduced }: { completed: number; plan
           <stop offset="100%" stopColor="var(--accent-secondary)" />
         </linearGradient>
       </defs>
-      <circle cx="32" cy="32" r={radius} fill="none" stroke="var(--border-subtle)" strokeWidth="3.5" />
+      <circle cx="32" cy="32" r={radius} fill="none" stroke="var(--ring-track)" strokeWidth="3.5" />
       <motion.circle
         cx="32" cy="32" r={radius} fill="none"
         stroke="url(#confirm-progress-grad)"
@@ -75,6 +88,186 @@ function ProgressRing({ completed, planned, reduced }: { completed: number; plan
   );
 }
 
+/** React-Verdrahtung um die framework-freie Hold-Logik (src/lib/holdConfirm.ts). */
+function useHoldConfirm(onComplete: () => void, holdMs: number) {
+  const [holding, setHolding] = useState(false);
+  /** Nach komplettiertem Hold friert der Fill ein: Während der Sheet-Exit-Animation
+   *  läuft er nicht mehr zurück, das Sheet verlässt den Screen „scharf gestellt“. */
+  const completedRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  const controllerRef = useRef<HoldConfirmController | null>(null);
+
+  /* Refs werden ausschließlich in Effekten geschrieben (React-Compiler-Regel) —
+     die Callbacks lesen zum Zeitpunkt des Feuerns den aktuellen Stand. */
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+  useEffect(() => {
+    controllerRef.current = createHoldConfirm(holdMs, () => {
+      completedRef.current = true;
+      onCompleteRef.current();
+    });
+    return () => {
+      controllerRef.current?.cancel();
+      controllerRef.current = null;
+    };
+  }, [holdMs]);
+
+  const start = () => {
+    completedRef.current = false;
+    setHolding(true);
+    controllerRef.current?.start();
+  };
+  const cancel = () => {
+    if (completedRef.current) return;
+    controllerRef.current?.cancel();
+    setHolding(false);
+  };
+  /* Tastatur (Enter/Space) bestätigt direkt: Die Halte-Hürde existiert gegen
+     versehentliche Touch-Activation, nicht gegen bewusste Eingabe —
+     für Screen-Reader-/Tastaturnutzer bleibt das ein normaler Button. */
+  const confirmNow = () => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    controllerRef.current?.cancel();
+    onCompleteRef.current();
+  };
+
+  return {
+    holding,
+    pointerHandlers: {
+      onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
+        if (!e.isPrimary) return;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        start();
+      },
+      onPointerUp: cancel,
+      onPointerCancel: cancel,
+      onLostPointerCapture: cancel,
+      onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+    },
+    keyHandlers: {
+      onKeyDown: (e: React.KeyboardEvent<HTMLButtonElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          confirmNow();
+        }
+      },
+    },
+  };
+}
+
+/** Hold-to-Confirm-Button: inset-Track (Plush-Layering „scharf gestellt“), über dem
+ *  ein Danger-Fill per clip-path nachläuft. Zwei gestapelte Labels mit identischem
+ *  Clip — das weiße Label wird exakt mit dem Fill enthüllt (sauberer Farbwechsel
+ *  ohne flackernde Textfarbe, wie Tabs-Clip-Technik). */
+function HoldConfirmButton({ label, reduced, onConfirm }: { label: string; reduced: boolean; onConfirm: () => void }) {
+  const hold = useHoldConfirm(onConfirm, HOLD_MS);
+  const clip = hold.holding ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)';
+  const fillTransition = reduced
+    ? 'none'
+    : hold.holding
+      ? `clip-path ${HOLD_MS}ms linear`
+      : 'clip-path 200ms var(--ease-out)';
+
+  return (
+    <button
+      type="button"
+      className="hold-danger"
+      {...hold.pointerHandlers}
+      {...hold.keyHandlers}
+      style={{
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        padding: '17px',
+        background: 'var(--bg-input)',
+        boxShadow: 'var(--neo-pressed)',
+        border: '1px solid var(--danger-border)',
+        borderRadius: 'var(--radius-input)',
+        cursor: 'pointer',
+        overflow: 'hidden',
+        /* Langdruck-Schutz: iOS würde sonst Text-Selektion/Callout über der Geste öffnen. */
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTouchCallout: 'none',
+        touchAction: 'none',
+        transform: hold.holding && !reduced ? 'scale(0.97)' : 'scale(1)',
+        transition: 'transform var(--duration-press) var(--ease-press)',
+      }}
+    >
+      <span style={{ color: 'var(--text-primary)', fontSize: '16px', fontWeight: 700 }}>{label}</span>
+      <span
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: 'inherit',
+          background: 'var(--danger)',
+          clipPath: clip,
+          transition: fillTransition,
+        }}
+      />
+      <span
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: 'inherit',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '17px',
+          color: 'var(--text-main)',
+          fontSize: '16px',
+          fontWeight: 700,
+          clipPath: clip,
+          transition: fillTransition,
+        }}
+      >
+        {label}
+      </span>
+    </button>
+  );
+}
+
+/** Tap-Button im bestehenden Press-Idiom: Scale via Motion, Schatten-Wechsel
+ *  konvex → pressed über Pointer-Events (physisches Eindrücken). */
+function TapButton({ variant, onClick, reduced, children }: {
+  variant: 'accent' | 'quiet';
+  onClick: () => void;
+  reduced: boolean;
+  children: React.ReactNode;
+}) {
+  const raised = variant === 'accent' ? 'var(--neo-convex)' : 'var(--neo-raised)';
+  return (
+    <motion.button
+      onClick={onClick}
+      whileTap={reduced ? undefined : { scale: 0.97 }}
+      style={{
+        width: '100%',
+        padding: '17px',
+        background: variant === 'accent' ? 'var(--accent-primary)' : 'var(--bg-input)',
+        boxShadow: raised,
+        border: variant === 'accent' ? 'none' : '1px solid var(--border)',
+        borderRadius: 'var(--radius-input)',
+        color: variant === 'accent' ? 'var(--text-on-accent)' : 'var(--text-primary)',
+        fontSize: '16px',
+        fontWeight: variant === 'accent' ? 700 : 500,
+        cursor: 'pointer',
+        transition: 'box-shadow var(--duration-press) var(--ease-press)',
+      }}
+      onPointerDown={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-pressed)'; }}
+      onPointerUp={(e) => { e.currentTarget.style.boxShadow = raised; }}
+      onPointerLeave={(e) => { e.currentTarget.style.boxShadow = raised; }}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
 export function ConfirmSheet({
   isOpen,
   onClose,
@@ -82,6 +275,8 @@ export function ConfirmSheet({
   title = 'Bist du sicher?',
   message = 'Diese Aktion kann nicht rückgängig gemacht werden.',
   confirmLabel = 'Löschen',
+  cancelLabel = 'Abbrechen',
+  details,
   progress = null,
 }: Props) {
   const reduced = useReducedMotion();
@@ -93,49 +288,38 @@ export function ConfirmSheet({
   const motivateTitle = remaining === 0 ? 'Training komplett.' : 'Fast am Ziel.';
   const motivateMessage = remaining === 0
     ? `Du hast alle ${planned} ${satzWort(planned)} geschafft.`
-    : `Du hast ${completed} von ${planned} ${satzWort(planned)} geschafft – nur noch ${remaining} ${satzWort(remaining)} bis zum Ziel.`;
+    : `Du hast ${completed} von ${planned} ${satzWort(planned)} geschafft. Nur noch ${remaining} ${satzWort(remaining)} bis zum Ziel.`;
+
+  const facts = !motivate && details && details.length > 0 ? details : null;
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} backdropDuration={BACKDROP_MS}>
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      backdropDuration={BACKDROP_MS}
+      /* Danger-getönte Abdunkelung: die ganze Umgebung kippt warm-rot statt neutral —
+         Stimmung über den Token-Mix, funktioniert in allen vier Themes. */
+      backdropBackground="color-mix(in srgb, var(--danger) 18%, var(--overlay))"
+    >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', paddingBottom: '8px' }}>
-        {/* Slot 1: Warn-Icon (Confirm) oder Fortschritts-Ring (Motivation) */}
-        {motivate ? (
+        {/* Slot 0: Fortschritts-Ring (nur Motivations-Variante) */}
+        {motivate && (
           <StaggerItem index={0} reduced={reduced}>
             <ProgressRing completed={completed} planned={planned} reduced={reduced} />
           </StaggerItem>
-        ) : (
-          <StaggerItem index={0} reduced={reduced}>
-            <motion.div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--danger-dim)',
-                boxShadow: 'var(--neo-pressed)',
-                border: '1px solid var(--danger-border)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              initial={reduced ? false : { scale: 1 }}
-              animate={reduced ? undefined : { scale: [1, 1.06, 1] }}
-              transition={reduced
-                ? { duration: 0 }
-                : { duration: 0.32, delay: 0.05 + STAGGER_S, ease: 'easeInOut' }}
-            >
-              <AlertTriangle size={24} color="var(--danger)" strokeWidth={1.5} />
-            </motion.div>
-          </StaggerItem>
         )}
 
-        <StaggerItem index={1} reduced={reduced}>
+        {/* Titel + Message — bewusst ohne Icon: Typo und Danger-Farbe tragen die Warnung
+            (iOS-Alert-Prinzip), kein Icon-in-Box-Muster. */}
+        <StaggerItem index={motivate ? 1 : 0} reduced={reduced}>
           <div>
             <h2 style={{
               fontFamily: 'var(--font-display)',
-              fontSize: '24px',
+              fontSize: '26px',
               fontWeight: 700,
               color: 'var(--text-primary)',
               letterSpacing: 'var(--tracking-display)',
+              lineHeight: 1.1,
               marginBottom: '8px',
             }}>
               {motivate ? motivateTitle : title}
@@ -151,106 +335,62 @@ export function ConfirmSheet({
           </div>
         </StaggerItem>
 
-        {/* Buttons — gleiche Geometrie in beiden Varianten, nur Reihenfolge/Farbe drehen sich:
-            Motivation: „Weitermachen" primär (Accent), „Trotzdem verwerfen" sekundär —
-            exakt so groß und erreichbar wie der bisherige Abbrechen-Button. */}
+        {/* Verlust-Fakten: nackte Zahlenreihe mit Hairlines — tabellarisch wie die
+            Satz-Tabelle der App. Kein Karten-Container. */}
+        {facts && (
+          <StaggerItem index={1} reduced={reduced}>
+            <div style={{ display: 'flex', alignItems: 'stretch' }}>
+              {facts.map((fact, i) => (
+                <div key={fact.label} style={{
+                  flex: 1,
+                  marginLeft: i === 0 ? 0 : '18px',
+                  paddingLeft: i === 0 ? 0 : '18px',
+                  borderLeft: i === 0 ? 'none' : '1px solid var(--border-subtle)',
+                }}>
+                  <div style={{
+                    fontSize: '10.5px',
+                    fontWeight: 600,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: 'var(--text-tertiary)',
+                    marginBottom: '4px',
+                  }}>
+                    {fact.label}
+                  </div>
+                  <div style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    fontVariantNumeric: 'tabular-nums',
+                    letterSpacing: 'var(--tracking-display)',
+                  }}>
+                    {fact.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </StaggerItem>
+        )}
+
+        {/* Buttons — die Regel ist konsequent: Zerstörung will gehalten werden, beide
+            Varianten halten. Reihenfolge dreht sich: Warnung → Hold primär; Motivation →
+            „Weitermachen“ primär (Accent), Hold sekundär. */}
         <StaggerItem index={2} reduced={reduced}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {motivate ? (
               <>
-                <motion.button
-                  onClick={onClose}
-                  whileTap={reduced ? undefined : { scale: 0.97 }}
-                  style={{
-                    width: '100%',
-                    padding: '17px',
-                    background: 'var(--accent-primary)',
-                    boxShadow: 'var(--neo-convex)',
-                    border: 'none',
-                    borderRadius: 'var(--radius-input)',
-                    color: 'var(--text-on-accent)',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'box-shadow var(--duration-press) var(--ease-press)',
-                  }}
-                  onPointerDown={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-pressed)'; }}
-                  onPointerUp={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-convex)'; }}
-                  onPointerLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-convex)'; }}
-                >
+                <TapButton variant="accent" onClick={onClose} reduced={reduced}>
                   Weitermachen
-                </motion.button>
-                <motion.button
-                  onClick={onConfirm}
-                  whileTap={reduced ? undefined : { scale: 0.97 }}
-                  style={{
-                    width: '100%',
-                    padding: '17px',
-                    background: 'var(--bg-input)',
-                    boxShadow: 'var(--neo-raised)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-input)',
-                    color: 'var(--text-primary)',
-                    fontSize: '16px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    transition: 'box-shadow var(--duration-press) var(--ease-press)',
-                  }}
-                  onPointerDown={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-pressed)'; }}
-                  onPointerUp={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-raised)'; }}
-                  onPointerLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-raised)'; }}
-                >
-                  Trotzdem verwerfen
-                </motion.button>
+                </TapButton>
+                <HoldConfirmButton label="Halten zum Verwerfen" reduced={reduced} onConfirm={onConfirm} />
               </>
             ) : (
               <>
-                <motion.button
-                  onClick={onConfirm}
-                  whileTap={reduced ? undefined : { scale: 0.97 }}
-                  style={{
-                    width: '100%',
-                    padding: '17px',
-                    background: 'var(--danger)',
-                    boxShadow: 'var(--neo-convex)',
-                    border: 'none',
-                    borderRadius: 'var(--radius-input)',
-                    color: 'var(--text-main)',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    /* Press-Feedback doppelt: Scale (motion) + Schatten-Wechsel (pointer events)
-                       — konvex → pressed fühlt sich wie physisches Eindrücken an. */
-                    transition: 'box-shadow var(--duration-press) var(--ease-press)',
-                  }}
-                  onPointerDown={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-pressed)'; }}
-                  onPointerUp={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-convex)'; }}
-                  onPointerLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-convex)'; }}
-                >
-                  {confirmLabel}
-                </motion.button>
-                <motion.button
-                  onClick={onClose}
-                  whileTap={reduced ? undefined : { scale: 0.97 }}
-                  style={{
-                    width: '100%',
-                    padding: '17px',
-                    background: 'var(--bg-input)',
-                    boxShadow: 'var(--neo-raised)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-input)',
-                    color: 'var(--text-primary)',
-                    fontSize: '16px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    transition: 'box-shadow var(--duration-press) var(--ease-press)',
-                  }}
-                  onPointerDown={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-pressed)'; }}
-                  onPointerUp={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-raised)'; }}
-                  onPointerLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-raised)'; }}
-                >
-                  Abbrechen
-                </motion.button>
+                <HoldConfirmButton label={`Halten zum ${confirmLabel}`} reduced={reduced} onConfirm={onConfirm} />
+                <TapButton variant="quiet" onClick={onClose} reduced={reduced}>
+                  {cancelLabel}
+                </TapButton>
               </>
             )}
           </div>
