@@ -1,23 +1,29 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { RotateCcw, Target, X } from 'lucide-react';
+import { RotateCcw, Target, Timer, X } from 'lucide-react';
 import { BottomSheet } from './BottomSheet';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { formatRepRange, type RepTargetRange } from '../lib/progression';
+import { formatRestTime, resolveRestSeconds } from '../lib/rest';
 
 interface SheetProps {
   isOpen: boolean;
   onClose: () => void;
-  /** 'exercise' = eigener Zielwert für eine Übung (mit Reset aufs Globale), 'global' = Standard für alle. */
+  /** 'exercise' = eigene Werte für eine Übung (mit Reset aufs Globale), 'global' = Standard für alle. */
   mode: 'exercise' | 'global';
   exerciseName?: string;
   /** Beim Öffnen eingefrorener aktueller Wert (Sheet springt nicht, während Livesdaten nachladen). */
   initial: RepTargetRange;
-  /** Globales Ziel als Kontext im Exercise-Modus. */
+  /** Beim Öffnen eingefrorene effektive Pausenzeit in Sekunden. */
+  initialRest: number;
+  /** Globales Rep-Ziel als Kontext im Exercise-Modus. */
   globalTarget?: RepTargetRange;
-  /** Override vorhanden? (zeigt Reset-Aktion) */
+  /** Globale Standard-Pausenzeit (localStorage) als Kontext. */
+  globalRestSeconds?: number;
+  /** Eigenes Override vorhanden? (zeigt Reset-Aktion) */
   hasOverride?: boolean;
-  onSave: (range: RepTargetRange) => Promise<void>;
+  /** Speichert BEIDE Werte (Rep-Ziel + Pausenzeit) als Override der Übung. */
+  onSave: (range: RepTargetRange, restSeconds: number) => Promise<void>;
   onReset?: () => Promise<void>;
 }
 
@@ -26,16 +32,18 @@ interface SheetProps {
  * Warm-up-Sheet-Stil — Hero-Frage, große Werte, neo-eingedellte Regler-Reihen.
  * Mountet frisch bei jedem Öffnen (kein Effect-SetState für die Vorbelegung).
  */
-export function RepTargetSheet({ isOpen, onClose, mode, exerciseName, initial, globalTarget, hasOverride, onSave, onReset }: SheetProps) {
+export function RepTargetSheet({ isOpen, onClose, mode, exerciseName, initial, initialRest, globalTarget, globalRestSeconds, hasOverride, onSave, onReset }: SheetProps) {
   const reduced = useReducedMotion();
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} eyebrow="Rep-Ziel" title={mode === 'global' ? 'Globales Rep-Ziel' : exerciseName ?? 'Rep-Ziel'} avoidKeyboard>
+    <BottomSheet isOpen={isOpen} onClose={onClose} eyebrow="Rep-Ziel & Pause" title={mode === 'global' ? 'Globales Rep-Ziel' : exerciseName ?? 'Rep-Ziel'} avoidKeyboard>
       {isOpen && (
         <RepTargetForm
           mode={mode}
           exerciseName={exerciseName}
           initial={initial}
+          initialRest={initialRest}
           globalTarget={globalTarget}
+          globalRestSeconds={globalRestSeconds}
           hasOverride={hasOverride}
           onSave={onSave}
           onReset={onReset}
@@ -51,17 +59,20 @@ interface FormProps {
   mode: 'exercise' | 'global';
   exerciseName?: string;
   initial: RepTargetRange;
+  initialRest: number;
   globalTarget?: RepTargetRange;
+  globalRestSeconds?: number;
   hasOverride?: boolean;
-  onSave: (range: RepTargetRange) => Promise<void>;
+  onSave: (range: RepTargetRange, restSeconds: number) => Promise<void>;
   onReset?: () => Promise<void>;
   onClose: () => void;
   reduced: boolean;
 }
 
-function RepTargetForm({ mode, exerciseName, initial, globalTarget, hasOverride, onSave, onReset, onClose, reduced }: FormProps) {
+function RepTargetForm({ mode, exerciseName, initial, initialRest, globalTarget, globalRestSeconds, hasOverride, onSave, onReset, onClose, reduced }: FormProps) {
   const [min, setMin] = useState(initial.min);
   const [max, setMax] = useState(initial.max);
+  const [restSek, setRestSek] = useState(initialRest);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,10 +91,10 @@ function RepTargetForm({ mode, exerciseName, initial, globalTarget, hasOverride,
     if (saving) return;
     setSaving(true);
     try {
-      await onSave({ min, max });
+      await onSave({ min, max }, restSek);
       onClose();
     } catch {
-      setError('Rep-Ziel konnte nicht gespeichert werden. Bitte versuche es erneut.');
+      setError('Ziele konnten nicht gespeichert werden. Bitte versuche es erneut.');
     } finally {
       setSaving(false);
     }
@@ -96,7 +107,7 @@ function RepTargetForm({ mode, exerciseName, initial, globalTarget, hasOverride,
       await onReset();
       onClose();
     } catch {
-      setError('Rep-Ziel konnte nicht zurückgesetzt werden.');
+      setError('Werte konnten nicht zurückgesetzt werden.');
     } finally {
       setSaving(false);
     }
@@ -110,10 +121,13 @@ function RepTargetForm({ mode, exerciseName, initial, globalTarget, hasOverride,
       <p className="warmup-sub">
         {mode === 'global'
           ? 'Gilt für alle Übungen ohne eigenen Zielwert.'
-          : <>Eigener Wert für {exerciseName}. Ohne eigenen Wert gilt {globalTarget ? formatRepRange(globalTarget) : 'der Standard'}.</>}
+          : <>Eigene Werte für {exerciseName}. Ohne eigene Werte gelten: Rep-Ziel {globalTarget ? formatRepRange(globalTarget) : 'Standard'}, Pause {formatRestTime(resolveRestSeconds(undefined, globalRestSeconds))}.</>}
       </p>
 
       <div className="rep-slider-group">
+        <div className="rep-slider-head" style={{ paddingLeft: '2px' }}>
+          <span className="rep-slider-label">Rep-Ziel</span>
+        </div>
         <div className="rep-slider-row">
           <div className="rep-slider-head">
             <span className="rep-slider-label">Unteres Ziel</span>
@@ -148,6 +162,29 @@ function RepTargetForm({ mode, exerciseName, initial, globalTarget, hasOverride,
         </div>
       </div>
 
+      <div className="rep-slider-group" style={{ marginTop: '14px' }}>
+        <div className="rep-slider-head" style={{ paddingLeft: '2px' }}>
+          <span className="rep-slider-label">Pausenzeit nach Satz</span>
+        </div>
+        <div className="rep-slider-row">
+          <div className="rep-slider-head">
+            <span className="rep-slider-label">Pause</span>
+            <span className="rep-slider-value">{formatRestTime(restSek)}</span>
+          </div>
+          <input
+            type="range"
+            className="rep-slider"
+            min={30}
+            max={300}
+            step={15}
+            value={restSek}
+            onChange={(event) => setRestSek(Number(event.target.value))}
+            aria-label="Pausenzeit in Sekunden"
+            aria-valuetext={`${restSek} Sekunden`}
+          />
+        </div>
+      </div>
+
       {error && <p className="warmup-error"><X size={13} /> {error}</p>}
 
       <div style={{ display: 'flex', gap: '9px' }}>
@@ -156,7 +193,7 @@ function RepTargetForm({ mode, exerciseName, initial, globalTarget, hasOverride,
             type="button"
             onClick={reset}
             whileTap={reduced ? undefined : { scale: 0.97 }}
-            aria-label="Eigenes Rep-Ziel zurücksetzen und globales Ziel verwenden"
+            aria-label="Eigene Werte zurücksetzen und globale Ziele verwenden"
             className="warmup-reset"
           >
             <RotateCcw size={17} />
@@ -169,7 +206,7 @@ function RepTargetForm({ mode, exerciseName, initial, globalTarget, hasOverride,
           disabled={saving}
           className="warmup-confirm"
         >
-          <Target size={16} /> {mode === 'global' ? 'Globales Ziel speichern' : 'Rep-Ziel speichern'}
+          {mode === 'global' ? <Target size={16} /> : <Timer size={16} />} Übernehmen
         </motion.button>
       </div>
     </>

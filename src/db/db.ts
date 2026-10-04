@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { type AppSettings, type BodyWeight, type GymEntry, type ProgressHistory, type RepTarget, type WarmupConfig, type WorkoutSession } from './schema';
+import { type AppSettings, type BodyWeight, type GymEntry, type ProgressHistory, type RepTarget, type RestTarget, type WarmupConfig, type WorkoutSession } from './schema';
 
 export class GymLogDB extends Dexie {
   entries!: Table<GymEntry, number>;
@@ -9,6 +9,7 @@ export class GymLogDB extends Dexie {
   bodyweights!: Table<BodyWeight, number>;
   settings!: Table<AppSettings, string>;
   repTargets!: Table<RepTarget, string>;
+  restTargets!: Table<RestTarget, string>;
 
   constructor() {
     super('GymLogDB');
@@ -61,6 +62,17 @@ export class GymLogDB extends Dexie {
       bodyweights: '++id, tag',
       settings: 'key',
       repTargets: 'machineId',
+    });
+    // v8: Pausenzeit-Override pro Übung — wieder nur ein neuer Store, additiv.
+    this.version(8).stores({
+      entries: '++id, machineId, datum',
+      sessions: '++id, startedAt, endedAt, status',
+      progressHistory: '++id, sessionId, exerciseId, datum',
+      warmupConfigs: 'key, machineId, tag',
+      bodyweights: '++id, tag',
+      settings: 'key',
+      repTargets: 'machineId',
+      restTargets: 'machineId',
     });
   }
 }

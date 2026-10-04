@@ -7,7 +7,7 @@
  * src/hooks/useWorkoutSessions.ts.
  */
 
-import { TRAINING_MODES, type AppSettings, type BodyWeight, type GymEntry, type ProgressHistory, type RepTarget, type RirValue, type SessionSet, type TrainingMode, type WarmupConfig, type WorkoutSession } from '../db/schema';
+import { TRAINING_MODES, type AppSettings, type BodyWeight, type GymEntry, type ProgressHistory, type RepTarget, type RestTarget, type RirValue, type SessionSet, type TrainingMode, type WarmupConfig, type WorkoutSession } from '../db/schema';
 
 /** Versionsnummer des aktuellen Backup-Formats. */
 export const BACKUP_FORMAT_VERSION = 3;
@@ -36,6 +36,8 @@ export interface BackupData {
   settings: AppSettings[];
   /** Rep-Ziel-Overrides pro Übung (Format v3, additiv — alte Backups ohne Feld bleiben lesbar). */
   repTargets: RepTarget[];
+  /** Pausenzeit-Overrides pro Übung (Format v3, additiv). */
+  restTargets: RestTarget[];
   localData?: BackupLocalData;
 }
 
@@ -236,6 +238,20 @@ export function normalizeBackup(raw: unknown): BackupData {
     return target;
   }).filter((item): item is RepTarget => item !== null);
 
+  // Rest-Target-Overrides: gleiche Toleranz wie repTargets (30–3600 s sinnvoll, weiter gefasst).
+  const restTargets = requireArray(data.restTargets ?? [], 'restTargets').map((item) => {
+    const record = item as Record<string, unknown>;
+    const machineId = typeof record.machineId === 'string' ? record.machineId : '';
+    const seconds = typeof record.seconds === 'number' && Number.isFinite(record.seconds) ? Math.round(record.seconds) : NaN;
+    if (!machineId || Number.isNaN(seconds) || seconds < 5 || seconds > 3600) return null;
+    const target: RestTarget = {
+      machineId,
+      seconds,
+      updatedAt: typeof record.updatedAt === 'number' && Number.isFinite(record.updatedAt) ? record.updatedAt : Date.now(),
+    };
+    return target;
+  }).filter((item): item is RestTarget => item !== null);
+
   return {
     version: 3,
     exportedAt: typeof data.exportedAt === 'string' ? data.exportedAt : new Date().toISOString(),
@@ -246,6 +262,7 @@ export function normalizeBackup(raw: unknown): BackupData {
     bodyweights,
     settings,
     repTargets,
+    restTargets,
     localData,
   };
 }

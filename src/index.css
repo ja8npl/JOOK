@@ -420,6 +420,19 @@ input[type='range'].rep-slider { -webkit-appearance: none; appearance: none; wid
 .rep-slider::-moz-range-track { height: 6px; border-radius: 3px; background: var(--ring-track); box-shadow: inset 0 1px 2px rgba(0,0,0,.45); }
 .rep-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--accent-primary); border: 2px solid var(--bg-surface); box-shadow: var(--neo-knob); }
 .rep-slider:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 3px; }
+/* Pausen-Leiste der Session — dockt über dem Footer („Now-Playing"-Platz), Wall-Clock-basiert:
+   jede Tick-Rechnung aus Date.now() minus Deadline, nie Interval-Drift (iOS-Hintergrund-fest). */
+.rest-bar { position: relative; overflow: hidden; flex-shrink: 0; margin: 0 16px 12px; padding: 12px 14px 15px; background: var(--bg-elevated); border: 1px solid var(--border-highlight); border-radius: var(--radius-md); box-shadow: var(--neo-float), inset 0 1px 0 rgba(255,255,255,.09); }
+.rest-bar.is-finished { background: color-mix(in srgb, var(--accent-primary) 14%, var(--bg-elevated)); border-color: var(--border-accent); }
+.rest-bar-main { display: flex; align-items: center; gap: 12px; }
+.rest-bar-time { flex-shrink: 0; min-width: 76px; color: var(--text-primary); font-family: var(--font-display); font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: var(--tracking-display); line-height: 1; }
+.rest-bar.is-finished .rest-bar-time { color: var(--accent-text); }
+.rest-bar-copy { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.rest-bar-label { overflow: hidden; color: var(--text-secondary); font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.rest-bar-actions { display: flex; flex-shrink: 0; gap: 6px; }
+.rest-bar-chip { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 40px; padding: 0 10px; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); box-shadow: var(--neo-pressed); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rest-bar-chip.is-skip { min-width: 40px; padding: 0; color: var(--text-tertiary); }
+.rest-bar-line { position: absolute; right: 0; bottom: 0; left: 0; height: 3px; background: var(--accent-primary); transform-origin: left; transition: transform 250ms linear; }
 /* Übungskarte — Squircle-Well + randlose Ghost-Actions */
 .machine-card { border-radius: var(--radius-card); }
 .machine-card-action { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px; color: var(--text-tertiary); background: transparent; border: 0; box-shadow: none; border-radius: 50%; cursor: pointer; transition: background 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out); }

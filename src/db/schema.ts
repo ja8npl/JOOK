@@ -132,6 +132,13 @@ export interface RepTarget {
   updatedAt: number;
 }
 
+/** Pausenzeit-Override pro Übung in Sekunden (Dexie v8, key = machineId). */
+export interface RestTarget {
+  machineId: string;
+  seconds: number;
+  updatedAt: number;
+}
+
 /** Körpergewicht-Messung (Dexie v5). */
 export interface BodyWeight {
   /** Unix-Timestamp der Messung (Date.now()). */

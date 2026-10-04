@@ -209,3 +209,22 @@ describe('Rep-Ziel im Backup', () => {
     expect(result.settings[0].repZielMin).toBeUndefined();
   });
 });
+
+describe('Pausenzeit-Overrides im Backup', () => {
+  it('übernimmt restTargets, kaputte Zeilen werden übersprungen', () => {
+    const result = normalizeBackup({
+      ...validV2Backup,
+      restTargets: [
+        { machineId: 'seitheben-kabel', seconds: 120, updatedAt: 5 },
+        { machineId: '', seconds: 90, updatedAt: 5 },
+        { machineId: 'kaputt', seconds: 2, updatedAt: 5 },
+      ],
+    });
+    expect(result.restTargets).toEqual([{ machineId: 'seitheben-kabel', seconds: 120, updatedAt: 5 }]);
+  });
+
+  it('alte Backups ohne restTargets → leere Liste', () => {
+    const result = normalizeBackup(validV2Backup);
+    expect(result.restTargets).toEqual([]);
+  });
+});
