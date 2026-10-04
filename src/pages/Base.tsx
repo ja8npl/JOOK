@@ -407,9 +407,32 @@ function ToggleRow({ icon, title, description, value, onChange, reduced }: {
 /* ════════════════════════ Sheet: Darstellung & Backup ════════════════════════ */
 
 function MoreSettingsSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const prefs = useBasePrefs();
+  const reduced = useReducedMotion();
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} eyebrow="Einstellungen" title="Darstellung & Backup">
       <div style={{ display: 'grid', gap: '22px' }}>
+        {/* Körnung an den Kanten */}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={prefs.grainEdges}
+          onClick={() => prefs.setGrainEdge(!prefs.grainEdges)}
+          className="warmup-toggle"
+        >
+          <span className="warmup-toggle-copy">
+            <span className="warmup-toggle-title">Körnung an den Kanten</span>
+            <span className="warmup-toggle-sub">Feines Dither in den Auflöse-Zonen des Trainings-Sheets.</span>
+          </span>
+          <span className={`warmup-switch${prefs.grainEdges ? ' is-on' : ''}`} aria-hidden="true">
+            <motion.span
+              animate={{ x: prefs.grainEdges ? 20 : 0 }}
+              transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 32 }}
+              className="warmup-switch-knob"
+            />
+          </span>
+        </button>
+
         {/* Rep-Ziel — globaler Standard */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>

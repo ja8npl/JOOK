@@ -17,6 +17,11 @@ const REST_KEY = 'gymlog.restDuration';
 const RIR_KEY = 'gymlog.rirDefault';
 const SOUND_KEY = 'gymlog.timerSound';
 const VIBRATION_KEY = 'gymlog.timerVibration';
+const GRAIN_KEY = 'gymlog.grainEdges';
+
+/** Event-Name: wird gefeuert, wenn ein Darstellungs-Präferenz sich ändert —
+ *  laufende Overlays (z. B. das Trainings-Sheet) können live reagieren. */
+export const PREFS_EVENT = 'jook:prefs';
 
 /** Liest die Timer-Feedback-Schalter zum Ablaufzeitpunkt (RestTimer fragt zur Laufzeit ab). */
 export function readTimerFeedback(): { sound: boolean; vibration: boolean } {
@@ -56,6 +61,11 @@ export function readRirDefault(): RirDefaultPref {
   return 'none';
 }
 
+/** Liest die Körnungs-Präferenz für die Blenden-Kanten des Trainings-Sheets (Default: an). */
+export function readGrainEdges(): boolean {
+  return readBool(GRAIN_KEY, true);
+}
+
 export interface BasePrefs {
   restDuration: RestDuration;
   setRestDuration: (value: RestDuration) => void;
@@ -65,6 +75,8 @@ export interface BasePrefs {
   setTimerSound: (value: boolean) => void;
   timerVibration: boolean;
   setTimerVibration: (value: boolean) => void;
+  grainEdges: boolean;
+  setGrainEdge: (value: boolean) => void;
 }
 
 /** App-Präferenzen des Base-Tabs. Änderungen persistieren sofort. */
@@ -73,18 +85,24 @@ export function useBasePrefs(): BasePrefs {
   const [rirDefault, setRirDefaultState] = useState<RirDefaultPref>(readRirDefault);
   const [timerSound, setTimerSoundState] = useState<boolean>(() => readBool(SOUND_KEY, true));
   const [timerVibration, setTimerVibrationState] = useState<boolean>(() => readBool(VIBRATION_KEY, true));
+  const [grainEdges, setGrainEdgeState] = useState<boolean>(() => readBool(GRAIN_KEY, true));
 
   useEffect(() => { writeValue(REST_KEY, String(restDuration)); }, [restDuration]);
   useEffect(() => { writeValue(RIR_KEY, rirDefault === 'none' ? 'none' : String(rirDefault)); }, [rirDefault]);
   useEffect(() => { writeValue(SOUND_KEY, timerSound ? '1' : '0'); }, [timerSound]);
   useEffect(() => { writeValue(VIBRATION_KEY, timerVibration ? '1' : '0'); }, [timerVibration]);
+  useEffect(() => { writeValue(GRAIN_KEY, grainEdges ? '1' : '0'); }, [grainEdges]);
 
   const setRestDuration = useCallback((value: RestDuration) => setRestDurationState(value), []);
   const setRirDefault = useCallback((value: RirDefaultPref) => setRirDefaultState(value), []);
   const setTimerSound = useCallback((value: boolean) => setTimerSoundState(value), []);
   const setTimerVibration = useCallback((value: boolean) => setTimerVibrationState(value), []);
+  const setGrainEdge = useCallback((value: boolean) => {
+    setGrainEdgeState(value);
+    try { window.dispatchEvent(new Event(PREFS_EVENT)); } catch { /* egal */ }
+  }, []);
 
-  return { restDuration, setRestDuration, rirDefault, setRirDefault, timerSound, setTimerSound, timerVibration, setTimerVibration };
+  return { restDuration, setRestDuration, rirDefault, setRirDefault, timerSound, setTimerSound, timerVibration, setTimerVibration, grainEdges, setGrainEdge };
 }
 
 /** Konvertiert die Präferenz in den RirValue eines neuen Satzes ('none' → undefined). */
