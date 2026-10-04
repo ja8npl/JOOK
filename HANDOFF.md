@@ -12,7 +12,7 @@
 - Alles deployed (Commits bis `1a12f0f`), 151/151 Tests, Build + Lint grün.
 - Skill-Setup (04.10.): aktive Skills in `C:\JOOK\.agents\skills`, alle übrigen im Pool `C:\JOOK\_skills-pool` (nichts gelöscht). AGENTS.md im Workspace-Root ist nur noch ein Verweis.
 - **UI-Selbstverifikation eingerichtet** (04.10.): `python _local/ui_verify.py --screens <...>` (Python-Playwright, headless Chromium) liefert geänderte Screens in 393×852 @3× in allen 4 Themes + Layout-/Crash-Checks — der zuverlässige Weg (das eingebaute Preview-Tool war bei Screenshots flaky). Regel steht in AGENTS.md.
-- **Körnung an den Auflösungs-Kanten** (04.10., überarbeitet): Trainings-Sheet löst Content oben/unten über **Material-Röcke** auf (Header/Footer mit Gradient deckend→transparent + maskiertem Backdrop-Blur + Körnung an der Naht) — kein Mask-Slicing mehr (halbe Zeilen lasen sich wie ein Render-Bug). Grain-Kachel rendert nativ in 3× (feines Korn, opacity .2). Schalter in Base → „Darstellung & Backup" → „Körnung an den Kanten" (Default an, Live-Update per `jook:prefs`-Event; schaltet NUR das Korn, Blur/Dissolve bleibt), Reduced Motion: statisch. Deploy `6ccebfd`.
+- **Weiche Kanten = progressiver Blur** (04.10., überarbeitet nach Nutzer-Feedback): Trainings-Sheet löst Content an Ober-/Unterkante über **6 gestapelte 8px-Backdrop-Blur-Streifen mit steigender Stärke (30→2px)** auf — Depth-of-Field ohne Farb-/Alpha-Mixing (alle früheren Varianten — Mask-Fade, getönte Skirts, feTurbulence-Korn — erzeugten ein sichtbares Schmutz-Band über den soliden Karten). Schalter in Base → „Darstellung & Backup" → „Weiche Kanten" (Default an, Live-Update per `jook:prefs`-Event; Storage-Key `gymlog.softEdges`). Deploy `d1cc38b`.
 
 ## Offene Probleme
 
