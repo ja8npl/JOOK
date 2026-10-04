@@ -59,7 +59,7 @@ export function WorkoutSessionModal() {
   const [discardFacts, setDiscardFacts] = useState<{ seconds: number; exercises: number; completed: number; planned: number } | null>(null);
   /* Rep-Ziel-Editor: Beim Öffnen eingefroren (machineId, Name, aktueller Wert), damit das
      Sheet nicht springt, während Live-Queries nachladen. */
-  const [repTargetFor, setRepTargetFor] = useState<{ machineId: string; name: string; initial: RepTargetRange; restSeconds: number } | null>(null);
+  const [repTargetFor, setRepTargetFor] = useState<{ machineId: string; name: string; initial: RepTargetRange; restSeconds: number; globalRestSeconds: number } | null>(null);
   const globalRepTarget = useGlobalRepTarget();
   const repOverrideActive = useHasExerciseRepTarget(repTargetFor?.machineId ?? '');
   const restOverrideActive = useHasExerciseRestTarget(repTargetFor?.machineId ?? '');
@@ -67,7 +67,6 @@ export function WorkoutSessionModal() {
   /* Pausen-Timer: Wall-Clock-Deadline (Date.now-Basis) statt Zähler — läuft damit
      korrekt weiter, wenn iOS die App im Hintergrund einschläft (Backlog #2). */
   const [rest, setRest] = useState<{ machineKey: string; name: string; duration: number; deadline: number } | null>(null);
-  const [globalRestSeconds] = useState(readRestDuration);
   const requestDiscard = () => {
     if (!activeSession) return;
     const counts = sessionSetCounts(activeSession.exercises);
@@ -232,10 +231,10 @@ export function WorkoutSessionModal() {
                     data-exercise-key={item.exercise.id}
                     className={`session-exercise-slot${draggingExerciseId === item.exercise.id ? ' is-dragging' : ''}${dropIndex === index ? ' is-drop-target' : ''}`}
                   >
-                    <ExerciseCard exerciseId={item.exercise.id} item={item} progress={previousFor(item.exercise.id)} reduced={reduced} onRemove={() => removeExercise(item.exercise.id)} onChange={(next) => updateExercise(item.exercise.id, () => next)} globalRestSeconds={globalRestSeconds}
+                    <ExerciseCard exerciseId={item.exercise.id} item={item} progress={previousFor(item.exercise.id)} reduced={reduced} onRemove={() => removeExercise(item.exercise.id)} onChange={(next) => updateExercise(item.exercise.id, () => next)}
                       onOpenWarmup={() => setWarmupTargetId(item.exercise.id)}
                       onOpenHistory={() => { setHistoryTargetKey(warmupExerciseKey(item.exercise)); setHistoryTargetName(item.exercise.name); }}
-                      onOpenRepTarget={(range, restSeconds) => setRepTargetFor({ machineId: warmupExerciseKey(item.exercise), name: item.exercise.name, initial: range, restSeconds })}
+                      onOpenRepTarget={(range, restSeconds) => setRepTargetFor({ machineId: warmupExerciseKey(item.exercise), name: item.exercise.name, initial: range, restSeconds, globalRestSeconds: readRestDuration() })}
                       onRestStart={(seconds) => setRest({ machineKey: warmupExerciseKey(item.exercise), name: item.exercise.name, duration: seconds, deadline: Date.now() + seconds * 1000 })}
                       onDragStart={startExerciseDrag(item.exercise.id)}
                     />
@@ -333,9 +332,9 @@ export function WorkoutSessionModal() {
       mode="exercise"
       exerciseName={repTargetFor?.name}
       initial={repTargetFor?.initial ?? DEFAULT_REP_TARGET}
-      initialRest={repTargetFor?.restSeconds ?? resolveRestSeconds(undefined, globalRestSeconds)}
+      initialRest={repTargetFor?.restSeconds ?? resolveRestSeconds(undefined, readRestDuration())}
       globalTarget={globalRepTarget}
-      globalRestSeconds={globalRestSeconds}
+      globalRestSeconds={repTargetFor?.globalRestSeconds}
       hasOverride={repTargetOverrideActive}
       onSave={async (range, restSeconds) => {
         const machineId = repTargetFor?.machineId ?? '';
@@ -378,7 +377,7 @@ function ExercisePicker({ query, setQuery, suggestions, onSelect }: { query: str
 /** Draft-Key der Zahlen-Inputs eines Satzes (Warm-up- und Arbeitssätze gleichermaßen). */
 const inputDraftKey = (field: 'gewicht' | 'wiederholungen', setId: string) => `${field}-${setId}`;
 
-function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange, onOpenWarmup, onOpenHistory, onOpenRepTarget, onRestStart, onDragStart, globalRestSeconds }: { exerciseId: string; item: SessionExercise; progress: { current?: import('../db/schema').ProgressHistory; previous?: import('../db/schema').ProgressHistory }; reduced: boolean; onRemove: () => void; onChange: (item: SessionExercise) => void; onOpenWarmup: () => void; onOpenHistory: () => void; onOpenRepTarget: (range: RepTargetRange, restSeconds: number) => void; onRestStart: (seconds: number) => void; onDragStart: (event: React.PointerEvent) => void; globalRestSeconds: number }) {
+function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange, onOpenWarmup, onOpenHistory, onOpenRepTarget, onRestStart, onDragStart }: { exerciseId: string; item: SessionExercise; progress: { current?: import('../db/schema').ProgressHistory; previous?: import('../db/schema').ProgressHistory }; reduced: boolean; onRemove: () => void; onChange: (item: SessionExercise) => void; onOpenWarmup: () => void; onOpenHistory: () => void; onOpenRepTarget: (range: RepTargetRange, restSeconds: number) => void; onRestStart: (seconds: number) => void; onDragStart: (event: React.PointerEvent) => void }) {
   /** Inkrement-Key für den Häkchen-Pop: zählt jeden Abhak-Vorgang, damit das Keyframe auch bei erneutem Abhaken derselben Zeile neu feuert. */
   const [checkPopKey, setCheckPopKey] = useState(0);
   /** Tipp-Zwischenstände der Zahlen-Inputs („0.“, „12,“, „0“) — pro Feld+Satz-ID, damit 0 nur als Placeholder wirkt. */
@@ -401,9 +400,9 @@ function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange,
   const globalRepTargetForCard = useGlobalRepTarget();
   const planRepTarget = item.exercise.wiederholungen ? { min: item.exercise.wiederholungen, max: item.exercise.wiederholungen } : undefined;
   const repTarget = ownRepTarget ?? planRepTarget ?? globalRepTargetForCard;
-  /* Effektive Pausenzeit: eigener Override → globale Standard-Pause (Base) → 90 s. */
+  /* Effektive Pausenzeit: eigener Override → globale Standard-Pause (Base) → 90 s.
+     Frisch zum Zeitpunkt des Abhakens gelesen — Base-Änderungen gelten sofort. */
   const restOverride = useExerciseRestTarget(warmupExerciseKey(item.exercise));
-  const restSeconds = resolveRestSeconds(restOverride, globalRestSeconds);
   const isWarmupOnly = warmupSets.length > 0 && workSets.length === 0;
   const renderSet = (set: import('../db/schema').SessionSet, isWarmup: boolean) => (
     <div className={`session-set-row${set.completed ? ' is-complete' : ''}${isWarmup ? ' is-warmup' : ''}`} key={set.id}>
@@ -467,7 +466,7 @@ function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange,
       />
       <RirPicker value={set.rir} setLabel={`Satz ${set.setNumber}`} onChange={(rir) => onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { rir }) : candidate) })} />
       <button className="session-set-remove" type="button" aria-label={`Satz ${set.setNumber} löschen`} onClick={() => onChange(withoutSessionSet(item, set.id))}><X size={14} /></button>
-      <button className="set-check" type="button" aria-label={`Satz ${set.setNumber} ${set.completed ? 'offen' : 'abhaken'}`} aria-pressed={set.completed} onClick={() => { setCheckPopKey((key) => key + 1); if (!set.completed) onRestStart(restSeconds); onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { completed: !candidate.completed, timestamp: Date.now() }) : candidate) }); }}><Check size={16} key={set.completed ? `done-${checkPopKey}` : 'open'} /></button>
+      <button className="set-check" type="button" aria-label={`Satz ${set.setNumber} ${set.completed ? 'offen' : 'abhaken'}`} aria-pressed={set.completed} onClick={() => { setCheckPopKey((key) => key + 1); if (!set.completed) onRestStart(resolveRestSeconds(restOverride, readRestDuration())); onChange({ ...item, sets: item.sets.map((candidate) => candidate.id === set.id ? updateSessionSet(candidate, { completed: !candidate.completed, timestamp: Date.now() }) : candidate) }); }}><Check size={16} key={set.completed ? `done-${checkPopKey}` : 'open'} /></button>
     </div>
   );
   return <motion.article ref={cardRef} className="workout-exercise-card glass-panel" initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -8 }} transition={reduced ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }}>
@@ -475,7 +474,7 @@ function ExerciseCard({ exerciseId, item, progress, reduced, onRemove, onChange,
       <button className="session-drag-handle" type="button" aria-label={`${item.exercise.name} verschieben`} onPointerDown={onDragStart}><GripVertical size={15} /></button>
       <div><span className="eyebrow">{item.exercise.target ?? 'Exercise'}</span><h2>{item.exercise.name}</h2></div>
       <div className="exercise-card-actions">
-        <button className={`icon-button subtle exercise-action-target${ownRepTarget || restOverride !== undefined ? ' is-active' : ''}`} type="button" aria-label={`Rep-Ziel & Pause für ${item.exercise.name} ${ownRepTarget || restOverride !== undefined ? 'ändern (eigene Werte aktiv)' : 'festlegen'}`} onClick={() => onOpenRepTarget(repTarget ?? DEFAULT_REP_TARGET, restSeconds)}><Target size={16} /></button>
+        <button className={`icon-button subtle exercise-action-target${ownRepTarget || restOverride !== undefined ? ' is-active' : ''}`} type="button" aria-label={`Rep-Ziel & Pause für ${item.exercise.name} ${ownRepTarget || restOverride !== undefined ? 'ändern (eigene Werte aktiv)' : 'festlegen'}`} onClick={() => onOpenRepTarget(repTarget ?? DEFAULT_REP_TARGET, resolveRestSeconds(restOverride, readRestDuration()))}><Target size={16} /></button>
         <button className={`icon-button subtle exercise-action-warmup${warmupConfig || warmupSets.length > 0 ? ' is-active' : ''}`} type="button" aria-label={`Warm-up für ${item.exercise.name} ${warmupConfig ? 'ändern' : 'einrichten'}`} onClick={onOpenWarmup}><Flame size={16} /></button>
         <button className="icon-button subtle" type="button" aria-label={`Verlauf von ${item.exercise.name} anzeigen`} onClick={onOpenHistory}><History size={16} /></button>
         <button className="icon-button subtle" type="button" aria-label={`${item.exercise.name} entfernen`} onClick={onRemove}><Trash2 size={16} /></button>
