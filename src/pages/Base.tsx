@@ -412,21 +412,21 @@ function MoreSettingsSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} eyebrow="Einstellungen" title="Darstellung & Backup">
       <div style={{ display: 'grid', gap: '22px' }}>
-        {/* Körnung an den Kanten */}
+        {/* Weiche Kanten (progressiver Blur) */}
         <button
           type="button"
           role="switch"
-          aria-checked={prefs.grainEdges}
-          onClick={() => prefs.setGrainEdge(!prefs.grainEdges)}
+          aria-checked={prefs.softEdges}
+          onClick={() => prefs.setSoftEdge(!prefs.softEdges)}
           className="warmup-toggle"
         >
           <span className="warmup-toggle-copy">
-            <span className="warmup-toggle-title">Körnung an den Kanten</span>
-            <span className="warmup-toggle-sub">Feines Dither in den Auflöse-Zonen des Trainings-Sheets.</span>
+            <span className="warmup-toggle-title">Weiche Kanten</span>
+            <span className="warmup-toggle-sub">Content löst sich an den Kanten des Trainings-Sheets in Blur auf.</span>
           </span>
-          <span className={`warmup-switch${prefs.grainEdges ? ' is-on' : ''}`} aria-hidden="true">
+          <span className={`warmup-switch${prefs.softEdges ? ' is-on' : ''}`} aria-hidden="true">
             <motion.span
-              animate={{ x: prefs.grainEdges ? 20 : 0 }}
+              animate={{ x: prefs.softEdges ? 20 : 0 }}
               transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 32 }}
               className="warmup-switch-knob"
             />

@@ -20,7 +20,12 @@ import { RepTargetSheet } from './RepTargetSheet';
 import { RestTimerBar } from './RestTimerBar';
 import { clearExerciseRepTarget, setExerciseRepTarget, useExerciseRepTarget, useGlobalRepTarget, useHasExerciseRepTarget } from '../hooks/useRepTargets';
 import { clearExerciseRestTarget, setExerciseRestTarget, useExerciseRestTarget, useHasExerciseRestTarget } from '../hooks/useRestTargets';
-import { readRestDuration, readGrainEdges, PREFS_EVENT } from '../hooks/useBasePrefs';
+import { readRestDuration, readSoftEdges, PREFS_EVENT } from '../hooks/useBasePrefs';
+
+/* Progressiver Blur an den Scroll-Kanten: Streifen von der Kante nach innen mit
+   abnehmender Blur-Stärke — Content "schmilzt" weich auf, ohne Farb-/Alpha-Tricks. */
+const BLUR_LAYERS = [30, 22, 15, 9, 5, 2];
+const BLUR_LAYER_H = 8;
 import { formatRepRange, type RepTargetRange } from '../lib/progression';
 import { resolveRestSeconds } from '../lib/rest';
 import { DEFAULT_REP_TARGET } from '../db/schema';
@@ -67,10 +72,10 @@ export function WorkoutSessionModal() {
   /* Pausen-Timer: Wall-Clock-Deadline (Date.now-Basis) statt Zähler — läuft damit
      korrekt weiter, wenn iOS die App im Hintergrund einschläft (Backlog #2). */
   const [rest, setRest] = useState<{ machineKey: string; name: string; duration: number; deadline: number } | null>(null);
-  /* Körnung an den Material-Kanten — Schalter in Base; Live-Update über das Prefs-Event. */
-  const [grainEdges, setGrainEdges] = useState(readGrainEdges);
+  /* Weiche Kanten (progressiver Blur) — Schalter in Base; Live-Update über das Prefs-Event. */
+  const [softEdges, setSoftEdges] = useState(readSoftEdges);
   useEffect(() => {
-    const sync = () => setGrainEdges(readGrainEdges());
+    const sync = () => setSoftEdges(readSoftEdges());
     window.addEventListener(PREFS_EVENT, sync);
     window.addEventListener('storage', sync);
     return () => {
@@ -211,7 +216,7 @@ export function WorkoutSessionModal() {
   const session = activeSession;
   const renderSession = (
     <motion.div className="session-shell" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <motion.section ref={sessionSheetRef} tabIndex={-1} className={`session-sheet${grainEdges ? ' grain-edges' : ''}`} style={{ outline: 'none' }} initial={reduced ? false : { y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 360, damping: 34 }} drag={reduced ? false : 'y'} dragListener={false} dragControls={dragControls} dragConstraints={{ top: 0, bottom: 0 }} dragElastic={{ top: 0, bottom: 0.55 }} onDragEnd={(_, info) => { if (info.offset.y > 110 || info.velocity.y > 550) requestDiscard(); }} aria-label="Aktive Trainingseinheit">
+      <motion.section ref={sessionSheetRef} tabIndex={-1} className={`session-sheet${softEdges ? ' soft-edges' : ''}`} style={{ outline: 'none' }} initial={reduced ? false : { y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 360, damping: 34 }} drag={reduced ? false : 'y'} dragListener={false} dragControls={dragControls} dragConstraints={{ top: 0, bottom: 0 }} dragElastic={{ top: 0, bottom: 0.55 }} onDragEnd={(_, info) => { if (info.offset.y > 110 || info.velocity.y > 550) requestDiscard(); }} aria-label="Aktive Trainingseinheit">
         {/* Griffleiste als Ziehl-Fläche — gleiche Physik wie im BottomSheet (110px / 550px/s) */}
         <div className="sheet-handle-zone" onPointerDown={(event) => dragControls.start(event)} aria-hidden="true"><div className="sheet-handle" /></div>
         {session && (<>
@@ -224,10 +229,10 @@ export function WorkoutSessionModal() {
             <button className="icon-button" type="button" onClick={requestDiscard} aria-label="Training verwerfen"><X size={20} /></button>
           </header>
 
-          {/* Auflösung über Material-Kanten: Content gleitet unter den Gr skirts von
-              Header/Footer hindurch (deckend → transparent, mit Blur + Körnung an der
-              Naht — Schalter in Base). Kein Mask-Slicing mehr. */}
-          <div className="session-content">
+          {/* Auflösung an den Kanten: progressiver Blur — gestapelte Streifen mit steigender
+              Blur-Stärke; Content schmilzt an der Kante in Weichzeichnung auf. Schalter in Base. */}
+          <div className="session-content-frame">
+            <div className="session-content">
             {session.exercises.length === 0 ? (
               <div className="session-empty glass-panel"><Dumbbell size={25} /><h2>Dein Training wartet.</h2><p>Füge deine erste Übung hinzu und logge jeden Satz live.</p></div>
             ) : (
@@ -258,6 +263,21 @@ export function WorkoutSessionModal() {
             )}
             <button className="add-exercise-button" type="button" onClick={() => setShowExercisePicker((value) => !value)}><Plus size={17} /> Übung hinzufügen <ChevronDown size={15} className={showExercisePicker ? 'rotate-icon' : ''} /></button>
           <AnimatePresence>{showExercisePicker && <ExercisePicker query={query} setQuery={setQuery} suggestions={suggestions} onSelect={async (exercise) => { await addExercise(exercise); setQuery(''); setShowExercisePicker(false); }} />}</AnimatePresence>
+          </div>
+          {softEdges && (
+            <>
+              <div className="session-blur top" aria-hidden="true">
+                {BLUR_LAYERS.map((blur, index) => (
+                  <i key={index} style={{ top: index * BLUR_LAYER_H, height: BLUR_LAYER_H, backdropFilter: `blur(${blur}px)`, WebkitBackdropFilter: `blur(${blur}px)` }} />
+                ))}
+              </div>
+              <div className="session-blur bottom" aria-hidden="true">
+                {BLUR_LAYERS.map((blur, index) => (
+                  <i key={index} style={{ bottom: index * BLUR_LAYER_H, height: BLUR_LAYER_H, backdropFilter: `blur(${blur}px)`, WebkitBackdropFilter: `blur(${blur}px)` }} />
+                ))}
+              </div>
+            </>
+          )}
           </div>
 
           {/* Pausen-Leiste: dockt über dem Footer, startet automatisch beim Abhaken. */}
