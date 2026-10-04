@@ -77,6 +77,9 @@ Kein Figma-, Stitch- oder Playwright-MCP verbunden. Wird einer davon später hin
 ## Backend
 `api/parse-plan.ts` (OpenRouter, Vercel-Limit 60 s): Modellketten mit Timeout pro Modell. Env-Variable heißt `OPENROUTER_API_KEY` – nur den Namen erwähnen, nie den Wert ausgeben oder loggen.
 
+## UI-Selbstprüfung (nach jeder UI-Änderung, vor der Fertigmeldung)
+Geänderte Screens mit `python _local/ui_verify.py --screens <home|session|base|progress|warmup>[,...] [--scroll]` selbst ansehen: 393×852 @3× (Touch) in allen 4 Themes, Screenshots + Check auf Crash, horizontale Überläufe und Konsolen-Fehler in `_local/screenshots/`. Nur die geänderten Screens prüfen, nicht alle. Dev-Server: `npx vite --port 5199` aus dem Repo-Root (Hintergrund). Schlägt Playwright fehl: DOM-Snapshot statt Screenshot. Nicht prüfbar damit: echtes iPhone-Safari, Safe Areas, Dynamic Island, Haptik/Sound — Jan prüft das am Gerät.
+
 ## Abschlussmeldung nach jeder Aufgabe
 1. Was geändert wurde (max. 3 Sätze).
 2. Welche Skills und MCPs wirklich benutzt wurden.

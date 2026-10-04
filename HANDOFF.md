@@ -11,6 +11,7 @@
 - **Layout-Fixes**: Übungskarte in der Session ohne horizontalen Überlauf (34px-Action-Buttons), Warm-up-Zeilen mit fester Input-Breite.
 - Alles deployed (Commits bis `1a12f0f`), 151/151 Tests, Build + Lint grün.
 - Skill-Setup (04.10.): aktive Skills in `C:\JOOK\.agents\skills`, alle übrigen im Pool `C:\JOOK\_skills-pool` (nichts gelöscht). AGENTS.md im Workspace-Root ist nur noch ein Verweis.
+- **UI-Selbstverifikation eingerichtet** (04.10.): `python _local/ui_verify.py --screens <...>` (Python-Playwright, headless Chromium) liefert geänderte Screens in 393×852 @3× in allen 4 Themes + Layout-/Crash-Checks — der zuverlässige Weg (das eingebaute Preview-Tool war bei Screenshots flaky). Regel steht in AGENTS.md.
 - **Körnung an den Auflösungs-Kanten** (04.10.): Trainings-Sheet löst Content oben/unten auf (Mask-Fade + maskierte Blur-Streifen), darin optional feines bewegtes Dither (feTurbulence-Kachel, transform-only Jitter, compositor-animiert). Streifen scroll-gekoppelt sichtbar (element-scoped Threshold-Flip — im Ruhezustand keine Bänder über leerem Padding). Schalter in Base → „Darstellung & Backup" → „Körnung an den Kanten" (Default an, Live-Update per `jook:prefs`-Event; schaltet NUR das Korn, Blur/Dissolve bleibt), Reduced Motion: statisch. Deploy `98cca90`.
 
 ## Offene Probleme
