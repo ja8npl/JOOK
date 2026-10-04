@@ -67,7 +67,7 @@ export function WorkoutSessionModal() {
   /* Pausen-Timer: Wall-Clock-Deadline (Date.now-Basis) statt Zähler — läuft damit
      korrekt weiter, wenn iOS die App im Hintergrund einschläft (Backlog #2). */
   const [rest, setRest] = useState<{ machineKey: string; name: string; duration: number; deadline: number } | null>(null);
-  /* Körnung an den Auflösungs-Kanten — Schalter in Base; Live-Update über das Prefs-Event. */
+  /* Körnung an den Material-Kanten — Schalter in Base; Live-Update über das Prefs-Event. */
   const [grainEdges, setGrainEdges] = useState(readGrainEdges);
   useEffect(() => {
     const sync = () => setGrainEdges(readGrainEdges());
@@ -78,23 +78,6 @@ export function WorkoutSessionModal() {
       window.removeEventListener('storage', sync);
     };
   }, []);
-  /* Kanten-Streifen nur sichtbar, wenn Content durch die jeweilige Kante läuft —
-     element-scoped Scroll-Handler mit Threshold-Flip (kein window-Listener, kein Frame-Work). */
-  const [edgeVis, setEdgeVis] = useState({ top: false, bottom: true });
-  const syncEdges = (el: HTMLElement) => {
-    const top = el.scrollTop > 8;
-    const bottom = el.scrollTop < el.scrollHeight - el.clientHeight - 8;
-    setEdgeVis((current) => (current.top === top && current.bottom === bottom ? current : { top, bottom }));
-  };
-  useEffect(() => {
-    if (!activeSession) return;
-    // Messung nach Layout (rAF), nicht synchron im Effekt
-    const raf = requestAnimationFrame(() => {
-      const content = document.querySelector('.session-content');
-      if (content) syncEdges(content as HTMLElement);
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [activeSession]);
   const requestDiscard = () => {
     if (!activeSession) return;
     const counts = sessionSetCounts(activeSession.exercises);
@@ -241,10 +224,10 @@ export function WorkoutSessionModal() {
             <button className="icon-button" type="button" onClick={requestDiscard} aria-label="Training verwerfen"><X size={20} /></button>
           </header>
 
-          {/* Auflösungs-Rahmen: Content löst sich an Ober-/Unterkante auf (Mask-Fade + Blur),
-              die Kanten-Streifen tragen optional die bewegte Körnung (Schalter in Base). */}
-          <div className="session-content-frame">
-            <div className="session-content" onScroll={(event) => syncEdges(event.currentTarget)}>
+          {/* Auflösung über Material-Kanten: Content gleitet unter den Gr skirts von
+              Header/Footer hindurch (deckend → transparent, mit Blur + Körnung an der
+              Naht — Schalter in Base). Kein Mask-Slicing mehr. */}
+          <div className="session-content">
             {session.exercises.length === 0 ? (
               <div className="session-empty glass-panel"><Dumbbell size={25} /><h2>Dein Training wartet.</h2><p>Füge deine erste Übung hinzu und logge jeden Satz live.</p></div>
             ) : (
@@ -275,10 +258,6 @@ export function WorkoutSessionModal() {
             )}
             <button className="add-exercise-button" type="button" onClick={() => setShowExercisePicker((value) => !value)}><Plus size={17} /> Übung hinzufügen <ChevronDown size={15} className={showExercisePicker ? 'rotate-icon' : ''} /></button>
           <AnimatePresence>{showExercisePicker && <ExercisePicker query={query} setQuery={setQuery} suggestions={suggestions} onSelect={async (exercise) => { await addExercise(exercise); setQuery(''); setShowExercisePicker(false); }} />}</AnimatePresence>
-          </div>
-          {/* Auflösungs-Kanten (Blur) immer da; die Körnung schaltet die grain-edges-Klasse. */}
-          <div className={`session-edge session-edge-top${edgeVis.top ? ' is-visible' : ''}`} aria-hidden="true" />
-          <div className={`session-edge session-edge-bottom${edgeVis.bottom ? ' is-visible' : ''}`} aria-hidden="true" />
           </div>
 
           {/* Pausen-Leiste: dockt über dem Footer, startet automatisch beim Abhaken. */}
