@@ -26,7 +26,7 @@ const ARME: Exercise[] = [
 ];
 
 const BRUST: Exercise[] = [
-  { id: 'Smith_Machine_Incline_Bench_Press', name: 'Schrägbank drücken Smith', equipment: 'machine', target: 'chest', saetze: 1, wiederholungen: 8 },
+  { id: 'Smith_Machine_Incline_Bench_Press', name: 'Schrägbank drücken Smith', equipment: 'machine', target: 'chest', saetze: 2, wiederholungen: 8 },
   { id: 'Butterfly', name: 'Brustfliege', equipment: 'machine', target: 'chest', saetze: 2, wiederholungen: 8 },
 ];
 
@@ -34,7 +34,7 @@ const RUECKEN: Exercise[] = [
   { id: 'Wide-Grip_Lat_Pulldown', name: 'Breiter Latzug', equipment: 'cable', target: 'lats', saetze: 2, wiederholungen: 8 },
   { id: 'Straight-Arm_Pulldown', name: 'Straight Arm Pullover Kabel', equipment: 'cable', target: 'lats', saetze: 2, wiederholungen: 8 },
   { id: 'Seated_Cable_Rows', name: 'Breites Rudern Maschine', equipment: 'cable', target: 'middle back', saetze: 2, wiederholungen: 8 },
-  { id: 'Cable_Shrugs', name: 'Shoulder Shrug Low Row', equipment: 'cable', target: 'traps', saetze: 1, wiederholungen: 8 },
+  { id: 'Leverage_High_Row', name: 'High Row Maschine', equipment: 'machine', target: 'middle back', saetze: 2, wiederholungen: 8 },
 ];
 
 /* --- Die drei Pläne: gleiche Übungen, andere Gruppen-Reihenfolge --- */

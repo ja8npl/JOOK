@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useDragControls } from 'framer-motion';
-import { Check, ChevronDown, Clock3, Dumbbell, Flame, GripVertical, History, Plus, Save, Target, Trash2, X } from 'lucide-react';
+import { ArrowUpDown, Check, ChevronDown, Clock3, Dumbbell, Flame, GripVertical, History, MoreHorizontal, Pause, Play, Plus, Save, SlidersHorizontal, Target, Trash2, X } from 'lucide-react';
 import { useWorkoutSession } from '../hooks/useWorkoutSession';
 import { useOverlayFocus } from '../hooks/useOverlayFocus';
-import { DISCARD_MOTIVATION_THRESHOLD, sessionSetCounts, updateSessionSet, withoutSessionSet } from '../hooks/workoutSessionUtils';
+import { DISCARD_MOTIVATION_THRESHOLD, sessionElapsedSeconds, sessionSetCounts, updateSessionSet, withoutSessionSet } from '../hooks/workoutSessionUtils';
 import { inputToNumber, isValidInputValue, numberToInputValue, stripLeadingZeros } from '../lib/numbers';
 import { searchStaticExercises, type StaticExercise } from '../hooks/useExercises';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -17,6 +17,8 @@ import { HistorySheet } from './HistorySheet';
 import { WarmupSheet } from './WarmupSheet';
 import { ConfirmSheet } from './ConfirmSheet';
 import { RepTargetSheet } from './RepTargetSheet';
+import { ReorderExercisesSheet } from './ReorderExercisesSheet';
+import { SessionSettingsSheet } from './SessionSettingsSheet';
 import { RestTimerBar } from './RestTimerBar';
 import { clearExerciseRepTarget, setExerciseRepTarget, useExerciseRepTarget, useGlobalRepTarget, useHasExerciseRepTarget } from '../hooks/useRepTargets';
 import { clearExerciseRestTarget, setExerciseRestTarget, useExerciseRestTarget, useHasExerciseRestTarget } from '../hooks/useRestTargets';
@@ -34,7 +36,7 @@ import { db } from '../db/db';
 import { type Exercise, type SessionExercise } from '../db/schema';
 
 export function WorkoutSessionModal() {
-  const { activeSession, updateSession, addExercise, removeExercise, updateExercise, reorderExercise, clearWarmup, finishSession, discardSession } = useWorkoutSession();
+  const { activeSession, updateSession, addExercise, removeExercise, updateExercise, reorderExercise, pauseSession, resumeSession, clearWarmup, finishSession, discardSession } = useWorkoutSession();
   const reduced = useReducedMotion();
   const progress = useProgressHistory();
   const [seconds, setSeconds] = useState(0);
@@ -74,6 +76,12 @@ export function WorkoutSessionModal() {
   const [rest, setRest] = useState<{ machineKey: string; name: string; duration: number; deadline: number } | null>(null);
   /* Weiche Kanten (progressiver Blur) — Schalter in Base; Live-Update über das Prefs-Event. */
   const [softEdges, setSoftEdges] = useState(readSoftEdges);
+  /* „…“-Menü + davon geöffnete Sheets. Während das Menü offen ist, besitzt das Popover
+     Escape/Außen-Tap — der Session-Escape (Verwerfen-Confirm) ist solange ausgehängt. */
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reorderOpen, setReorderOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const menuWrapRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const sync = () => setSoftEdges(readSoftEdges());
     window.addEventListener(PREFS_EVENT, sync);
@@ -90,8 +98,41 @@ export function WorkoutSessionModal() {
     setDiscardFacts({ seconds, exercises: activeSession.exercises.length, ...counts });
     setDiscardConfirmOpen(true);
   };
-  const sessionSheetRef = useOverlayFocus(Boolean(activeSession) && !discardConfirmOpen, requestDiscard);
+  /* Reihenfolge aus dem Sortier-Sheet übernehmen: Anhand der IDs neu sortieren, dabei
+     die aktuellen Session-Objekte behalten — eingetragene Sätze und Werte bleiben erhalten. */
+  const handleReorderSave = (orderedIds: string[]) => {
+    updateSession((current) => {
+      const byId = new Map(current.exercises.map((item) => [item.exercise.id, item]));
+      const ordered = orderedIds
+        .map((id) => byId.get(id))
+        .filter((item): item is SessionExercise => Boolean(item));
+      const missing = current.exercises.filter((item) => !orderedIds.includes(item.exercise.id));
+      return { ...current, exercises: [...ordered, ...missing] };
+    });
+  };
+  const sessionSheetRef = useOverlayFocus(Boolean(activeSession) && !discardConfirmOpen && !menuOpen, requestDiscard);
   const dragControls = useDragControls();
+
+  /* Popover-Verhalten: Außen-Tap und Escape schließen (die Items liegen im Session-Sheet,
+     Tab bleibt dadurch innerhalb der Falle; Escape greift nur hier, solange offen). */
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onPointerDown = (event: PointerEvent) => {
+      if (menuWrapRef.current && !menuWrapRef.current.contains(event.target as Node)) setMenuOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!activeSession) return undefined;
@@ -100,7 +141,7 @@ export function WorkoutSessionModal() {
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
     document.documentElement.classList.add('overlay-open');
-    const tick = () => setSeconds(Math.max(0, Math.floor((Date.now() - activeSession.startedAt) / 1000)));
+    const tick = () => setSeconds(sessionElapsedSeconds(activeSession.startedAt, activeSession.pausedAt));
     tick();
     const interval = window.setInterval(tick, 1000);
     return () => {
@@ -224,9 +265,34 @@ export function WorkoutSessionModal() {
             <div>
               <span className="eyebrow accent-copy">Live session</span>
               <input className="session-name-input" value={session.name} onChange={(event) => updateSession((current) => ({ ...current, name: event.target.value }))} aria-label="Name der Trainingseinheit" />
-              <div className="session-time"><Clock3 size={15} /> <span>{formatTime(seconds)}</span><span className="session-live-dot" aria-label="Training läuft" /></div>
+              <div className="session-time"><Clock3 size={15} /> <span>{formatTime(seconds)}</span><span className={`session-live-dot${session.pausedAt ? ' is-paused' : ''}`} aria-label={session.pausedAt ? 'Training pausiert' : 'Training läuft'} /></div>
             </div>
-            <button className="icon-button" type="button" onClick={requestDiscard} aria-label="Training verwerfen"><X size={20} /></button>
+            <div className="session-menu-wrap" ref={menuWrapRef}>
+              <button className="icon-button" type="button" aria-haspopup="menu" aria-expanded={menuOpen} aria-label="Trainingsoptionen" onClick={() => setMenuOpen((open) => !open)}><MoreHorizontal size={20} /></button>
+              <AnimatePresence>
+                {menuOpen && (
+                  <motion.div className="session-menu" role="menu" aria-label="Trainingsoptionen" style={{ transformOrigin: 'top right' }} initial={reduced ? false : { opacity: 0, y: -4, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={reduced ? undefined : { opacity: 0, y: -4, scale: 0.96 }} transition={reduced ? { duration: 0 } : { duration: 0.16, ease: [0.22, 1, 0.36, 1] }}>
+                    <button role="menuitem" className="session-menu-item" type="button" onClick={() => { setMenuOpen(false); if (session.pausedAt) resumeSession(); else pauseSession(); }}>
+                      {session.pausedAt ? <Play size={16} /> : <Pause size={16} />}
+                      <span>{session.pausedAt ? 'Training fortsetzen' : 'Training pausieren'}</span>
+                    </button>
+                    <button role="menuitem" className="session-menu-item" type="button" disabled={session.exercises.length === 0} onClick={() => { setMenuOpen(false); setReorderOpen(true); }}>
+                      <ArrowUpDown size={16} />
+                      <span>Übungen neu sortieren</span>
+                    </button>
+                    <button role="menuitem" className="session-menu-item" type="button" onClick={() => { setMenuOpen(false); setSettingsOpen(true); }}>
+                      <SlidersHorizontal size={16} />
+                      <span>Trainingseinstellungen</span>
+                    </button>
+                    <div className="session-menu-divider" role="separator" />
+                    <button role="menuitem" className="session-menu-item is-danger" type="button" onClick={() => { setMenuOpen(false); requestDiscard(); }}>
+                      <Trash2 size={16} />
+                      <span>Training verwerfen</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </header>
 
           {/* Auflösung an den Kanten: progressiver Blur — gestapelte Streifen mit steigender
@@ -379,6 +445,17 @@ export function WorkoutSessionModal() {
         await Promise.all([clearExerciseRepTarget(machineId), clearExerciseRestTarget(machineId)]);
       }}
     />
+
+    {/* Übungen neu sortieren — Reihenfolge wird erst auf „Speichern“ in die Session übernommen. */}
+    <ReorderExercisesSheet
+      isOpen={reorderOpen}
+      onClose={() => setReorderOpen(false)}
+      exercises={session?.exercises ?? []}
+      onSave={handleReorderSave}
+    />
+
+    {/* Trainingseinstellungen — dieselben Standardwerte wie Base, direkt im Training. */}
+    <SessionSettingsSheet isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
     {/* Verwerfen bestätigen — ein laufendes Training geht sonst unwiderruflich verloren.
         ≥ DISCARD_MOTIVATION_THRESHOLD erledigter Arbeitssätze: motivierende Variante mit Ring. */}

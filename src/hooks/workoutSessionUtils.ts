@@ -62,3 +62,9 @@ export function reorderSessionExercises(exercises: SessionExercise[], fromId: st
   next.splice(Math.max(0, Math.min(insertIndex, next.length)), 0, moved);
   return next;
 }
+
+/** Verstrichene Sekunden einer Session. Während der Pause (pausedAt gesetzt) friert die
+ *  Uhr ein; beim Fortsetzen wird startedAt um die Pausendauer verschoben (useWorkoutSession). */
+export function sessionElapsedSeconds(startedAt: number, pausedAt?: number | null, now: number = Date.now()): number {
+  return Math.max(0, Math.floor(((pausedAt ?? now) - startedAt) / 1000));
+}

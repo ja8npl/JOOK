@@ -10,6 +10,8 @@ interface Props {
   title?: string;
   /** Kleine Overline über dem Titel (z. B. „Dein Verlauf"). */
   eyebrow?: string;
+  /** Titel zentriert (z. B. „Übungen neu sortieren") — der Schließen-Button bleibt rechts. */
+  centeredTitle?: boolean;
   children: React.ReactNode;
   /** Hebt das Sheet über die iOS-Tastatur (Visual-Viewport-Offset). */
   avoidKeyboard?: boolean;
@@ -41,7 +43,7 @@ function useKeyboardInset(active: boolean): number {
   return inset;
 }
 
-export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKeyboard = false, backdropDuration = 0.22, backdropBackground }: Props) {
+export function BottomSheet({ isOpen, onClose, title, eyebrow, centeredTitle = false, children, avoidKeyboard = false, backdropDuration = 0.22, backdropBackground }: Props) {
   const reduced  = useReducedMotion();
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
@@ -168,9 +170,10 @@ export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKe
             {/* Header */}
             {title && (
               <div style={{
+                position: 'relative',
                 display: 'flex',
                 alignItems: 'flex-start',
-                justifyContent: 'space-between',
+                justifyContent: centeredTitle ? 'center' : 'space-between',
                 marginBottom: '18px',
               }}>
                 <div style={{ minWidth: 0 }}>
@@ -186,6 +189,7 @@ export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKe
                     color: 'var(--text-primary)',
                     letterSpacing: 'var(--tracking-display)',
                     lineHeight: 1.15,
+                    ...(centeredTitle ? { textAlign: 'center' as const } : {}),
                   }}>
                     {title}
                   </h2>
@@ -207,6 +211,7 @@ export function BottomSheet({ isOpen, onClose, title, eyebrow, children, avoidKe
                     cursor: 'pointer',
                     color: 'var(--text-tertiary)',
                     flexShrink: 0,
+                    ...(centeredTitle ? { position: 'absolute' as const, right: 0, top: '-2px' } : {}),
                   }}
                 >
                   <X size={16} strokeWidth={2.5} />

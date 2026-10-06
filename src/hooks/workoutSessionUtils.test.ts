@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeSessionSetProgress, DISCARD_MOTIVATION_THRESHOLD, withoutSessionSet, reorderSessionExercises } from './workoutSessionUtils';
+import { computeSessionSetProgress, DISCARD_MOTIVATION_THRESHOLD, withoutSessionSet, reorderSessionExercises, sessionElapsedSeconds } from './workoutSessionUtils';
 import { type SessionExercise, type SessionSet } from '../db/schema';
 
 function set(overrides: Partial<SessionSet> = {}): SessionSet {
@@ -125,5 +125,24 @@ describe('reorderSessionExercises', () => {
   it('unbekannte ID → unverändert', () => {
     const reordered = reorderSessionExercises(base(['a', 'b']), 'unknown', 0);
     expect(reordered.map((e) => e.exercise.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('sessionElapsedSeconds', () => {
+  it('zählt von startedAt bis jetzt', () => {
+    expect(sessionElapsedSeconds(1_000, undefined, 61_000)).toBe(60);
+  });
+
+  it('eingefroren, während pausiert (pausedAt gesetzt)', () => {
+    // Auch 5 Minuten später bleibt die Uhr auf dem Pausenzeitpunkt stehen.
+    expect(sessionElapsedSeconds(1_000, 31_000, 331_000)).toBe(30);
+  });
+
+  it('ohne Pause: pausedAt null wirkt wie "jetzt"', () => {
+    expect(sessionElapsedSeconds(1_000, null, 16_000)).toBe(15);
+  });
+
+  it('negativer Verlauf wird auf 0 geklemmt', () => {
+    expect(sessionElapsedSeconds(10_000, undefined, 5_000)).toBe(0);
   });
 });

@@ -12,6 +12,8 @@ import { autoWarmupForNewExercise, withoutWarmupSets } from './warmup';
 export interface ActiveWorkoutSession {
   name: string;
   startedAt: number;
+  /** gesetzter Pausenzeitpunkt (Date.now()): Die Uhr friert ein, bis resumeSession startet. */
+  pausedAt?: number | null;
   exercises: SessionExercise[];
 }
 
@@ -27,6 +29,10 @@ interface WorkoutSessionContextValue {
   updateExercise: (exerciseId: string, updater: (exercise: SessionExercise) => SessionExercise) => void;
   /** Verschiebt eine Übung innerhalb der Session (Drag-Reorder). */
   reorderExercise: (fromId: string, insertIndex: number) => void;
+  /** Friert die Trainings-Uhr ein (Menü „Training pausieren“). */
+  pauseSession: () => void;
+  /** Rechnet die Pausenzeit heraus und läuft weiter. */
+  resumeSession: () => void;
   /** Entfernt alle Warm-up-Sätze der Übung. */
   clearWarmup: (exerciseId: string) => void;
   finishSession: () => Promise<number | null>;
@@ -119,6 +125,19 @@ export function WorkoutSessionProvider({ children }: { children: ReactNode }) {
       : current);
   }, []);
 
+  /* Pause: pausedAt friert die Uhr ein (sessionElapsedSeconds); beim Fortsetzen wird
+     startedAt um die Pausendauer verschoben — ein Feld, kein Zähler-Drift. */
+  const pauseSession = useCallback(() => {
+    setActiveSession((current) => current && !current.pausedAt ? { ...current, pausedAt: Date.now() } : current);
+  }, []);
+
+  const resumeSession = useCallback(() => {
+    setActiveSession((current) => {
+      if (!current?.pausedAt) return current;
+      return { ...current, startedAt: current.startedAt + Math.max(0, Date.now() - current.pausedAt), pausedAt: null };
+    });
+  }, []);
+
   /** Entfernt alle Warm-up-Sätze der Übung (z. B. beim manuellen Zurücksetzen). */
   const clearWarmup = useCallback((exerciseId: string) => {
     updateExercise(exerciseId, withoutWarmupSets);
@@ -153,10 +172,12 @@ export function WorkoutSessionProvider({ children }: { children: ReactNode }) {
     removeExercise,
     updateExercise,
     reorderExercise,
+    pauseSession,
+    resumeSession,
     clearWarmup,
     finishSession,
     discardSession,
-  }), [activeSession, startMenuOpen, openStartMenu, closeStartMenu, startSession, updateSession, addExercise, removeExercise, updateExercise, reorderExercise, clearWarmup, finishSession, discardSession]);
+  }), [activeSession, startMenuOpen, openStartMenu, closeStartMenu, startSession, updateSession, addExercise, removeExercise, updateExercise, reorderExercise, pauseSession, resumeSession, clearWarmup, finishSession, discardSession]);
 
   return <WorkoutSessionContext.Provider value={value}>{children}</WorkoutSessionContext.Provider>;
 }
