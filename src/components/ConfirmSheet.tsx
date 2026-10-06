@@ -183,10 +183,12 @@ function HoldConfirmButton({ label, reduced, onConfirm }: { label: string; reduc
         justifyContent: 'center',
         width: '100%',
         padding: '17px',
-        background: 'var(--bg-input)',
-        boxShadow: 'var(--neo-pressed)',
+        /* Liquid-Glass-Fill: die Danger-Wirkung kommt vom nachlaufenden Fill + Border,
+           die Fläche bleibt Glas statt opakem Inset-Well. */
+        background: 'var(--bg-glass)',
+        boxShadow: 'var(--glass-shadow), var(--glass-edge)',
         border: '1px solid var(--danger-border)',
-        borderRadius: 'var(--radius-input)',
+        borderRadius: 'var(--radius-pill)',
         cursor: 'pointer',
         overflow: 'hidden',
         /* Langdruck-Schutz: iOS würde sonst Text-Selektion/Callout über der Geste öffnen. */
@@ -233,35 +235,37 @@ function HoldConfirmButton({ label, reduced, onConfirm }: { label: string; reduc
   );
 }
 
-/** Tap-Button im bestehenden Press-Idiom: Scale via Motion, Schatten-Wechsel
- *  konvex → pressed über Pointer-Events (physisches Eindrücken). */
+/** Tap-Button im Liquid-Glass-Idiom (quiet = Glas-Pill) bzw. solide Accent-Fläche:
+ *  Scale via Motion, Schatten-Wechsel konvex → pressed nur beim Accent-Button
+ *  (die Glas-Pill feedbackt über Scale + Sheen aus der CSS-Klasse). */
 function TapButton({ variant, onClick, reduced, children }: {
   variant: 'accent' | 'quiet';
   onClick: () => void;
   reduced: boolean;
   children: React.ReactNode;
 }) {
-  const raised = variant === 'accent' ? 'var(--neo-convex)' : 'var(--neo-raised)';
+  const accent = variant === 'accent';
   return (
     <motion.button
       onClick={onClick}
       whileTap={reduced ? undefined : { scale: 0.97 }}
+      className={accent ? undefined : 'glass-pill'}
       style={{
         width: '100%',
         padding: '17px',
-        background: variant === 'accent' ? 'var(--accent-primary)' : 'var(--bg-input)',
-        boxShadow: raised,
-        border: variant === 'accent' ? 'none' : '1px solid var(--border)',
-        borderRadius: 'var(--radius-input)',
-        color: variant === 'accent' ? 'var(--text-on-accent)' : 'var(--text-primary)',
+        background: accent ? 'var(--accent-primary)' : undefined,
+        boxShadow: accent ? 'var(--neo-convex)' : undefined,
+        border: accent ? 'none' : undefined,
+        borderRadius: accent ? 'var(--radius-input)' : undefined,
+        color: accent ? 'var(--text-on-accent)' : 'var(--text-primary)',
         fontSize: '16px',
-        fontWeight: variant === 'accent' ? 700 : 500,
+        fontWeight: accent ? 700 : 500,
         cursor: 'pointer',
         transition: 'box-shadow var(--duration-press) var(--ease-press)',
       }}
-      onPointerDown={(e) => { e.currentTarget.style.boxShadow = 'var(--neo-pressed)'; }}
-      onPointerUp={(e) => { e.currentTarget.style.boxShadow = raised; }}
-      onPointerLeave={(e) => { e.currentTarget.style.boxShadow = raised; }}
+      onPointerDown={accent ? (e) => { e.currentTarget.style.boxShadow = 'var(--neo-pressed)'; } : undefined}
+      onPointerUp={accent ? (e) => { e.currentTarget.style.boxShadow = 'var(--neo-convex)'; } : undefined}
+      onPointerLeave={accent ? (e) => { e.currentTarget.style.boxShadow = 'var(--neo-convex)'; } : undefined}
     >
       {children}
     </motion.button>

@@ -198,19 +198,16 @@ export function BottomSheet({ isOpen, onClose, title, eyebrow, centeredTitle = f
                   onClick={onClose}
                   whileTap={reduced ? undefined : { scale: 0.96 }}
                   aria-label="Schließen"
+                  className="glass-circle"
                   style={{
-                    background: 'var(--bg-input)',
-                    boxShadow: 'var(--neo-pressed)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '50%',
-                    width: '44px',
-                    height: '44px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
                     color: 'var(--text-tertiary)',
                     flexShrink: 0,
+                    width: '44px',
+                    height: '44px',
                     ...(centeredTitle ? { position: 'absolute' as const, right: 0, top: '-2px' } : {}),
                   }}
                 >

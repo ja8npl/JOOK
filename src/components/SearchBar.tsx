@@ -69,9 +69,9 @@ export function SearchBar({
                  den CSS-Transform beim Scale-Tween und würde die Zentrierung killen.
                  (Input 50px − Button 34px) / 2 = 8px */
               top: '8px',
-              background: 'var(--bg-chip-inset)',
-              boxShadow: 'var(--neo-pressed)',
-              border: '1px solid var(--border)',
+              background: 'var(--bg-glass)',
+              boxShadow: 'var(--glass-shadow), var(--glass-edge)',
+              border: '1px solid var(--glass-border)',
               borderRadius: '50%',
               width: '34px',
               height: '34px',

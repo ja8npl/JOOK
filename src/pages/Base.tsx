@@ -180,9 +180,9 @@ export function Base() {
                     whileTap={reduced ? undefined : { scale: 0.95 }}
                     style={{
                       minWidth: '56px', minHeight: '44px', padding: '0 14px',
-                      background: selected ? 'var(--accent-dim)' : 'var(--bg-input)',
-                      boxShadow: selected ? 'var(--neo-pressed)' : 'var(--neo-pill)',
-                      border: `1px solid ${selected ? 'var(--border-accent)' : 'var(--border)'}`,
+                      background: selected ? 'var(--accent-dim)' : 'var(--bg-glass)',
+                      boxShadow: selected ? 'var(--neo-pressed)' : 'var(--glass-shadow), var(--glass-edge)',
+                      border: `1px solid ${selected ? 'var(--border-accent)' : 'var(--glass-border)'}`,
                       borderRadius: 'var(--radius-pill)',
                       color: selected ? 'var(--accent-text)' : 'var(--text-secondary)',
                       fontSize: '13px', fontWeight: selected ? 700 : 500, fontVariantNumeric: 'tabular-nums',
@@ -214,9 +214,9 @@ export function Base() {
                     whileTap={reduced ? undefined : { scale: 0.95 }}
                     style={{
                       minWidth: '44px', minHeight: '44px', padding: '0 12px',
-                      background: selected ? 'var(--accent-dim)' : 'var(--bg-input)',
-                      boxShadow: selected ? 'var(--neo-pressed)' : 'var(--neo-pill)',
-                      border: `1px solid ${selected ? 'var(--border-accent)' : 'var(--border)'}`,
+                      background: selected ? 'var(--accent-dim)' : 'var(--bg-glass)',
+                      boxShadow: selected ? 'var(--neo-pressed)' : 'var(--glass-shadow), var(--glass-edge)',
+                      border: `1px solid ${selected ? 'var(--border-accent)' : 'var(--glass-border)'}`,
                       borderRadius: 'var(--radius-pill)',
                       color: selected ? 'var(--accent-text)' : 'var(--text-secondary)',
                       fontSize: '12px', fontWeight: selected ? 700 : 500,

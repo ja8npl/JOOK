@@ -149,7 +149,7 @@ export function Warmup() {
                   style={{
                     width: '52px',
                     height: '44px',
-                    borderRadius: '22px',
+                    borderRadius: 'var(--radius-pill)',
                     background: showSet3 ? 'var(--accent)' : 'var(--bg-chip-inset)',
                     boxShadow: showSet3 ? 'inset 0 1px 2px rgba(0, 0, 0, 0.2)' : 'var(--neo-pressed)',
                     /* Transparent statt none — verhindert 1px-Layoutshift beim Toggle */

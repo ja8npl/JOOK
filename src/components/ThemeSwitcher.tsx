@@ -20,9 +20,9 @@ export function ThemeSwitcher() {
         display: 'inline-flex',
         gap: '3px',
         padding: '4px',
-        background: 'var(--bg-input)',
-        boxShadow: 'var(--neo-pressed)',
-        border: '1px solid var(--border)',
+        background: 'var(--bg-glass)',
+        boxShadow: 'var(--glass-shadow), var(--glass-edge)',
+        border: '1px solid var(--glass-border)',
         borderRadius: 'var(--radius-pill)',
       }}
     >

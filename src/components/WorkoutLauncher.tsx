@@ -173,7 +173,7 @@ export function WorkoutLauncher() {
                     <button type="button" onClick={() => void chooseTemplate(template)}><strong>{template.name}</strong><small>{template.exercises.length} Übungen · {template.exercises.slice(0, 2).map((exercise) => exercise.name).join(', ')}</small></button>
                     <div style={{ display: 'flex', gap: '6px' }}>
                       {template.builtin !== true && <button className="template-delete" type="button" onClick={() => deleteTemplate(template.id)} aria-label={`${template.name} löschen`}><Trash2 size={15} /></button>}
-                      <button type="button" onClick={() => editTemplate(template)} aria-label={`${template.name} bearbeiten`} style={{ width: '38px', height: '38px', display: 'grid', placeItems: 'center', background: 'var(--bg-input)', border: '1px solid var(--border-subtle)', borderRadius: '11px', boxShadow: 'var(--neo-pressed)', color: 'var(--text-secondary)' }}><Pencil size={14} /></button>
+                      <button type="button" onClick={() => editTemplate(template)} aria-label={`${template.name} bearbeiten`} style={{ width: '38px', height: '38px', display: 'grid', placeItems: 'center', background: 'var(--bg-glass)', border: '1px solid var(--glass-border)', borderRadius: '50%', boxShadow: 'var(--glass-shadow), var(--glass-edge)', color: 'var(--text-secondary)' }}><Pencil size={14} /></button>
                     </div>
                   </div>
                 ))}

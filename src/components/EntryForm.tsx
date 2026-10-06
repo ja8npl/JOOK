@@ -191,8 +191,8 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
                       fontWeight: 700,
                       letterSpacing: '0.06em',
                       background: 'var(--accent-dim)',
-                      padding: '2px 6px',
-                      borderRadius: '6px',
+                      padding: '2px 8px',
+                      borderRadius: 'var(--radius-pill)',
                       border: '1px solid var(--border-accent)',
                     }}>
                       EIGENE
@@ -224,8 +224,8 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
                         fontSize: '10px',
                         color: 'var(--text-tertiary)',
                         background: 'var(--bg-input)',
-                        padding: '2px 6px',
-                        borderRadius: '6px',
+                        padding: '2px 8px',
+                        borderRadius: 'var(--radius-pill)',
                         border: '1px solid var(--border)',
                         letterSpacing: '0.04em',
                       }}>
@@ -299,7 +299,7 @@ export function EntryForm({ initialEntry, defaultName, onSaved }: Props) {
                     cursor: 'pointer',
                     display: 'flex',
                     padding: '6px',
-                    borderRadius: '8px',
+                    borderRadius: '50%',
                   }}
                 >
                   <X size={15} strokeWidth={2.5} />
@@ -502,7 +502,7 @@ const suggestionButtonStyle: React.CSSProperties = {
   padding: '12px 14px',
   background: 'none',
   border: 'none',
-  borderRadius: '10px',
+  borderRadius: 'var(--radius-pill)',
   color: 'var(--text-primary)',
   fontSize: '15px',
   display: 'flex',
