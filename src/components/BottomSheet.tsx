@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { lockOverlay, unlockOverlay } from '../lib/overlayLock';
 
 interface Props {
   isOpen: boolean;
@@ -50,18 +51,12 @@ export function BottomSheet({ isOpen, onClose, title, eyebrow, centeredTitle = f
   const keyboardInset = useKeyboardInset(isOpen && avoidKeyboard);
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.documentElement.classList.add('overlay-open');
-      sheetRef.current?.focus();
-    } else {
-      document.body.style.overflow = '';
-      document.documentElement.classList.remove('overlay-open');
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.documentElement.classList.remove('overlay-open');
-    };
+    if (!isOpen) return undefined;
+    lockOverlay();
+    // preventScroll: ohne die Option scrollt iOS die (Visual-)Viewport-Position auf
+    // das fokussierte Sheet nach — das ganze Fenster rutschte beim Öffnen nach oben.
+    sheetRef.current?.focus({ preventScroll: true });
+    return () => unlockOverlay();
   }, [isOpen]);
 
   useEffect(() => {

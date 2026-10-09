@@ -9,6 +9,7 @@ import { BUILTIN_WORKOUT_TEMPLATES } from '../data/builtinTemplates';
 import { searchStaticExercises, type StaticExercise } from '../hooks/useExercises';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { PlanImportSheet } from './PlanImportSheet';
+import { lockOverlay, unlockOverlay } from '../lib/overlayLock';
 import { type Exercise } from '../db/schema';
 
 export function WorkoutLauncher() {
@@ -27,16 +28,8 @@ export function WorkoutLauncher() {
 
   useEffect(() => {
     if (!startMenuOpen) return undefined;
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    document.documentElement.classList.add('overlay-open');
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousHtmlOverflow;
-      document.documentElement.classList.remove('overlay-open');
-    };
+    lockOverlay();
+    return () => unlockOverlay();
   }, [startMenuOpen]);
 
   const close = () => {

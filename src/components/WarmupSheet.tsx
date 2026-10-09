@@ -107,7 +107,6 @@ function WarmupForm({ exerciseName, currentConfig, onConfirm, onReset, onClose, 
           }}
           placeholder="z. B. 80"
           aria-label="Maximales Gewicht in Kilogramm"
-          autoFocus
           className="warmup-input"
         />
         <span className="warmup-input-unit">kg</span>

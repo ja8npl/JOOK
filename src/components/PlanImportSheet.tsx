@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { matchStaticExercise } from '../hooks/useExercises';
 import { useOverlayFocus } from '../hooks/useOverlayFocus';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { lockOverlay, unlockOverlay } from '../lib/overlayLock';
 import {
   compressImage,
   parsePlan,
@@ -112,16 +113,8 @@ function PlanImportForm({ onRequestClose, onSave }: Omit<PlanImportSheetProps, '
   const listRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    document.documentElement.classList.add('overlay-open');
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousHtmlOverflow;
-      document.documentElement.classList.remove('overlay-open');
-    };
+    lockOverlay();
+    return () => unlockOverlay();
   }, []);
 
   const canSubmit = Boolean(planText.trim()) || Boolean(image);

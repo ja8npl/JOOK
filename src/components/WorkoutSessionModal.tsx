@@ -23,6 +23,7 @@ import { RestTimerBar } from './RestTimerBar';
 import { clearExerciseRepTarget, setExerciseRepTarget, useExerciseRepTarget, useGlobalRepTarget, useHasExerciseRepTarget } from '../hooks/useRepTargets';
 import { clearExerciseRestTarget, setExerciseRestTarget, useExerciseRestTarget, useHasExerciseRestTarget } from '../hooks/useRestTargets';
 import { readRestDuration, readSoftEdges, PREFS_EVENT } from '../hooks/useBasePrefs';
+import { lockOverlay, unlockOverlay } from '../lib/overlayLock';
 
 /* Progressiver Blur an den Scroll-Kanten: Streifen von der Kante nach innen mit
    abnehmender Blur-Stärke — Content "schmilzt" weich auf, ohne Farb-/Alpha-Tricks. */
@@ -136,19 +137,13 @@ export function WorkoutSessionModal() {
 
   useEffect(() => {
     if (!activeSession) return undefined;
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    document.documentElement.classList.add('overlay-open');
+    lockOverlay();
     const tick = () => setSeconds(sessionElapsedSeconds(activeSession.startedAt, activeSession.pausedAt));
     tick();
     const interval = window.setInterval(tick, 1000);
     return () => {
       window.clearInterval(interval);
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousHtmlOverflow;
-      document.documentElement.classList.remove('overlay-open');
+      unlockOverlay();
     };
   }, [activeSession]);
 

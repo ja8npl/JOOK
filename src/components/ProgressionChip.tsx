@@ -37,8 +37,9 @@ export function ProgressionChip({ last, zielBereich, settled }: Props) {
           role="status"
         >
           <span className="progression-chip-eyebrow"><TrendingUp size={12} /> Steigerung</span>
-          <span>Letztes Mal {firstSetSummary(last!.gewicht, last!.reps, last!.rir)} → Heute {suggestion.aktion}</span>
-          <span className="progression-chip-hint">{suggestion.deltaLabel}</span>
+          <span className="progression-chip-delta">{suggestion.deltaLabel}</span>
+          <span className="progression-chip-last">Letztes Mal {firstSetSummary(last!.gewicht, last!.reps, last!.rir)}</span>
+          <span className="progression-chip-action">{suggestion.aktion}</span>
         </motion.div>
       )}
     </AnimatePresence>
